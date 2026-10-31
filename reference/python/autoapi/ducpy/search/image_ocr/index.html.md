@@ -7,18 +7,18 @@ OCR is gracefully skipped.
 
 ## Attributes
 
-| [`logger`](#ducpy.search.image_ocr.logger)                                             |    |
-|----------------------------------------------------------------------------------------|----|
-| [`_RAPID_OCR_ENGINE`](#ducpy.search.image_ocr._RAPID_OCR_ENGINE)                       |    |
-| [`_server_side_ocr_available`](#ducpy.search.image_ocr._server_side_ocr_available)     |    |
+| [`logger`](#ducpy.search.image_ocr.logger)                       |    |
+|-------------------------------------------------------------------------------|----|
+| [`_RAPID_OCR_ENGINE`](#ducpy.search.image_ocr._RAPID_OCR_ENGINE)            |    |
+| [`_server_side_ocr_available`](#ducpy.search.image_ocr._server_side_ocr_available)   |    |
 | [`_extract_image_text_with_ocr`](#ducpy.search.image_ocr._extract_image_text_with_ocr) |    |
 
 ## Functions
 
-| [`server_side_ocr_available`](#ducpy.search.image_ocr.server_side_ocr_available)(→ bool)                 | Return whether the `ocr` extra (RapidOCR) is installed and usable.   |
-|----------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`_get_local_cache_dir`](#ducpy.search.image_ocr._get_local_cache_dir)(→ str | None)                     |                                                                      |
-| [`_get_rapid_engine`](#ducpy.search.image_ocr._get_rapid_engine)(→ Any)                                  |                                                                      |
+| [`server_side_ocr_available`](#ducpy.search.image_ocr.server_side_ocr_available)(→ bool)               | Return whether the `ocr` extra (RapidOCR) is installed and usable.   |
+|--------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| [`_get_local_cache_dir`](#ducpy.search.image_ocr._get_local_cache_dir)(→ str | None)              |                                                                      |
+| [`_get_rapid_engine`](#ducpy.search.image_ocr._get_rapid_engine)(→ Any)                        |                                                                      |
 | [`extract_image_text_with_ocr`](#ducpy.search.image_ocr.extract_image_text_with_ocr)(→ tuple[str, bool]) | OCR an image using the `ocr` extra, or skip when unavailable.        |
 
 ## Module Contents

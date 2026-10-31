@@ -173,7 +173,7 @@ Module Contents
 
 
 
-.. py:function:: search_duc_elements(duc_path: str | pathlib.Path, query: str, *, output_path: str | pathlib.Path | None = None, limit: int = 50, ocr_language: str = 'eng', search_all_external_files: bool = False, external_file_targets: list[ducpy.search.search_external_files.ExternalFileSearchTarget | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: list[str] | None = None) -> DucSearchResponse
+.. py:function:: search_duc_elements(duc_path: str | pathlib.Path, query: str, *, output_path: str | pathlib.Path | None = None, limit: int = 50, ocr_language: str = 'eng', search_all_external_files: bool = False, external_file_targets: list[ducpy.search.search_external_files.ExternalFileSearchTarget | dict[str, Any] | tuple[Any, ...] | str] | None = None, external_file_element_ids: list[str] | None = None) -> DucSearchResponse
 
    Search DUC elements and export ordered results to JSON.
 

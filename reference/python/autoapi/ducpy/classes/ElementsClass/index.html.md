@@ -3,84 +3,84 @@
 ## Attributes
 
 | [`DucElement`](#ducpy.classes.ElementsClass.DucElement)   |    |
-|-----------------------------------------------------------|----|
+|---------------------------------------------------------------|----|
 
 ## Classes
 
-| [`DictionaryEntry`](#ducpy.classes.ElementsClass.DictionaryEntry)                   |                                                                                                       |
-|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| [`StringValueEntry`](#ducpy.classes.ElementsClass.StringValueEntry)                 |                                                                                                       |
-| [`GeometricPoint`](#ducpy.classes.ElementsClass.GeometricPoint)                     |                                                                                                       |
-| [`DucPoint`](#ducpy.classes.ElementsClass.DucPoint)                                 |                                                                                                       |
-| [`Margins`](#ducpy.classes.ElementsClass.Margins)                                   |                                                                                                       |
-| [`Viewer3DClipPlane`](#ducpy.classes.ElementsClass.Viewer3DClipPlane)               |                                                                                                       |
-| [`Viewer3DMaterial`](#ducpy.classes.ElementsClass.Viewer3DMaterial)                 |                                                                                                       |
-| [`Viewer3DZebra`](#ducpy.classes.ElementsClass.Viewer3DZebra)                       |                                                                                                       |
-| [`Viewer3DCamera`](#ducpy.classes.ElementsClass.Viewer3DCamera)                     |                                                                                                       |
-| [`Viewer3DGridPlanes`](#ducpy.classes.ElementsClass.Viewer3DGridPlanes)             |                                                                                                       |
-| [`Viewer3DGrid`](#ducpy.classes.ElementsClass.Viewer3DGrid)                         | Tagged union: {"type": "uniform", "value": bool} or {"type": "perPlane", "value": Viewer3DGridPlanes} |
-| [`Viewer3DDisplay`](#ducpy.classes.ElementsClass.Viewer3DDisplay)                   |                                                                                                       |
-| [`Viewer3DClipping`](#ducpy.classes.ElementsClass.Viewer3DClipping)                 |                                                                                                       |
-| [`Viewer3DExplode`](#ducpy.classes.ElementsClass.Viewer3DExplode)                   |                                                                                                       |
-| [`Viewer3DState`](#ducpy.classes.ElementsClass.Viewer3DState)                       |                                                                                                       |
-| [`TilingProperties`](#ducpy.classes.ElementsClass.TilingProperties)                 |                                                                                                       |
-| [`HatchPatternLine`](#ducpy.classes.ElementsClass.HatchPatternLine)                 |                                                                                                       |
-| [`CustomHatchPattern`](#ducpy.classes.ElementsClass.CustomHatchPattern)             |                                                                                                       |
-| [`DucHatchStyle`](#ducpy.classes.ElementsClass.DucHatchStyle)                       |                                                                                                       |
-| [`DucImageFilter`](#ducpy.classes.ElementsClass.DucImageFilter)                     |                                                                                                       |
-| [`ElementContentBase`](#ducpy.classes.ElementsClass.ElementContentBase)             |                                                                                                       |
-| [`StrokeStyle`](#ducpy.classes.ElementsClass.StrokeStyle)                           |                                                                                                       |
-| [`StrokeSides`](#ducpy.classes.ElementsClass.StrokeSides)                           |                                                                                                       |
-| [`ElementStroke`](#ducpy.classes.ElementsClass.ElementStroke)                       |                                                                                                       |
-| [`ElementBackground`](#ducpy.classes.ElementsClass.ElementBackground)               |                                                                                                       |
-| [`DucElementStylesBase`](#ducpy.classes.ElementsClass.DucElementStylesBase)         |                                                                                                       |
-| [`BoundElement`](#ducpy.classes.ElementsClass.BoundElement)                         |                                                                                                       |
-| [`DucElementBase`](#ducpy.classes.ElementsClass.DucElementBase)                     |                                                                                                       |
-| [`DucHead`](#ducpy.classes.ElementsClass.DucHead)                                   |                                                                                                       |
-| [`PointBindingPoint`](#ducpy.classes.ElementsClass.PointBindingPoint)               |                                                                                                       |
-| [`DucPointBinding`](#ducpy.classes.ElementsClass.DucPointBinding)                   |                                                                                                       |
-| [`DucLineReference`](#ducpy.classes.ElementsClass.DucLineReference)                 |                                                                                                       |
-| [`DucLine`](#ducpy.classes.ElementsClass.DucLine)                                   |                                                                                                       |
-| [`DucPath`](#ducpy.classes.ElementsClass.DucPath)                                   |                                                                                                       |
-| [`DucLinearElementBase`](#ducpy.classes.ElementsClass.DucLinearElementBase)         |                                                                                                       |
-| [`DucStackLikeStyles`](#ducpy.classes.ElementsClass.DucStackLikeStyles)             |                                                                                                       |
-| [`DucStackBase`](#ducpy.classes.ElementsClass.DucStackBase)                         |                                                                                                       |
-| [`DucStackElementBase`](#ducpy.classes.ElementsClass.DucStackElementBase)           |                                                                                                       |
-| [`LineSpacing`](#ducpy.classes.ElementsClass.LineSpacing)                           |                                                                                                       |
-| [`DucTextStyle`](#ducpy.classes.ElementsClass.DucTextStyle)                         |                                                                                                       |
-| [`DucTableStyle`](#ducpy.classes.ElementsClass.DucTableStyle)                       |                                                                                                       |
-| [`DucDocStyle`](#ducpy.classes.ElementsClass.DucDocStyle)                           |                                                                                                       |
-| [`DucPlotStyle`](#ducpy.classes.ElementsClass.DucPlotStyle)                         |                                                                                                       |
-| [`DucRectangleElement`](#ducpy.classes.ElementsClass.DucRectangleElement)           |                                                                                                       |
-| [`DucPolygonElement`](#ducpy.classes.ElementsClass.DucPolygonElement)               |                                                                                                       |
-| [`DucEllipseElement`](#ducpy.classes.ElementsClass.DucEllipseElement)               |                                                                                                       |
-| [`DucEmbeddableElement`](#ducpy.classes.ElementsClass.DucEmbeddableElement)         |                                                                                                       |
-| [`DocumentGridConfig`](#ducpy.classes.ElementsClass.DocumentGridConfig)             |                                                                                                       |
-| [`DucPdfElement`](#ducpy.classes.ElementsClass.DucPdfElement)                       |                                                                                                       |
-| [`DucDocElement`](#ducpy.classes.ElementsClass.DucDocElement)                       |                                                                                                       |
-| [`DucTableElement`](#ducpy.classes.ElementsClass.DucTableElement)                   |                                                                                                       |
-| [`ImageCrop`](#ducpy.classes.ElementsClass.ImageCrop)                               |                                                                                                       |
-| [`DucImageElement`](#ducpy.classes.ElementsClass.DucImageElement)                   |                                                                                                       |
-| [`DucTextElement`](#ducpy.classes.ElementsClass.DucTextElement)                     |                                                                                                       |
-| [`DucLinearElement`](#ducpy.classes.ElementsClass.DucLinearElement)                 |                                                                                                       |
-| [`DucArrowElement`](#ducpy.classes.ElementsClass.DucArrowElement)                   |                                                                                                       |
-| [`DucFreeDrawEnds`](#ducpy.classes.ElementsClass.DucFreeDrawEnds)                   |                                                                                                       |
-| [`DucFreeDrawElement`](#ducpy.classes.ElementsClass.DucFreeDrawElement)             |                                                                                                       |
-| [`DucFrameElement`](#ducpy.classes.ElementsClass.DucFrameElement)                   |                                                                                                       |
-| [`PlotLayout`](#ducpy.classes.ElementsClass.PlotLayout)                             |                                                                                                       |
-| [`DucPlotElement`](#ducpy.classes.ElementsClass.DucPlotElement)                     |                                                                                                       |
-| [`DucModelElement`](#ducpy.classes.ElementsClass.DucModelElement)                   |                                                                                                       |
+| [`DictionaryEntry`](#ducpy.classes.ElementsClass.DictionaryEntry)          |                                                                                                       |
+|---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| [`StringValueEntry`](#ducpy.classes.ElementsClass.StringValueEntry)         |                                                                                                       |
+| [`GeometricPoint`](#ducpy.classes.ElementsClass.GeometricPoint)           |                                                                                                       |
+| [`DucPoint`](#ducpy.classes.ElementsClass.DucPoint)                 |                                                                                                       |
+| [`Margins`](#ducpy.classes.ElementsClass.Margins)                  |                                                                                                       |
+| [`Viewer3DClipPlane`](#ducpy.classes.ElementsClass.Viewer3DClipPlane)        |                                                                                                       |
+| [`Viewer3DMaterial`](#ducpy.classes.ElementsClass.Viewer3DMaterial)         |                                                                                                       |
+| [`Viewer3DZebra`](#ducpy.classes.ElementsClass.Viewer3DZebra)            |                                                                                                       |
+| [`Viewer3DCamera`](#ducpy.classes.ElementsClass.Viewer3DCamera)           |                                                                                                       |
+| [`Viewer3DGridPlanes`](#ducpy.classes.ElementsClass.Viewer3DGridPlanes)       |                                                                                                       |
+| [`Viewer3DGrid`](#ducpy.classes.ElementsClass.Viewer3DGrid)             | Tagged union: {"type": "uniform", "value": bool} or {"type": "perPlane", "value": Viewer3DGridPlanes} |
+| [`Viewer3DDisplay`](#ducpy.classes.ElementsClass.Viewer3DDisplay)          |                                                                                                       |
+| [`Viewer3DClipping`](#ducpy.classes.ElementsClass.Viewer3DClipping)         |                                                                                                       |
+| [`Viewer3DExplode`](#ducpy.classes.ElementsClass.Viewer3DExplode)          |                                                                                                       |
+| [`Viewer3DState`](#ducpy.classes.ElementsClass.Viewer3DState)            |                                                                                                       |
+| [`TilingProperties`](#ducpy.classes.ElementsClass.TilingProperties)         |                                                                                                       |
+| [`HatchPatternLine`](#ducpy.classes.ElementsClass.HatchPatternLine)         |                                                                                                       |
+| [`CustomHatchPattern`](#ducpy.classes.ElementsClass.CustomHatchPattern)       |                                                                                                       |
+| [`DucHatchStyle`](#ducpy.classes.ElementsClass.DucHatchStyle)            |                                                                                                       |
+| [`DucImageFilter`](#ducpy.classes.ElementsClass.DucImageFilter)           |                                                                                                       |
+| [`ElementContentBase`](#ducpy.classes.ElementsClass.ElementContentBase)       |                                                                                                       |
+| [`StrokeStyle`](#ducpy.classes.ElementsClass.StrokeStyle)              |                                                                                                       |
+| [`StrokeSides`](#ducpy.classes.ElementsClass.StrokeSides)              |                                                                                                       |
+| [`ElementStroke`](#ducpy.classes.ElementsClass.ElementStroke)            |                                                                                                       |
+| [`ElementBackground`](#ducpy.classes.ElementsClass.ElementBackground)        |                                                                                                       |
+| [`DucElementStylesBase`](#ducpy.classes.ElementsClass.DucElementStylesBase)     |                                                                                                       |
+| [`BoundElement`](#ducpy.classes.ElementsClass.BoundElement)             |                                                                                                       |
+| [`DucElementBase`](#ducpy.classes.ElementsClass.DucElementBase)           |                                                                                                       |
+| [`DucHead`](#ducpy.classes.ElementsClass.DucHead)                  |                                                                                                       |
+| [`PointBindingPoint`](#ducpy.classes.ElementsClass.PointBindingPoint)        |                                                                                                       |
+| [`DucPointBinding`](#ducpy.classes.ElementsClass.DucPointBinding)          |                                                                                                       |
+| [`DucLineReference`](#ducpy.classes.ElementsClass.DucLineReference)         |                                                                                                       |
+| [`DucLine`](#ducpy.classes.ElementsClass.DucLine)                  |                                                                                                       |
+| [`DucPath`](#ducpy.classes.ElementsClass.DucPath)                  |                                                                                                       |
+| [`DucLinearElementBase`](#ducpy.classes.ElementsClass.DucLinearElementBase)     |                                                                                                       |
+| [`DucStackLikeStyles`](#ducpy.classes.ElementsClass.DucStackLikeStyles)       |                                                                                                       |
+| [`DucStackBase`](#ducpy.classes.ElementsClass.DucStackBase)             |                                                                                                       |
+| [`DucStackElementBase`](#ducpy.classes.ElementsClass.DucStackElementBase)      |                                                                                                       |
+| [`LineSpacing`](#ducpy.classes.ElementsClass.LineSpacing)              |                                                                                                       |
+| [`DucTextStyle`](#ducpy.classes.ElementsClass.DucTextStyle)             |                                                                                                       |
+| [`DucTableStyle`](#ducpy.classes.ElementsClass.DucTableStyle)            |                                                                                                       |
+| [`DucDocStyle`](#ducpy.classes.ElementsClass.DucDocStyle)              |                                                                                                       |
+| [`DucPlotStyle`](#ducpy.classes.ElementsClass.DucPlotStyle)             |                                                                                                       |
+| [`DucRectangleElement`](#ducpy.classes.ElementsClass.DucRectangleElement)      |                                                                                                       |
+| [`DucPolygonElement`](#ducpy.classes.ElementsClass.DucPolygonElement)        |                                                                                                       |
+| [`DucEllipseElement`](#ducpy.classes.ElementsClass.DucEllipseElement)        |                                                                                                       |
+| [`DucEmbeddableElement`](#ducpy.classes.ElementsClass.DucEmbeddableElement)     |                                                                                                       |
+| [`DocumentGridConfig`](#ducpy.classes.ElementsClass.DocumentGridConfig)       |                                                                                                       |
+| [`DucPdfElement`](#ducpy.classes.ElementsClass.DucPdfElement)            |                                                                                                       |
+| [`DucDocElement`](#ducpy.classes.ElementsClass.DucDocElement)            |                                                                                                       |
+| [`DucTableElement`](#ducpy.classes.ElementsClass.DucTableElement)          |                                                                                                       |
+| [`ImageCrop`](#ducpy.classes.ElementsClass.ImageCrop)                |                                                                                                       |
+| [`DucImageElement`](#ducpy.classes.ElementsClass.DucImageElement)          |                                                                                                       |
+| [`DucTextElement`](#ducpy.classes.ElementsClass.DucTextElement)           |                                                                                                       |
+| [`DucLinearElement`](#ducpy.classes.ElementsClass.DucLinearElement)         |                                                                                                       |
+| [`DucArrowElement`](#ducpy.classes.ElementsClass.DucArrowElement)          |                                                                                                       |
+| [`DucFreeDrawEnds`](#ducpy.classes.ElementsClass.DucFreeDrawEnds)          |                                                                                                       |
+| [`DucFreeDrawElement`](#ducpy.classes.ElementsClass.DucFreeDrawElement)       |                                                                                                       |
+| [`DucFrameElement`](#ducpy.classes.ElementsClass.DucFrameElement)          |                                                                                                       |
+| [`PlotLayout`](#ducpy.classes.ElementsClass.PlotLayout)               |                                                                                                       |
+| [`DucPlotElement`](#ducpy.classes.ElementsClass.DucPlotElement)           |                                                                                                       |
+| [`DucModelElement`](#ducpy.classes.ElementsClass.DucModelElement)          |                                                                                                       |
 | [`DucBlockDuplicationArray`](#ducpy.classes.ElementsClass.DucBlockDuplicationArray) |                                                                                                       |
-| [`DucBlockMetadata`](#ducpy.classes.ElementsClass.DucBlockMetadata)                 |                                                                                                       |
-| [`DucBlock`](#ducpy.classes.ElementsClass.DucBlock)                                 |                                                                                                       |
-| [`DucBlockInstance`](#ducpy.classes.ElementsClass.DucBlockInstance)                 |                                                                                                       |
-| [`DucBlockCollectionEntry`](#ducpy.classes.ElementsClass.DucBlockCollectionEntry)   |                                                                                                       |
-| [`DucBlockCollection`](#ducpy.classes.ElementsClass.DucBlockCollection)             |                                                                                                       |
-| [`DucGroup`](#ducpy.classes.ElementsClass.DucGroup)                                 |                                                                                                       |
-| [`DucRegion`](#ducpy.classes.ElementsClass.DucRegion)                               |                                                                                                       |
-| [`DucLayerOverrides`](#ducpy.classes.ElementsClass.DucLayerOverrides)               |                                                                                                       |
-| [`DucLayer`](#ducpy.classes.ElementsClass.DucLayer)                                 |                                                                                                       |
-| [`ElementWrapper`](#ducpy.classes.ElementsClass.ElementWrapper)                     |                                                                                                       |
+| [`DucBlockMetadata`](#ducpy.classes.ElementsClass.DucBlockMetadata)         |                                                                                                       |
+| [`DucBlock`](#ducpy.classes.ElementsClass.DucBlock)                 |                                                                                                       |
+| [`DucBlockInstance`](#ducpy.classes.ElementsClass.DucBlockInstance)         |                                                                                                       |
+| [`DucBlockCollectionEntry`](#ducpy.classes.ElementsClass.DucBlockCollectionEntry)  |                                                                                                       |
+| [`DucBlockCollection`](#ducpy.classes.ElementsClass.DucBlockCollection)       |                                                                                                       |
+| [`DucGroup`](#ducpy.classes.ElementsClass.DucGroup)                 |                                                                                                       |
+| [`DucRegion`](#ducpy.classes.ElementsClass.DucRegion)                |                                                                                                       |
+| [`DucLayerOverrides`](#ducpy.classes.ElementsClass.DucLayerOverrides)        |                                                                                                       |
+| [`DucLayer`](#ducpy.classes.ElementsClass.DucLayer)                 |                                                                                                       |
+| [`ElementWrapper`](#ducpy.classes.ElementsClass.ElementWrapper)           |                                                                                                       |
 
 ## Module Contents
 
@@ -108,7 +108,7 @@
 
 #### y *: float*
 
-#### mirroring *: [ducpy.enums.BEZIER_MIRRORING](../../enums/index.md#ducpy.enums.BEZIER_MIRRORING) | None* *= None*
+#### mirroring *: [ducpy.enums.BEZIER_MIRRORING](../../enums/index.html.md#ducpy.enums.BEZIER_MIRRORING) | None* *= None*
 
 ### *class* ducpy.classes.ElementsClass.Margins
 
@@ -276,7 +276,7 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 ### *class* ducpy.classes.ElementsClass.DucHatchStyle
 
-#### hatch_style *: [ducpy.enums.HATCH_STYLE](../../enums/index.md#ducpy.enums.HATCH_STYLE)*
+#### hatch_style *: [ducpy.enums.HATCH_STYLE](../../enums/index.html.md#ducpy.enums.HATCH_STYLE)*
 
 #### pattern_name *: str*
 
@@ -304,7 +304,7 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 #### opacity *: float*
 
-#### preference *: [ducpy.enums.ELEMENT_CONTENT_PREFERENCE](../../enums/index.md#ducpy.enums.ELEMENT_CONTENT_PREFERENCE) | None* *= None*
+#### preference *: [ducpy.enums.ELEMENT_CONTENT_PREFERENCE](../../enums/index.html.md#ducpy.enums.ELEMENT_CONTENT_PREFERENCE) | None* *= None*
 
 #### tiling *: [TilingProperties](#ducpy.classes.ElementsClass.TilingProperties) | None* *= None*
 
@@ -314,23 +314,23 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 ### *class* ducpy.classes.ElementsClass.StrokeStyle
 
-#### preference *: [ducpy.enums.STROKE_PREFERENCE](../../enums/index.md#ducpy.enums.STROKE_PREFERENCE) | None* *= None*
+#### preference *: [ducpy.enums.STROKE_PREFERENCE](../../enums/index.html.md#ducpy.enums.STROKE_PREFERENCE) | None* *= None*
 
-#### cap *: [ducpy.enums.STROKE_CAP](../../enums/index.md#ducpy.enums.STROKE_CAP) | None* *= None*
+#### cap *: [ducpy.enums.STROKE_CAP](../../enums/index.html.md#ducpy.enums.STROKE_CAP) | None* *= None*
 
-#### join *: [ducpy.enums.STROKE_JOIN](../../enums/index.md#ducpy.enums.STROKE_JOIN) | None* *= None*
+#### join *: [ducpy.enums.STROKE_JOIN](../../enums/index.html.md#ducpy.enums.STROKE_JOIN) | None* *= None*
 
 #### dash *: List[float] | None* *= None*
 
 #### dash_line_override *: str | None* *= None*
 
-#### dash_cap *: [ducpy.enums.STROKE_CAP](../../enums/index.md#ducpy.enums.STROKE_CAP) | None* *= None*
+#### dash_cap *: [ducpy.enums.STROKE_CAP](../../enums/index.html.md#ducpy.enums.STROKE_CAP) | None* *= None*
 
 #### miter_limit *: float | None* *= None*
 
 ### *class* ducpy.classes.ElementsClass.StrokeSides
 
-#### preference *: [ducpy.enums.STROKE_SIDE_PREFERENCE](../../enums/index.md#ducpy.enums.STROKE_SIDE_PREFERENCE) | None* *= None*
+#### preference *: [ducpy.enums.STROKE_SIDE_PREFERENCE](../../enums/index.html.md#ducpy.enums.STROKE_SIDE_PREFERENCE) | None* *= None*
 
 #### values *: List[float] | None* *= None*
 
@@ -342,7 +342,7 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 #### style *: [StrokeStyle](#ducpy.classes.ElementsClass.StrokeStyle)*
 
-#### placement *: [ducpy.enums.STROKE_PLACEMENT](../../enums/index.md#ducpy.enums.STROKE_PLACEMENT) | None* *= None*
+#### placement *: [ducpy.enums.STROKE_PLACEMENT](../../enums/index.html.md#ducpy.enums.STROKE_PLACEMENT) | None* *= None*
 
 #### stroke_sides *: [StrokeSides](#ducpy.classes.ElementsClass.StrokeSides) | None* *= None*
 
@@ -360,7 +360,7 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 #### opacity *: float*
 
-#### blending *: [ducpy.enums.BLENDING](../../enums/index.md#ducpy.enums.BLENDING) | None* *= None*
+#### blending *: [ducpy.enums.BLENDING](../../enums/index.html.md#ducpy.enums.BLENDING) | None* *= None*
 
 ### *class* ducpy.classes.ElementsClass.BoundElement
 
@@ -383,8 +383,6 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 #### height *: float*
 
 #### angle *: float*
-
-#### scope *: str*
 
 #### label *: str*
 
@@ -432,7 +430,7 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 #### size *: float*
 
-#### type *: [ducpy.enums.LINE_HEAD](../../enums/index.md#ducpy.enums.LINE_HEAD) | None* *= None*
+#### type *: [ducpy.enums.LINE_HEAD](../../enums/index.html.md#ducpy.enums.LINE_HEAD) | None* *= None*
 
 #### block_id *: str | None* *= None*
 
@@ -526,7 +524,7 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 #### value *: float*
 
-#### type *: [ducpy.enums.LINE_SPACING_TYPE](../../enums/index.md#ducpy.enums.LINE_SPACING_TYPE) | None* *= None*
+#### type *: [ducpy.enums.LINE_SPACING_TYPE](../../enums/index.html.md#ducpy.enums.LINE_SPACING_TYPE) | None* *= None*
 
 ### *class* ducpy.classes.ElementsClass.DucTextStyle
 
@@ -536,9 +534,9 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 #### big_font_family *: str*
 
-#### text_align *: [ducpy.enums.TEXT_ALIGN](../../enums/index.md#ducpy.enums.TEXT_ALIGN)*
+#### text_align *: [ducpy.enums.TEXT_ALIGN](../../enums/index.html.md#ducpy.enums.TEXT_ALIGN)*
 
-#### vertical_align *: [ducpy.enums.VERTICAL_ALIGN](../../enums/index.md#ducpy.enums.VERTICAL_ALIGN)*
+#### vertical_align *: [ducpy.enums.VERTICAL_ALIGN](../../enums/index.html.md#ducpy.enums.VERTICAL_ALIGN)*
 
 #### line_height *: float*
 
@@ -648,7 +646,7 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 #### base *: [DucElementBase](#ducpy.classes.ElementsClass.DucElementBase)*
 
-#### status *: [ducpy.enums.IMAGE_STATUS](../../enums/index.md#ducpy.enums.IMAGE_STATUS)*
+#### status *: [ducpy.enums.IMAGE_STATUS](../../enums/index.html.md#ducpy.enums.IMAGE_STATUS)*
 
 #### scale *: List[float]*
 
@@ -830,7 +828,7 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 #### stack_base *: [DucStackBase](#ducpy.classes.ElementsClass.DucStackBase)*
 
-#### boolean_operation *: [ducpy.enums.BOOLEAN_OPERATION](../../enums/index.md#ducpy.enums.BOOLEAN_OPERATION)*
+#### boolean_operation *: [ducpy.enums.BOOLEAN_OPERATION](../../enums/index.html.md#ducpy.enums.BOOLEAN_OPERATION)*
 
 ### *class* ducpy.classes.ElementsClass.DucLayerOverrides
 
@@ -852,4 +850,4 @@ Tagged union: {“type”: “uniform”, “value”: bool} or {“type”: “
 
 ### *class* ducpy.classes.ElementsClass.ElementWrapper
 
-#### element *: DucElement*
+#### element *: [DucElement](#ducpy.classes.ElementsClass.DucElement)*

@@ -95,7 +95,7 @@ Module Contents
 
 
    .. py:attribute:: pages
-      :type:  tuple[PageSpan, Ellipsis]
+      :type:  tuple[PageSpan, ...]
       :value: ()
 
 
@@ -126,9 +126,9 @@ Module Contents
 
 .. py:function:: element_file_id(element: dict[str, Any]) -> str | None
 
-.. py:function:: _normalize_target(value: ExternalFileSearchTarget | dict[str, Any] | tuple[Any, Ellipsis] | str) -> ExternalFileSearchTarget
+.. py:function:: _normalize_target(value: ExternalFileSearchTarget | dict[str, Any] | tuple[Any, ...] | str) -> ExternalFileSearchTarget
 
-.. py:function:: _dedupe_targets(targets: Iterable[ResolvedExternalFileSearchTarget]) -> tuple[ResolvedExternalFileSearchTarget, Ellipsis]
+.. py:function:: _dedupe_targets(targets: Iterable[ResolvedExternalFileSearchTarget]) -> tuple[ResolvedExternalFileSearchTarget, ...]
 
 .. py:function:: _has_table(conn: sqlite3.Connection, table_name: str) -> bool
 
@@ -138,7 +138,7 @@ Module Contents
 
 .. py:function:: _fetch_element_external_refs(conn: sqlite3.Connection, element_ids: Iterable[str]) -> list[tuple[str, str]]
 
-.. py:function:: resolve_external_file_search_targets(conn: sqlite3.Connection, *, search_all_external_files: bool = False, external_file_targets: Iterable[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: Iterable[str] | None = None) -> tuple[ResolvedExternalFileSearchTarget, Ellipsis]
+.. py:function:: resolve_external_file_search_targets(conn: sqlite3.Connection, *, search_all_external_files: bool = False, external_file_targets: Iterable[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, ...] | str] | None = None, external_file_element_ids: Iterable[str] | None = None) -> tuple[ResolvedExternalFileSearchTarget, ...]
 
 .. py:function:: _external_active_revision_id(external: dict[str, Any]) -> str | None
 
@@ -152,7 +152,7 @@ Module Contents
 
 .. py:function:: load_external_file_text(duc_source: str | pathlib.Path, target: ResolvedExternalFileSearchTarget, *, fallback_element_type: str | None, ocr_language: str) -> ExtractedExternalText
 
-.. py:function:: resolve_external_file_search_targets_from_parsed_duc(duc_source: str | pathlib.Path, duc_data: dict[str, Any], *, search_all_external_files: bool = False, external_file_targets: Iterable[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: Iterable[str] | None = None) -> tuple[ResolvedExternalFileSearchTarget, Ellipsis]
+.. py:function:: resolve_external_file_search_targets_from_parsed_duc(duc_source: str | pathlib.Path, duc_data: dict[str, Any], *, search_all_external_files: bool = False, external_file_targets: Iterable[ExternalFileSearchTarget | dict[str, Any] | tuple[Any, ...] | str] | None = None, external_file_element_ids: Iterable[str] | None = None) -> tuple[ResolvedExternalFileSearchTarget, ...]
 
 .. py:function:: _fetch_external_revision_row(conn: sqlite3.Connection, file_id: str, revision_id: str) -> dict[str, Any] | None
 

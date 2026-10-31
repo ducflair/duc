@@ -7,25 +7,25 @@ via DucData wrapper.
 
 ## Attributes
 
-| [`logger`](#ducpy.parse.logger)       |    |
-|---------------------------------------|----|
+| [`logger`](#ducpy.parse.logger)    |    |
+|------------------------------------------------------------|----|
 | [`PathInput`](#ducpy.parse.PathInput) |    |
 
 ## Classes
 
 | [`DucData`](#ducpy.parse.DucData)   | Dict subclass allowing attribute-style access (`data.elements`).   |
-|-------------------------------------|--------------------------------------------------------------------|
+|------------------------------------------------------------|--------------------------------------------------------------------|
 
 ## Functions
 
-| [`_wrap`](#ducpy.parse._wrap)(→ Any)                                                                 | Recursively wrap dicts as DucData for attribute access.                 |
-|------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| [`_path`](#ducpy.parse._path)(→ str)                                                                 |                                                                         |
-| [`parse_duc`](#ducpy.parse.parse_duc)(→ DucData)                                                     | Parse a `.duc` file into a [`DucData`](#ducpy.parse.DucData) dict.      |
-| [`list_external_files`](#ducpy.parse.list_external_files)(→ List[DucData])                           | List metadata for all external files (without data blobs).              |
-| [`stream_external_file_revision_to_path`](#ducpy.parse.stream_external_file_revision_to_path)(→ int) | Stream an external file revision from a `.duc` file into `output_path`. |
-| [`stream_checkpoint_data_to_path`](#ducpy.parse.stream_checkpoint_data_to_path)(→ int)               | Stream checkpoint data from a `.duc` file into `output_path`.           |
-| [`stream_delta_changeset_to_path`](#ducpy.parse.stream_delta_changeset_to_path)(→ int)               | Stream delta changeset data from a `.duc` file into `output_path`.      |
+| [`_wrap`](#ducpy.parse._wrap)(→ Any)                                 | Recursively wrap dicts as DucData for attribute access.                                   |
+|-----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| [`_path`](#ducpy.parse._path)(→ str)                                 |                                                                                           |
+| [`parse_duc`](#ducpy.parse.parse_duc)(→ DucData)                         | Parse a `.duc` file into a [`DucData`](#ducpy.parse.DucData) dict. |
+| [`list_external_files`](#ducpy.parse.list_external_files)(→ List[DucData])         | List metadata for all external files (without data blobs).                                |
+| [`stream_external_file_revision_to_path`](#ducpy.parse.stream_external_file_revision_to_path)(→ int) | Stream an external file revision from a `.duc` file into `output_path`.                   |
+| [`stream_checkpoint_data_to_path`](#ducpy.parse.stream_checkpoint_data_to_path)(→ int)        | Stream checkpoint data from a `.duc` file into `output_path`.                             |
+| [`stream_delta_changeset_to_path`](#ducpy.parse.stream_delta_changeset_to_path)(→ int)        | Stream delta changeset data from a `.duc` file into `output_path`.                        |
 
 ## Module Contents
 
@@ -55,9 +55,9 @@ Recursively wrap dicts as DucData for attribute access.
 
 ### ducpy.parse.PathInput
 
-### ducpy.parse.\_path(source: PathInput) → str
+### ducpy.parse.\_path(source: [PathInput](#ducpy.parse.PathInput)) → str
 
-### ducpy.parse.parse_duc(source: PathInput) → [DucData](#ducpy.parse.DucData)
+### ducpy.parse.parse_duc(source: [PathInput](#ducpy.parse.PathInput)) → [DucData](#ducpy.parse.DucData)
 
 Parse a `.duc` file into a [`DucData`](#ducpy.parse.DucData) dict.
 
@@ -86,18 +86,18 @@ DucData
 >>> print(f"First element type: {data.elements[0].type}")
 ```
 
-### ducpy.parse.list_external_files(source: PathInput) → List[[DucData](#ducpy.parse.DucData)]
+### ducpy.parse.list_external_files(source: [PathInput](#ducpy.parse.PathInput)) → List[[DucData](#ducpy.parse.DucData)]
 
 List metadata for all external files (without data blobs).
 
-### ducpy.parse.stream_external_file_revision_to_path(source: PathInput, revision_id: str, output_path: PathInput) → int
+### ducpy.parse.stream_external_file_revision_to_path(source: [PathInput](#ducpy.parse.PathInput), revision_id: str, output_path: [PathInput](#ducpy.parse.PathInput)) → int
 
 Stream an external file revision from a `.duc` file into `output_path`.
 
-### ducpy.parse.stream_checkpoint_data_to_path(source: PathInput, checkpoint_id: str, output_path: PathInput) → int
+### ducpy.parse.stream_checkpoint_data_to_path(source: [PathInput](#ducpy.parse.PathInput), checkpoint_id: str, output_path: [PathInput](#ducpy.parse.PathInput)) → int
 
 Stream checkpoint data from a `.duc` file into `output_path`.
 
-### ducpy.parse.stream_delta_changeset_to_path(source: PathInput, delta_id: str, output_path: PathInput) → int
+### ducpy.parse.stream_delta_changeset_to_path(source: [PathInput](#ducpy.parse.PathInput), delta_id: str, output_path: [PathInput](#ducpy.parse.PathInput)) → int
 
 Stream delta changeset data from a `.duc` file into `output_path`.

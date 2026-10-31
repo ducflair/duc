@@ -21,20 +21,20 @@ The JSON output is shaped for downstream consumers that need:
 ## Attributes
 
 | [`DucSearchResult`](#id0)   |    |
-|-----------------------------|----|
+|--------------------------------------------------------------------|----|
 
 ## Classes
 
-| [`DucSearchResult`](#id0)                                                        |                                                           |
-|----------------------------------------------------------------------------------|-----------------------------------------------------------|
+| [`DucSearchResult`](#id0)        |                                                           |
+|-------------------------------------------------------------------------|-----------------------------------------------------------|
 | [`DucElementSearchResult`](#ducpy.search.search_elements.DucElementSearchResult) | One result row for a single element.                      |
-| [`DucFileSearchResult`](#ducpy.search.search_elements.DucFileSearchResult)       | One grouped result row for repeated file-backed elements. |
-| [`DucSearchResponse`](#ducpy.search.search_elements.DucSearchResponse)           | Search response and JSON export metadata.                 |
+| [`DucFileSearchResult`](#ducpy.search.search_elements.DucFileSearchResult)    | One grouped result row for repeated file-backed elements. |
+| [`DucSearchResponse`](#ducpy.search.search_elements.DucSearchResponse)      | Search response and JSON export metadata.                 |
 
 ## Functions
 
 | [`search_duc_elements`](#ducpy.search.search_elements.search_duc_elements)(→ DucSearchResponse)   | Search DUC elements and export ordered results to JSON.   |
-|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
+|---------------------------------------------------------------------------------------------|-----------------------------------------------------------|
 
 ## Module Contents
 
@@ -96,7 +96,7 @@ Search response and JSON export metadata.
 
 #### query *: str*
 
-#### results *: list[DucSearchResult]*
+#### results *: list[[DucSearchResult](#id0)]*
 
 #### total_hits *: int*
 
@@ -108,6 +108,6 @@ Search response and JSON export metadata.
 
 Convert the response to a JSON-friendly dictionary.
 
-### ducpy.search.search_elements.search_duc_elements(duc_path: str | pathlib.Path, query: str, , output_path: str | pathlib.Path | None = None, limit: int = 50, ocr_language: str = 'eng', search_all_external_files: bool = False, external_file_targets: list[[ducpy.search.search_external_files.ExternalFileSearchTarget](../search_external_files/index.md#ducpy.search.search_external_files.ExternalFileSearchTarget) | dict[str, Any] | tuple[Any, Ellipsis] | str] | None = None, external_file_element_ids: list[str] | None = None) → [DucSearchResponse](#ducpy.search.search_elements.DucSearchResponse)
+### ducpy.search.search_elements.search_duc_elements(duc_path: str | pathlib.Path, query: str, , output_path: str | pathlib.Path | None = None, limit: int = 50, ocr_language: str = 'eng', search_all_external_files: bool = False, external_file_targets: list[[ducpy.search.search_external_files.ExternalFileSearchTarget](../search_external_files/index.html.md#ducpy.search.search_external_files.ExternalFileSearchTarget) | dict[str, Any] | tuple[Any, ...] | str] | None = None, external_file_element_ids: list[str] | None = None) → [DucSearchResponse](#ducpy.search.search_elements.DucSearchResponse)
 
 Search DUC elements and export ordered results to JSON.

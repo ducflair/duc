@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ExternalFileResolutionStatus"],"fn":["create_external_file_locator","resolve_locator","resolve_locator_path"],"mod":["paths"],"struct":["ExternalFileResolutionResult"]};

@@ -1,0 +1,103 @@
+ducpy.classes.locator
+=====================
+
+.. py:module:: ducpy.classes.locator
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.classes.locator.ExternalFileResolutionStatus
+   ducpy.classes.locator.ExternalFileResolutionResult
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.classes.locator.normalize_host_path
+   ducpy.classes.locator.normalize_path_segments
+   ducpy.classes.locator.get_owning_duc_directory
+   ducpy.classes.locator.create_external_file_locator
+   ducpy.classes.locator.resolve_locator_path
+   ducpy.classes.locator.resolve_locator
+
+
+Module Contents
+---------------
+
+.. py:class:: ExternalFileResolutionStatus
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   str(object='') -> str
+   str(bytes_or_buffer[, encoding[, errors]]) -> str
+
+   Create a new string object from the given object. If encoding or
+   errors is specified, then the object must expose a data buffer
+   that will be decoded using the given encoding and error handler.
+   Otherwise, returns the result of object.__str__() (if defined)
+   or repr(object).
+   encoding defaults to sys.getdefaultencoding().
+   errors defaults to 'strict'.
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: RESOLVED
+      :value: 'resolved'
+
+
+
+   .. py:attribute:: MISSING
+      :value: 'missing'
+
+
+
+   .. py:attribute:: INACCESSIBLE
+      :value: 'inaccessible'
+
+
+
+   .. py:attribute:: UNRESOLVED
+      :value: 'unresolved'
+
+
+
+.. py:class:: ExternalFileResolutionResult
+
+   .. py:attribute:: status
+      :type:  ExternalFileResolutionStatus
+
+
+   .. py:attribute:: resolved_path
+      :type:  Optional[str]
+
+
+   .. py:attribute:: error
+      :type:  Optional[str]
+
+
+   .. py:attribute:: locator
+      :type:  ducpy.classes.DataStateClass.ExternalFileLocator
+
+
+.. py:function:: normalize_host_path(raw_path: str) -> str
+
+.. py:function:: normalize_path_segments(path_str: str) -> str
+
+.. py:function:: get_owning_duc_directory(owning_duc_path: str) -> str
+
+.. py:function:: create_external_file_locator(kind: Union[ducpy.classes.DataStateClass.ExternalFileLocatorKind, str], path: str, original_path: Optional[str] = None) -> ducpy.classes.DataStateClass.ExternalFileLocator
+
+   Creates an ExternalFileLocator with explicit kind.
+
+
+.. py:function:: resolve_locator_path(locator: ducpy.classes.DataStateClass.ExternalFileLocator, owning_duc_path: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]
+
+.. py:function:: resolve_locator(locator: ducpy.classes.DataStateClass.ExternalFileLocator, owning_duc_path: Optional[str] = None, check_exists: bool = False) -> ExternalFileResolutionResult
+

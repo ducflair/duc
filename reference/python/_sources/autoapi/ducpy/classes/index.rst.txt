@@ -12,5 +12,6 @@ Submodules
 
    /autoapi/ducpy/classes/DataStateClass/index
    /autoapi/ducpy/classes/ElementsClass/index
+   /autoapi/ducpy/classes/locator/index
 
 

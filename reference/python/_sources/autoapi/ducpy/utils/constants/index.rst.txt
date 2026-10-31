@@ -14,7 +14,6 @@ Attributes
 
 .. autoapisummary::
 
-   ducpy.utils.constants.DEFAULT_SCOPE
    ducpy.utils.constants.DEFAULT_STROKE_COLOR
    ducpy.utils.constants.DEFAULT_FILL_COLOR
    ducpy.utils.constants.DEFAULT_TEXT_COLOR
@@ -25,10 +24,6 @@ Attributes
 
 Module Contents
 ---------------
-
-.. py:data:: DEFAULT_SCOPE
-   :value: 'mm'
-
 
 .. py:data:: DEFAULT_STROKE_COLOR
    :value: '#000000'

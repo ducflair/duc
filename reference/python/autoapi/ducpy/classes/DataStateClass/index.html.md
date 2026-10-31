@@ -3,36 +3,38 @@
 ## Attributes
 
 | [`DucIssueAnchor`](#ducpy.classes.DataStateClass.DucIssueAnchor)   |    |
-|--------------------------------------------------------------------|----|
+|-------------------------------------------------------------------|----|
 
 ## Classes
 
-| [`DictionaryEntry`](#ducpy.classes.DataStateClass.DictionaryEntry)             |    |
-|--------------------------------------------------------------------------------|----|
-| [`Actor`](#ducpy.classes.DataStateClass.Actor)                                 |    |
-| [`DucCharterRequirement`](#ducpy.classes.DataStateClass.DucCharterRequirement) |    |
-| [`DucCharterConstraint`](#ducpy.classes.DataStateClass.DucCharterConstraint)   |    |
-| [`DucCharterDecision`](#ducpy.classes.DataStateClass.DucCharterDecision)       |    |
-| [`DucCharterStakeholder`](#ducpy.classes.DataStateClass.DucCharterStakeholder) |    |
-| [`DucCharter`](#ducpy.classes.DataStateClass.DucCharter)                       |    |
-| [`DucIssueMessage`](#ducpy.classes.DataStateClass.DucIssueMessage)             |    |
-| [`DucIssueCanvasAnchor`](#ducpy.classes.DataStateClass.DucIssueCanvasAnchor)   |    |
-| [`DucIssueElementAnchor`](#ducpy.classes.DataStateClass.DucIssueElementAnchor) |    |
-| [`DucIssueModelAnchor`](#ducpy.classes.DataStateClass.DucIssueModelAnchor)     |    |
-| [`DucIssue`](#ducpy.classes.DataStateClass.DucIssue)                           |    |
-| [`DucGlobalState`](#ducpy.classes.DataStateClass.DucGlobalState)               |    |
-| [`DucLocalState`](#ducpy.classes.DataStateClass.DucLocalState)                 |    |
-| [`VersionBase`](#ducpy.classes.DataStateClass.VersionBase)                     |    |
-| [`Checkpoint`](#ducpy.classes.DataStateClass.Checkpoint)                       |    |
-| [`Delta`](#ducpy.classes.DataStateClass.Delta)                                 |    |
-| [`SchemaMigration`](#ducpy.classes.DataStateClass.SchemaMigration)             |    |
-| [`VersionChain`](#ducpy.classes.DataStateClass.VersionChain)                   |    |
-| [`VersionGraphMetadata`](#ducpy.classes.DataStateClass.VersionGraphMetadata)   |    |
-| [`VersionGraph`](#ducpy.classes.DataStateClass.VersionGraph)                   |    |
-| [`DisplayPrecision`](#ducpy.classes.DataStateClass.DisplayPrecision)           |    |
-| [`ExternalFileRevision`](#ducpy.classes.DataStateClass.ExternalFileRevision)   |    |
-| [`DucExternalFile`](#ducpy.classes.DataStateClass.DucExternalFile)             |    |
-| [`ExportedDataState`](#ducpy.classes.DataStateClass.ExportedDataState)         |    |
+| [`DictionaryEntry`](#ducpy.classes.DataStateClass.DictionaryEntry)         |                       |
+|--------------------------------------------------------------------------|-----------------------|
+| [`Actor`](#ducpy.classes.DataStateClass.Actor)                   |                       |
+| [`DucCharterRequirement`](#ducpy.classes.DataStateClass.DucCharterRequirement)   |                       |
+| [`DucCharterConstraint`](#ducpy.classes.DataStateClass.DucCharterConstraint)    |                       |
+| [`DucCharterDecision`](#ducpy.classes.DataStateClass.DucCharterDecision)      |                       |
+| [`DucCharterStakeholder`](#ducpy.classes.DataStateClass.DucCharterStakeholder)   |                       |
+| [`DucCharter`](#ducpy.classes.DataStateClass.DucCharter)              |                       |
+| [`DucIssueMessage`](#ducpy.classes.DataStateClass.DucIssueMessage)         |                       |
+| [`DucIssueCanvasAnchor`](#ducpy.classes.DataStateClass.DucIssueCanvasAnchor)    |                       |
+| [`DucIssueElementAnchor`](#ducpy.classes.DataStateClass.DucIssueElementAnchor)   |                       |
+| [`DucIssueModelAnchor`](#ducpy.classes.DataStateClass.DucIssueModelAnchor)     |                       |
+| [`DucIssue`](#ducpy.classes.DataStateClass.DucIssue)                |                       |
+| [`DucGlobalState`](#ducpy.classes.DataStateClass.DucGlobalState)          |                       |
+| [`DucLocalState`](#ducpy.classes.DataStateClass.DucLocalState)           |                       |
+| [`VersionBase`](#ducpy.classes.DataStateClass.VersionBase)             |                       |
+| [`Checkpoint`](#ducpy.classes.DataStateClass.Checkpoint)              |                       |
+| [`Delta`](#ducpy.classes.DataStateClass.Delta)                   |                       |
+| [`SchemaMigration`](#ducpy.classes.DataStateClass.SchemaMigration)         |                       |
+| [`VersionChain`](#ducpy.classes.DataStateClass.VersionChain)            |                       |
+| [`VersionGraphMetadata`](#ducpy.classes.DataStateClass.VersionGraphMetadata)    |                       |
+| [`VersionGraph`](#ducpy.classes.DataStateClass.VersionGraph)            |                       |
+| [`DisplayPrecision`](#ducpy.classes.DataStateClass.DisplayPrecision)        |                       |
+| [`ExternalFileLocatorKind`](#ducpy.classes.DataStateClass.ExternalFileLocatorKind) | str(object='') -> str |
+| [`ExternalFileLocator`](#ducpy.classes.DataStateClass.ExternalFileLocator)     |                       |
+| [`ExternalFileRevision`](#ducpy.classes.DataStateClass.ExternalFileRevision)    |                       |
+| [`DucExternalFile`](#ducpy.classes.DataStateClass.DucExternalFile)         |                       |
+| [`ExportedDataState`](#ducpy.classes.DataStateClass.ExportedDataState)       |                       |
 
 ## Module Contents
 
@@ -132,8 +134,6 @@
 
 #### y *: float*
 
-#### scope *: str | None* *= None*
-
 #### type *: str* *= 'canvas'*
 
 ### *class* ducpy.classes.DataStateClass.DucIssueElementAnchor
@@ -154,7 +154,7 @@
 
 #### normal *: List[float] | None* *= None*
 
-#### viewer_state *: [ducpy.classes.ElementsClass.Viewer3DState](../ElementsClass/index.md#ducpy.classes.ElementsClass.Viewer3DState) | None* *= None*
+#### viewer_state *: [ducpy.classes.ElementsClass.Viewer3DState](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.Viewer3DState) | None* *= None*
 
 #### topology_id *: str | None* *= None*
 
@@ -184,7 +184,7 @@
 
 #### due_date *: int | None* *= None*
 
-#### anchor *: DucIssueAnchor | None* *= None*
+#### anchor *: [DucIssueAnchor](#ducpy.classes.DataStateClass.DucIssueAnchor) | None* *= None*
 
 #### assignee_ids *: List[str] | None* *= None*
 
@@ -196,13 +196,7 @@
 
 #### view_background_color *: str*
 
-#### main_scope *: str*
-
-#### scope_exponent_threshold *: int*
-
 ### *class* ducpy.classes.DataStateClass.DucLocalState
-
-#### scope *: str*
 
 #### scroll_x *: float*
 
@@ -222,9 +216,9 @@
 
 #### outline_mode_enabled *: bool*
 
-#### current_item_stroke *: [ducpy.classes.ElementsClass.ElementStroke](../ElementsClass/index.md#ducpy.classes.ElementsClass.ElementStroke) | None*
+#### current_item_stroke *: [ducpy.classes.ElementsClass.ElementStroke](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.ElementStroke) | None*
 
-#### current_item_background *: [ducpy.classes.ElementsClass.ElementBackground](../ElementsClass/index.md#ducpy.classes.ElementsClass.ElementBackground) | None*
+#### current_item_background *: [ducpy.classes.ElementsClass.ElementBackground](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.ElementBackground) | None*
 
 #### current_item_opacity *: float | None*
 
@@ -232,13 +226,13 @@
 
 #### current_item_font_size *: float | None*
 
-#### current_item_text_align *: [ducpy.enums.TEXT_ALIGN](../../enums/index.md#ducpy.enums.TEXT_ALIGN) | None*
+#### current_item_text_align *: [ducpy.enums.TEXT_ALIGN](../../enums/index.html.md#ducpy.enums.TEXT_ALIGN) | None*
 
 #### current_item_roundness *: float | None*
 
-#### current_item_start_line_head *: [ducpy.classes.ElementsClass.DucHead](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucHead) | None*
+#### current_item_start_line_head *: [ducpy.classes.ElementsClass.DucHead](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.DucHead) | None*
 
-#### current_item_end_line_head *: [ducpy.classes.ElementsClass.DucHead](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucHead) | None*
+#### current_item_end_line_head *: [ducpy.classes.ElementsClass.DucHead](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.DucHead) | None*
 
 #### manual_save_mode *: bool | None* *= None*
 
@@ -348,6 +342,35 @@ Bases: [`VersionBase`](#ducpy.classes.DataStateClass.VersionBase)
 
 #### angular *: int* *= 2*
 
+### *class* ducpy.classes.DataStateClass.ExternalFileLocatorKind
+
+Bases: `str`, `enum.Enum`
+
+str(object=’’) -> str
+str(bytes_or_buffer[, encoding[, errors]]) -> str
+
+Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object._\_str_\_() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to ‘strict’.
+
+Initialize self.  See help(type(self)) for accurate signature.
+
+#### RELATIVE *= 'relative'*
+
+#### ABSOLUTE *= 'absolute'*
+
+### *class* ducpy.classes.DataStateClass.ExternalFileLocator
+
+#### kind *: [ExternalFileLocatorKind](#ducpy.classes.DataStateClass.ExternalFileLocatorKind)*
+
+#### path *: str*
+
+#### original_path *: str | None* *= None*
+
 ### *class* ducpy.classes.DataStateClass.ExternalFileRevision
 
 #### id *: str*
@@ -365,6 +388,8 @@ Bases: [`VersionBase`](#ducpy.classes.DataStateClass.VersionBase)
 #### message *: str | None* *= None*
 
 #### last_retrieved *: int | None* *= None*
+
+#### locator *: [ExternalFileLocator](#ducpy.classes.DataStateClass.ExternalFileLocator) | None* *= None*
 
 ### *class* ducpy.classes.DataStateClass.DucExternalFile
 
@@ -388,19 +413,19 @@ Bases: [`VersionBase`](#ducpy.classes.DataStateClass.VersionBase)
 
 #### thumbnail *: bytes*
 
-#### elements *: List[[ducpy.classes.ElementsClass.ElementWrapper](../ElementsClass/index.md#ducpy.classes.ElementsClass.ElementWrapper)]*
+#### elements *: List[[ducpy.classes.ElementsClass.ElementWrapper](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.ElementWrapper)]*
 
-#### blocks *: List[[ducpy.classes.ElementsClass.DucBlock](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucBlock)]*
+#### blocks *: List[[ducpy.classes.ElementsClass.DucBlock](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.DucBlock)]*
 
-#### block_instances *: List[[ducpy.classes.ElementsClass.DucBlockInstance](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucBlockInstance)]*
+#### block_instances *: List[[ducpy.classes.ElementsClass.DucBlockInstance](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.DucBlockInstance)]*
 
-#### block_collections *: List[[ducpy.classes.ElementsClass.DucBlockCollection](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucBlockCollection)]*
+#### block_collections *: List[[ducpy.classes.ElementsClass.DucBlockCollection](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.DucBlockCollection)]*
 
-#### groups *: List[[ducpy.classes.ElementsClass.DucGroup](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucGroup)]*
+#### groups *: List[[ducpy.classes.ElementsClass.DucGroup](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.DucGroup)]*
 
-#### regions *: List[[ducpy.classes.ElementsClass.DucRegion](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucRegion)]*
+#### regions *: List[[ducpy.classes.ElementsClass.DucRegion](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.DucRegion)]*
 
-#### layers *: List[[ducpy.classes.ElementsClass.DucLayer](../ElementsClass/index.md#ducpy.classes.ElementsClass.DucLayer)]*
+#### layers *: List[[ducpy.classes.ElementsClass.DucLayer](../ElementsClass/index.html.md#ducpy.classes.ElementsClass.DucLayer)]*
 
 #### dictionary *: Dict[str, str]*
 

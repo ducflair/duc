@@ -93,43 +93,46 @@
 
 ## Pages
 
-- [ducpy](index.html.md): **Builders API (High-level)**
-- [API Reference](autoapi/index.html.md): This page contains auto-generated API reference documentation <sup>[1](#f1)</sup>.
+- [ducpy](index.html.md): &#42;&#42;Builders API (High-level)&#42;&#42;
+- [API Reference](autoapi/index.html.md): This page contains auto-generated API reference documentation &lt;sup&gt;1&lt;/sup&gt;.
 - [ducpy](autoapi/ducpy/index.html.md): Python library for the .duc project-state format for physical-engineering work before execution.
-- [ducpy.classes](autoapi/ducpy/classes/index.html.md): * [ducpy.classes.DataStateClass](DataStateClass/index.md)
-- [ducpy.enums](autoapi/ducpy/enums/index.html.md): Native enum definitions for DUC types.
-- [ducpy.utils](autoapi/ducpy/utils/index.html.md): * [ducpy.utils.constants](constants/index.md)
 - [ducpy.builders](autoapi/ducpy/builders/index.html.md): User-friendly helper functions for creating DUC elements without verbose dataclass construction.
-- [ducpy.search](autoapi/ducpy/search/index.html.md): Search helpers for DUC SQLite databases.
-- [ducpy.parse](autoapi/ducpy/parse/index.html.md): Parse .duc files using the Rust native extension (ducpy_native).
-- [ducpy.serialize](autoapi/ducpy/serialize/index.html.md): Serialize DUC data using the Rust native extension (ducpy_native).
-- [ducpy.classes.DataStateClass](autoapi/ducpy/classes/DataStateClass/index.html.md): | [`DucIssueAnchor`](#ducpy.classes.DataStateClass.DucIssueAnchor)   |    |
-- [ducpy.classes.ElementsClass](autoapi/ducpy/classes/ElementsClass/index.html.md): | [`DucElement`](#ducpy.classes.ElementsClass.DucElement)   |    |
-- [ducpy.utils.io](autoapi/ducpy/utils/io/index.html.md): This module provides high-level functions for reading and writing DUC files.
-- [ducpy.utils.convert](autoapi/ducpy/utils/convert/index.html.md): Utilities for converting between Python snake_case and Rust/JSON camelCase naming,
-- [ducpy.utils.mutate_utils](autoapi/ducpy/utils/mutate_utils/index.html.md): Utility function for recursively mutating dataclass objects.
-- [ducpy.utils.constants](autoapi/ducpy/utils/constants/index.html.md): Utility constants for DucPy package.
-- [ducpy.utils.rand_utils](autoapi/ducpy/utils/rand_utils/index.html.md): | [`generate_random_id`](#ducpy.utils.rand_utils.generate_random_id)([length])   | Generate a random...
-- [ducpy.builders.state_builders](autoapi/ducpy/builders/state_builders/index.html.md): Helper functions for creating DUC state-related objects with a user-friendly API.
-- [ducpy.builders.block_utils](autoapi/ducpy/builders/block_utils/index.html.md): | [`_get_base`](#ducpy.builders.block_utils._get_base)(element)             |                       ...
-- [ducpy.builders.sql_builder](autoapi/ducpy/builders/sql_builder/index.html.md): Thin wrapper to open .duc files as SQLite databases and run raw SQL.
-- [ducpy.builders.block_instance_builder](autoapi/ducpy/builders/block_instance_builder/index.html.md): | [`BlockInstanceBuilder`](#ducpy.builders.block_instance_builder.BlockInstanceBuilder)   |    |
-- [ducpy.builders.mutate_builder](autoapi/ducpy/builders/mutate_builder/index.html.md): | [`mutate_element`](#ducpy.builders.mutate_builder.mutate_element)(el, \*\*kwargs)                 ...
+- [ducpy.builders.block_instance_builder](autoapi/ducpy/builders/block_instance_builder/index.html.md): | &#96;BlockInstanceBuilder&#96;   |    |
+- [ducpy.builders.block_utils](autoapi/ducpy/builders/block_utils/index.html.md): | &#96;&#95;get_base&#96;(element)     |                                                        |
 - [ducpy.builders.element_builders](autoapi/ducpy/builders/element_builders/index.html.md): Helper functions for creating DUC elements with a user-friendly API.
+- [ducpy.builders.mutate_builder](autoapi/ducpy/builders/mutate_builder/index.html.md): | &#96;mutate_element&#96;(el, &#92;&#42;&#92;&#42;kwargs)               | Mutate any property of an element (ElementWrapper...
+- [ducpy.builders.sql_builder](autoapi/ducpy/builders/sql_builder/index.html.md): Thin wrapper to open .duc files as SQLite databases and run raw SQL.
+- [ducpy.builders.state_builders](autoapi/ducpy/builders/state_builders/index.html.md): Helper functions for creating DUC state-related objects with a user-friendly API.
 - [ducpy.builders.style_builders](autoapi/ducpy/builders/style_builders/index.html.md): Helper functions for creating element styles with a user-friendly API.
-- [ducpy.search.search_ifc](autoapi/ducpy/search/search_ifc/index.html.md): IFC text extraction for model-element search (the IfcOpenShell engine).
+- [ducpy.classes](autoapi/ducpy/classes/index.html.md): &#42; ducpy.classes.DataStateClass
+- [ducpy.classes.DataStateClass](autoapi/ducpy/classes/DataStateClass/index.html.md): | &#96;DucIssueAnchor&#96;   |    |
+- [ducpy.classes.ElementsClass](autoapi/ducpy/classes/ElementsClass/index.html.md): | &#96;DucElement&#96;   |    |
+- [ducpy.classes.locator](autoapi/ducpy/classes/locator/index.html.md): | &#96;ExternalFileResolutionStatus&#96;   | str(object='') -&gt; str   |
+- [ducpy.enums](autoapi/ducpy/enums/index.html.md): Native enum definitions for DUC types.
+- [ducpy.model_output](autoapi/ducpy/model_output/index.html.md): Typed model artifacts shared by desktop and cloud Python workers.
+- [ducpy.parse](autoapi/ducpy/parse/index.html.md): Parse .duc files using the Rust native extension (ducpy_native).
+- [ducpy.search](autoapi/ducpy/search/index.html.md): Search helpers for DUC SQLite databases.
+- [ducpy.search.&#95;model_files](autoapi/ducpy/search/_model_files/index.html.md): Internal helpers for reading model-linked external files from DUC data.
 - [ducpy.search.image_ocr](autoapi/ducpy/search/image_ocr/index.html.md): Server-side image OCR helpers for DUC search.
-- [ducpy.search.search_external_files](autoapi/ducpy/search/search_external_files/index.html.md): Scoped external-file search helpers.
-- [ducpy.search.search_pdf](autoapi/ducpy/search/search_pdf/index.html.md): PDF text extraction for search.
 - [ducpy.search.search_build123d](autoapi/ducpy/search/search_build123d/index.html.md): Semantic text extraction for build123d model elements.
-- [ducpy.search._model_files](autoapi/ducpy/search/_model_files/index.html.md): Internal helpers for reading model-linked external files from DUC data.
-- [ducpy.search.search_elements](autoapi/ducpy/search/search_elements/index.html.md): Element search helpers for `.duc` SQLite databases.
 - [ducpy.search.search_charter_issues](autoapi/ducpy/search/search_charter_issues/index.html.md): Search user-authored project Charter and Issue content in DUC files.
-- [ducpy.search.search_ezdxf](autoapi/ducpy/search/search_ezdxf/index.html.md): DXF text extraction for model-element search (the `ezdxf` engine).
+- [ducpy.search.search_elements](autoapi/ducpy/search/search_elements/index.html.md): Element search helpers for &#96;.duc&#96; SQLite databases.
+- [ducpy.search.search_external_files](autoapi/ducpy/search/search_external_files/index.html.md): Scoped external-file search helpers.
+- [ducpy.search.search_ezdxf](autoapi/ducpy/search/search_ezdxf/index.html.md): DXF text extraction for model-element search (the &#96;ezdxf&#96; engine).
+- [ducpy.search.search_ifc](autoapi/ducpy/search/search_ifc/index.html.md): IFC text extraction for model-element search (the IfcOpenShell engine).
 - [ducpy.search.search_models](autoapi/ducpy/search/search_models/index.html.md): Scoped model-element search helpers.
-- [Downloads & Installation](downloads.html.md): The recommended way to install ducpy:
-- [Examples](examples.html.md): The source for all examples lives in `packages/ducpy/src/examples/`.
-
----
-
-For more comprehensive documentation, see [llms-full.txt](llms-full.txt)
+- [ducpy.search.search_pdf](autoapi/ducpy/search/search_pdf/index.html.md): PDF text extraction for search.
+- [ducpy.serialize](autoapi/ducpy/serialize/index.html.md): Serialize DUC data using the Rust native extension (ducpy_native).
+- [ducpy.tessellate](autoapi/ducpy/tessellate/index.html.md): CAD and BIM model tessellation subpackage for ducpy.
+- [ducpy.tessellate.&#95;&#92;&#95;main&#95;&#92;&#95;](autoapi/ducpy/tessellate/__main__/index.html.md): Module entry point for python -m ducpy.tessellate.
+- [ducpy.tessellate.cli](autoapi/ducpy/tessellate/cli/index.html.md): CLI entry point for ducpy CAD and BIM tessellation sidecar.
+- [ducpy.tessellate.runner](autoapi/ducpy/tessellate/runner/index.html.md): CAD and BIM model tessellation execution engine for ducpy.
+- [ducpy.tessellate.shims](autoapi/ducpy/tessellate/shims/index.html.md): CAD and BIM tessellation and capture shims for ducpy.
+- [ducpy.utils](autoapi/ducpy/utils/index.html.md): &#42; ducpy.utils.constants
+- [ducpy.utils.constants](autoapi/ducpy/utils/constants/index.html.md): Utility constants for DucPy package.
+- [ducpy.utils.convert](autoapi/ducpy/utils/convert/index.html.md): Utilities for converting between Python snake_case and Rust/JSON camelCase naming,
+- [ducpy.utils.io](autoapi/ducpy/utils/io/index.html.md): This module provides high-level functions for reading and writing DUC files.
+- [ducpy.utils.mutate_utils](autoapi/ducpy/utils/mutate_utils/index.html.md): Utility function for recursively mutating dataclass objects.
+- [ducpy.utils.rand_utils](autoapi/ducpy/utils/rand_utils/index.html.md): | &#96;generate_random_id&#96;(&#91;length&#93;)   | Generate a random string ID.                        |
+- [Examples](examples.html.md): The source for all examples lives in &#96;packages/ducpy/src/examples/&#96;.
+- [Downloads &amp; Installation](downloads.html.md): The recommended way to install ducpy:

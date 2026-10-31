@@ -69,7 +69,7 @@ Module Contents
 
 
    .. py:attribute:: items
-      :type:  tuple[Build123dTextItem, Ellipsis]
+      :type:  tuple[Build123dTextItem, ...]
       :value: ()
 
 

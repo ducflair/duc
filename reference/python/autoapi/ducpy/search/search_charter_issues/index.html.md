@@ -5,21 +5,21 @@ Search user-authored project Charter and Issue content in DUC files.
 ## Attributes
 
 | [`DucCharterIssueSearchResult`](#ducpy.search.search_charter_issues.DucCharterIssueSearchResult)   |    |
-|----------------------------------------------------------------------------------------------------|----|
+|--------------------------------------------------------------------------------|----|
 
 ## Classes
 
-| [`DucCharterSearchResult`](#ducpy.search.search_charter_issues.DucCharterSearchResult)               | One matching Charter section or record.                             |
-|------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-| [`DucIssueSearchResult`](#ducpy.search.search_charter_issues.DucIssueSearchResult)                   | One matching issue, aggregating matches from its discussion thread. |
+| [`DucCharterSearchResult`](#ducpy.search.search_charter_issues.DucCharterSearchResult)        | One matching Charter section or record.                             |
+|--------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| [`DucIssueSearchResult`](#ducpy.search.search_charter_issues.DucIssueSearchResult)          | One matching issue, aggregating matches from its discussion thread. |
 | [`DucCharterIssueSearchResponse`](#ducpy.search.search_charter_issues.DucCharterIssueSearchResponse) | Combined Charter and Issue search response.                         |
 
 ## Functions
 
 | [`search_duc_charter`](#ducpy.search.search_charter_issues.search_duc_charter)(→ DucCharterIssueSearchResponse)   | Search user-authored fields in the project Charter.                   |
-|-------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| [`search_duc_issues`](#ducpy.search.search_charter_issues.search_duc_issues)(→ DucCharterIssueSearchResponse)     | Search issue titles, discussions, people, and exact reference fields. |
-| [`search_duc_charter_and_issues`](#ducpy.search.search_charter_issues.search_duc_charter_and_issues)(...)         | Search the project Charter and Issues in one ranked response.         |
+|--------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| [`search_duc_issues`](#ducpy.search.search_charter_issues.search_duc_issues)(→ DucCharterIssueSearchResponse)    | Search issue titles, discussions, people, and exact reference fields. |
+| [`search_duc_charter_and_issues`](#ducpy.search.search_charter_issues.search_duc_charter_and_issues)(...)                    | Search the project Charter and Issues in one ranked response.         |
 
 ## Module Contents
 
@@ -71,7 +71,7 @@ Combined Charter and Issue search response.
 
 #### query *: str*
 
-#### results *: list[DucCharterIssueSearchResult]*
+#### results *: list[[DucCharterIssueSearchResult](#ducpy.search.search_charter_issues.DucCharterIssueSearchResult)]*
 
 #### total_hits *: int*
 

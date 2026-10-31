@@ -33,5 +33,5 @@ Module Contents
 
 .. py:function:: _compress_whitespace(value: str | None) -> str
 
-.. py:function:: extract_pdf_text_for_search(pdf_bytes: bytes, *, ocr_language: str) -> tuple[str, tuple[tuple[int, int, int], Ellipsis], bool]
+.. py:function:: extract_pdf_text_for_search(pdf_bytes: bytes, *, ocr_language: str) -> tuple[str, tuple[tuple[int, int, int], ...], bool]
 

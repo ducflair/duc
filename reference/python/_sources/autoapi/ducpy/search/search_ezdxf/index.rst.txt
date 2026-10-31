@@ -118,7 +118,7 @@ Module Contents
 
 
    .. py:attribute:: items
-      :type:  tuple[DxfTextItem, Ellipsis]
+      :type:  tuple[DxfTextItem, ...]
       :value: ()
 
 

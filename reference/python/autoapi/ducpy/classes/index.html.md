@@ -2,5 +2,6 @@
 
 ## Submodules
 
-* [ducpy.classes.DataStateClass](DataStateClass/index.md)
-* [ducpy.classes.ElementsClass](ElementsClass/index.md)
+* [ducpy.classes.DataStateClass](DataStateClass/index.html.md)
+* [ducpy.classes.ElementsClass](ElementsClass/index.html.md)
+* [ducpy.classes.locator](locator/index.html.md)

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DUC SQL Schema Reference (v4.0.0)</title>
+<title>DUC SQL Schema Reference (v4.0.1)</title>
 <style>
 :root { color-scheme: light dark; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -111,9 +111,9 @@ mermaid.initialize({ startOnLoad: true });
 </script>
 </head>
 <body>
-<div style="background:#1e1e2e;color:#cdd6f4;padding:8px 16px;font-family:sans-serif;font-size:14px;border-bottom:1px solid #313244;">DUC SQL Schema Reference &mdash; <strong>Version 4.0.0</strong></div>
+<div style="background:#1e1e2e;color:#cdd6f4;padding:8px 16px;font-family:sans-serif;font-size:14px;border-bottom:1px solid #313244;">DUC SQL Schema Reference &mdash; <strong>Version 4.0.1</strong></div>
 <h1>@duc_schema</h1>
-<p class="sq-gen"><code><a href="https://sq.io/docs/inspect">sq inspect</a></code> @ <code>2026-09-27T14:30:46Z</code></p>
+<p class="sq-gen"><code><a href="https://sq.io/docs/inspect">sq inspect</a></code> @ <code>2026-10-31T15:44:16Z</code></p>
 <table>
 <thead>
 <tr><th>Property</th><th>Value</th></tr>
@@ -128,7 +128,7 @@ mermaid.initialize({ startOnLoad: true });
 <tr><td>Schema</td><td><code>main</code></td></tr>
 <tr><td>Catalog</td><td><code>default</code></td></tr>
 <tr><td>Size</td><td><code>712.0KB</code></td></tr>
-<tr><td>Tables</td><td><code>93</code></td></tr>
+<tr><td>Tables</td><td><code>94</code></td></tr>
 <tr><td>Views</td><td><code>0</code></td></tr>
 <tr><td>Location</td><td><code>sqlite3:///home/runner/work/duc/duc/target/duc_schema.sqlite</code></td></tr>
 </tbody>
@@ -319,15 +319,12 @@ erDiagram
     duc_global_state {
         int id PK
         text view_background_color
-        text main_scope
-        int scope_exponent_threshold
     }
     duc_issue_anchors {
         text issue_id PK,FK
         text anchor_type
         float canvas_x
         float canvas_y
-        text canvas_scope
         text element_id
         float anchor_x
         float anchor_y
@@ -382,7 +379,6 @@ erDiagram
     }
     duc_local_state {
         int id PK
-        text scope
         float scroll_x
         float scroll_y
         float zoom
@@ -570,7 +566,6 @@ erDiagram
         float width
         float height
         float angle
-        text scope
         text label
         text description
         int is_visible
@@ -591,6 +586,10 @@ erDiagram
         text link
         int locked
         unknown custom_data
+    }
+    external_file_locators {
+        text revision_id PK,FK
+        text locator
     }
     external_file_revision_chunks {
         text revision_id PK,FK
@@ -990,6 +989,7 @@ erDiagram
     elements |o--|| element_text : &#34;&#34;
     block_instances |o--o{ elements : &#34;&#34;
     layers |o--o{ elements : &#34;&#34;
+    external_file_revisions ||--|| external_file_locators : &#34;&#34;
     external_file_revisions ||--o{ external_file_revision_chunks : &#34;&#34;
     external_files ||--o{ external_file_revisions : &#34;&#34;
     elements ||--o{ freedraw_element_points : &#34;&#34;
@@ -1054,6 +1054,7 @@ erDiagram
 <a href="#element_table"><code>element_table</code></a>
 <a href="#element_text"><code>element_text</code></a>
 <a href="#elements"><code>elements</code></a>
+<a href="#external_file_locators"><code>external_file_locators</code></a>
 <a href="#external_file_revision_chunks"><code>external_file_revision_chunks</code></a>
 <a href="#external_file_revisions"><code>external_file_revisions</code></a>
 <a href="#external_file_text_index"><code>external_file_text_index</code></a>
@@ -2198,20 +2199,16 @@ erDiagram
     duc_global_state {
         int id PK
         text view_background_color
-        text main_scope
-        int scope_exponent_threshold
     }
 </pre>
 <table>
 <caption id="duc_global_state-columns"><a class="sq-anchor" href="#duc_global_state-columns">Columns</a></caption>
 <thead>
-<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Default</th></tr>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th></tr>
 </thead>
 <tbody>
-<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>view_background_color</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>main_scope</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
-<tr><td><code>scope_exponent_threshold</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>3</code></td></tr>
+<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td><code>view_background_color</code></td><td><code>TEXT</code></td><td></td><td></td><td></td></tr>
 </tbody>
 </table>
 <table>
@@ -2233,7 +2230,6 @@ erDiagram
         text anchor_type
         float canvas_x
         float canvas_y
-        text canvas_scope
         text element_id
         float anchor_x
         float anchor_y
@@ -2257,7 +2253,6 @@ erDiagram
 <tr><td><code>anchor_type</code></td><td><code>TEXT</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>canvas_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td></tr>
 <tr><td><code>canvas_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>canvas_scope</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td></tr>
 <tr><td><code>element_id</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td></tr>
 <tr><td><code>anchor_x</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td></tr>
 <tr><td><code>anchor_y</code></td><td><code>REAL</code></td><td>✓</td><td></td><td></td></tr>
@@ -2575,7 +2570,6 @@ erDiagram
 erDiagram
     duc_local_state {
         int id PK
-        text scope
         float scroll_x
         float scroll_y
         float zoom
@@ -2607,7 +2601,6 @@ erDiagram
 </thead>
 <tbody>
 <tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td></td></tr>
-<tr><td><code>scope</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td><code>&#39;mm&#39;</code></td></tr>
 <tr><td><code>scroll_x</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
 <tr><td><code>scroll_y</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
 <tr><td><code>zoom</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>1.0</code></td></tr>
@@ -3613,7 +3606,6 @@ erDiagram
         float width
         float height
         float angle
-        text scope
         text label
         text description
         int is_visible
@@ -3670,7 +3662,6 @@ erDiagram
 <tr><td><code>width</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
 <tr><td><code>height</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
 <tr><td><code>angle</code></td><td><code>REAL</code></td><td></td><td></td><td></td><td><code>0.0</code></td></tr>
-<tr><td><code>scope</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td><code>&#39;mm&#39;</code></td></tr>
 <tr><td><code>label</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td><code>&#39;&#39;</code></td></tr>
 <tr><td><code>description</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td><code>is_visible</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>1</code></td></tr>
@@ -3733,7 +3724,6 @@ erDiagram
 <tr><td><code>idx_elements_instance</code></td><td><code>instance_id</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>idx_elements_label</code></td><td><code>label</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>idx_elements_layer</code></td><td><code>layer_id</code></td><td></td><td></td><td></td></tr>
-<tr><td><code>idx_elements_scope</code></td><td><code>scope</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>idx_elements_spatial</code></td><td><code>x, y, width, height</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>idx_elements_type</code></td><td><code>element_type</code></td><td></td><td></td><td></td></tr>
 <tr><td><code>idx_elements_updated</code></td><td><code>updated</code></td><td></td><td></td><td></td></tr>
@@ -3766,6 +3756,54 @@ END</code></td></tr>
     INSERT INTO search_elements(rowid, label, description)
     VALUES (NEW.rowid, NEW.label, NEW.description);
 END</code></td></tr>
+</tbody>
+</table>
+<h3 id="external_file_locators" class="sq-table"><a class="sq-anchor" href="#external_file_locators"><code>external_file_locators</code></a></h3>
+<p class="summary">table · 0 rows</p>
+<h4 id="external_file_locators-erd"><a class="sq-anchor" href="#external_file_locators-erd">Entity Relationship Diagram</a></h4>
+<pre class="mermaid">
+erDiagram
+    external_file_locators {
+        text revision_id PK,FK
+        text locator
+    }
+    external_file_revisions ||--|| external_file_locators : &#34;&#34;
+</pre>
+<table>
+<caption id="external_file_locators-columns"><a class="sq-anchor" href="#external_file_locators-columns">Columns</a></caption>
+<thead>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th></tr>
+</thead>
+<tbody>
+<tr><td><code>revision_id</code></td><td><code>TEXT</code></td><td></td><td>✓</td><td>✓</td></tr>
+<tr><td><code>locator</code></td><td><code>TEXT</code></td><td></td><td></td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="external_file_locators-foreign-keys"><a class="sq-anchor" href="#external_file_locators-foreign-keys">Foreign keys</a></caption>
+<thead>
+<tr><th>Relationship <span class="fk-legend">(<span class="fk-out">→</span> references · <span class="fk-in">←</span> referenced by)</span></th><th>Constraint</th><th>On update</th><th>On delete</th></tr>
+</thead>
+<tbody>
+<tr><td><code>revision_id</code> <span class="fk-out">→</span> <code>external_file_revisions.id</code></td><td></td><td></td><td>cascade</td></tr>
+</tbody>
+</table>
+<table>
+<caption id="external_file_locators-indexes"><a class="sq-anchor" href="#external_file_locators-indexes">Indexes</a></caption>
+<thead>
+<tr><th>Index</th><th>Columns</th><th>Unique</th><th>Primary</th><th>Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>sqlite_autoindex_external_file_locators_1</code></td><td><code>revision_id</code></td><td>✓</td><td>✓</td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="external_file_locators-check-constraints"><a class="sq-anchor" href="#external_file_locators-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>json_valid(locator)</td></tr>
 </tbody>
 </table>
 <h3 id="external_file_revision_chunks" class="sq-table"><a class="sq-anchor" href="#external_file_revision_chunks"><code>external_file_revision_chunks</code></a></h3>
@@ -3841,6 +3879,7 @@ erDiagram
         int created
         int last_retrieved
     }
+    external_file_revisions ||--|| external_file_locators : &#34;&#34;
     external_file_revisions ||--o{ external_file_revision_chunks : &#34;&#34;
     external_files ||--o{ external_file_revisions : &#34;&#34;
 </pre>
@@ -3868,6 +3907,7 @@ erDiagram
 </thead>
 <tbody>
 <tr><td><code>file_id</code> <span class="fk-out">→</span> <code>external_files.id</code></td><td></td><td></td><td>cascade</td></tr>
+<tr><td><code>id</code> <span class="fk-in">←</span> <code>external_file_locators.revision_id</code></td><td></td><td></td><td>cascade</td></tr>
 <tr><td><code>id</code> <span class="fk-in">←</span> <code>external_file_revision_chunks.revision_id</code></td><td></td><td></td><td>cascade</td></tr>
 </tbody>
 </table>

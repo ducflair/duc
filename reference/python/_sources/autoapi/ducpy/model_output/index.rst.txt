@@ -1,0 +1,71 @@
+ducpy.model_output
+==================
+
+.. py:module:: ducpy.model_output
+
+.. autoapi-nested-parse::
+
+   Typed model artifacts shared by desktop and cloud Python workers.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   ducpy.model_output.KINDS
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   ducpy.model_output.ModelOutputCollector
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.model_output._shims
+
+
+Module Contents
+---------------
+
+.. py:data:: KINDS
+
+.. py:function:: _shims()
+
+.. py:class:: ModelOutputCollector(payload: dict, mounted_files: dict, workspace: pathlib.Path, limit: int, preview_limit: int | None = None)
+
+   .. py:attribute:: payload
+
+
+   .. py:attribute:: files
+
+
+   .. py:attribute:: workspace
+
+
+   .. py:attribute:: limit
+
+
+   .. py:attribute:: preview_limit
+
+
+   .. py:attribute:: declaration
+      :type:  dict | None
+      :value: None
+
+
+
+   .. py:method:: emit_output(value: Any = None, *, kind: str, data: Any = None, path: str | None = None, mime_type: str | None = None, filename: str | None = None) -> None
+
+
+   .. py:method:: collect(events: list[dict], globals_dict: dict, output_path: pathlib.Path, legacy_kind: str, now: str) -> dict | None
+
+

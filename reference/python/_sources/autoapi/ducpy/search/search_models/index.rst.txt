@@ -118,7 +118,7 @@ Module Contents
 
 
    .. py:attribute:: file_ids
-      :type:  tuple[str, Ellipsis]
+      :type:  tuple[str, ...]
 
 
 .. py:function:: extract_python_imports(code: str | None) -> set[str]

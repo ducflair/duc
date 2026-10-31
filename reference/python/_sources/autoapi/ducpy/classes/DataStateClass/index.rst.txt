@@ -39,6 +39,8 @@ Classes
    ducpy.classes.DataStateClass.VersionGraphMetadata
    ducpy.classes.DataStateClass.VersionGraph
    ducpy.classes.DataStateClass.DisplayPrecision
+   ducpy.classes.DataStateClass.ExternalFileLocatorKind
+   ducpy.classes.DataStateClass.ExternalFileLocator
    ducpy.classes.DataStateClass.ExternalFileRevision
    ducpy.classes.DataStateClass.DucExternalFile
    ducpy.classes.DataStateClass.ExportedDataState
@@ -241,12 +243,6 @@ Module Contents
       :type:  float
 
 
-   .. py:attribute:: scope
-      :type:  Optional[str]
-      :value: None
-
-
-
    .. py:attribute:: type
       :type:  str
       :value: 'canvas'
@@ -389,19 +385,7 @@ Module Contents
       :type:  str
 
 
-   .. py:attribute:: main_scope
-      :type:  str
-
-
-   .. py:attribute:: scope_exponent_threshold
-      :type:  int
-
-
 .. py:class:: DucLocalState
-
-   .. py:attribute:: scope
-      :type:  str
-
 
    .. py:attribute:: scroll_x
       :type:  float
@@ -715,6 +699,51 @@ Module Contents
 
 
 
+.. py:class:: ExternalFileLocatorKind
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   str(object='') -> str
+   str(bytes_or_buffer[, encoding[, errors]]) -> str
+
+   Create a new string object from the given object. If encoding or
+   errors is specified, then the object must expose a data buffer
+   that will be decoded using the given encoding and error handler.
+   Otherwise, returns the result of object.__str__() (if defined)
+   or repr(object).
+   encoding defaults to sys.getdefaultencoding().
+   errors defaults to 'strict'.
+
+   Initialize self.  See help(type(self)) for accurate signature.
+
+
+   .. py:attribute:: RELATIVE
+      :value: 'relative'
+
+
+
+   .. py:attribute:: ABSOLUTE
+      :value: 'absolute'
+
+
+
+.. py:class:: ExternalFileLocator
+
+   .. py:attribute:: kind
+      :type:  ExternalFileLocatorKind
+
+
+   .. py:attribute:: path
+      :type:  str
+
+
+   .. py:attribute:: original_path
+      :type:  Optional[str]
+      :value: None
+
+
+
 .. py:class:: ExternalFileRevision
 
    .. py:attribute:: id
@@ -753,6 +782,12 @@ Module Contents
 
    .. py:attribute:: last_retrieved
       :type:  Optional[int]
+      :value: None
+
+
+
+   .. py:attribute:: locator
+      :type:  Optional[ExternalFileLocator]
       :value: None
 
 

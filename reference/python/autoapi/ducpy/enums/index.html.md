@@ -5,22 +5,22 @@ Source of truth: types.rs / duc.sql
 
 ## Classes
 
-| [`VERTICAL_ALIGN`](#ducpy.enums.VERTICAL_ALIGN)                         | Enum where members are also (and must be) ints   |
-|-------------------------------------------------------------------------|--------------------------------------------------|
-| [`TEXT_ALIGN`](#ducpy.enums.TEXT_ALIGN)                                 | Enum where members are also (and must be) ints   |
-| [`LINE_SPACING_TYPE`](#ducpy.enums.LINE_SPACING_TYPE)                   | Enum where members are also (and must be) ints   |
-| [`STROKE_PLACEMENT`](#ducpy.enums.STROKE_PLACEMENT)                     | Enum where members are also (and must be) ints   |
-| [`STROKE_PREFERENCE`](#ducpy.enums.STROKE_PREFERENCE)                   | Enum where members are also (and must be) ints   |
-| [`STROKE_SIDE_PREFERENCE`](#ducpy.enums.STROKE_SIDE_PREFERENCE)         | Enum where members are also (and must be) ints   |
-| [`STROKE_CAP`](#ducpy.enums.STROKE_CAP)                                 | Enum where members are also (and must be) ints   |
-| [`STROKE_JOIN`](#ducpy.enums.STROKE_JOIN)                               | Enum where members are also (and must be) ints   |
-| [`LINE_HEAD`](#ducpy.enums.LINE_HEAD)                                   | Enum where members are also (and must be) ints   |
-| [`BEZIER_MIRRORING`](#ducpy.enums.BEZIER_MIRRORING)                     | Enum where members are also (and must be) ints   |
-| [`BLENDING`](#ducpy.enums.BLENDING)                                     | Enum where members are also (and must be) ints   |
+| [`VERTICAL_ALIGN`](#ducpy.enums.VERTICAL_ALIGN)             | Enum where members are also (and must be) ints   |
+|-----------------------------------------------------------------------------|--------------------------------------------------|
+| [`TEXT_ALIGN`](#ducpy.enums.TEXT_ALIGN)                 | Enum where members are also (and must be) ints   |
+| [`LINE_SPACING_TYPE`](#ducpy.enums.LINE_SPACING_TYPE)          | Enum where members are also (and must be) ints   |
+| [`STROKE_PLACEMENT`](#ducpy.enums.STROKE_PLACEMENT)           | Enum where members are also (and must be) ints   |
+| [`STROKE_PREFERENCE`](#ducpy.enums.STROKE_PREFERENCE)          | Enum where members are also (and must be) ints   |
+| [`STROKE_SIDE_PREFERENCE`](#ducpy.enums.STROKE_SIDE_PREFERENCE)     | Enum where members are also (and must be) ints   |
+| [`STROKE_CAP`](#ducpy.enums.STROKE_CAP)                 | Enum where members are also (and must be) ints   |
+| [`STROKE_JOIN`](#ducpy.enums.STROKE_JOIN)                | Enum where members are also (and must be) ints   |
+| [`LINE_HEAD`](#ducpy.enums.LINE_HEAD)                  | Enum where members are also (and must be) ints   |
+| [`BEZIER_MIRRORING`](#ducpy.enums.BEZIER_MIRRORING)           | Enum where members are also (and must be) ints   |
+| [`BLENDING`](#ducpy.enums.BLENDING)                   | Enum where members are also (and must be) ints   |
 | [`ELEMENT_CONTENT_PREFERENCE`](#ducpy.enums.ELEMENT_CONTENT_PREFERENCE) | Enum where members are also (and must be) ints   |
-| [`HATCH_STYLE`](#ducpy.enums.HATCH_STYLE)                               | Enum where members are also (and must be) ints   |
-| [`IMAGE_STATUS`](#ducpy.enums.IMAGE_STATUS)                             | Enum where members are also (and must be) ints   |
-| [`BOOLEAN_OPERATION`](#ducpy.enums.BOOLEAN_OPERATION)                   | Enum where members are also (and must be) ints   |
+| [`HATCH_STYLE`](#ducpy.enums.HATCH_STYLE)                | Enum where members are also (and must be) ints   |
+| [`IMAGE_STATUS`](#ducpy.enums.IMAGE_STATUS)               | Enum where members are also (and must be) ints   |
+| [`BOOLEAN_OPERATION`](#ducpy.enums.BOOLEAN_OPERATION)          | Enum where members are also (and must be) ints   |
 
 ## Module Contents
 

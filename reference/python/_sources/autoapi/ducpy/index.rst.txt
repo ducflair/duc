@@ -39,9 +39,11 @@ Submodules
    /autoapi/ducpy/builders/index
    /autoapi/ducpy/classes/index
    /autoapi/ducpy/enums/index
+   /autoapi/ducpy/model_output/index
    /autoapi/ducpy/parse/index
    /autoapi/ducpy/search/index
    /autoapi/ducpy/serialize/index
+   /autoapi/ducpy/tessellate/index
    /autoapi/ducpy/utils/index
 
 

@@ -1,0 +1,24 @@
+ducpy.tessellate.cli
+====================
+
+.. py:module:: ducpy.tessellate.cli
+
+.. autoapi-nested-parse::
+
+   CLI entry point for ducpy CAD and BIM tessellation sidecar.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   ducpy.tessellate.cli.main
+
+
+Module Contents
+---------------
+
+.. py:function:: main() -> int
+

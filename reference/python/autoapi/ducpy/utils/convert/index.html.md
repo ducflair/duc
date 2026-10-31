@@ -5,21 +5,22 @@ and for flattening/nesting element structures to match the Rust serde layout.
 
 ## Attributes
 
-| [`_CAMEL_RE1`](#ducpy.utils.convert._CAMEL_RE1)                               |    |
-|-------------------------------------------------------------------------------|----|
-| [`_CAMEL_RE2`](#ducpy.utils.convert._CAMEL_RE2)                               |    |
+| [`_CAMEL_RE1`](#ducpy.utils.convert._CAMEL_RE1)                |    |
+|----------------------------------------------------------------------------|----|
+| [`_CAMEL_RE2`](#ducpy.utils.convert._CAMEL_RE2)                |    |
 | [`_SNAKE_TO_CAMEL_OVERRIDES`](#ducpy.utils.convert._SNAKE_TO_CAMEL_OVERRIDES) |    |
-| [`_FLATTEN_KEYS`](#ducpy.utils.convert._FLATTEN_KEYS)                         |    |
+| [`_FLATTEN_KEYS`](#ducpy.utils.convert._FLATTEN_KEYS)             |    |
+| [`_IDENTITY_MAP_FIELDS`](#ducpy.utils.convert._IDENTITY_MAP_FIELDS)      |    |
 
 ## Functions
 
-| [`camel_to_snake`](#ducpy.utils.convert.camel_to_snake)(→ str)               |                                                                                  |
-|------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [`snake_to_camel`](#ducpy.utils.convert.snake_to_camel)(→ str)               |                                                                                  |
-| [`deep_camel_to_snake`](#ducpy.utils.convert.deep_camel_to_snake)(→ Any)     |                                                                                  |
-| [`deep_snake_to_camel`](#ducpy.utils.convert.deep_snake_to_camel)(→ Any)     |                                                                                  |
-| [`_flatten_dict`](#ducpy.utils.convert._flatten_dict)(→ dict)                | Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.        |
-| [`to_serializable`](#ducpy.utils.convert.to_serializable)(→ Any)             | Convert a value to a JSON-serializable form suitable for the Rust native module. |
+| [`camel_to_snake`](#ducpy.utils.convert.camel_to_snake)(→ str)        |                                                                                  |
+|-------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
+| [`snake_to_camel`](#ducpy.utils.convert.snake_to_camel)(→ str)        |                                                                                  |
+| [`deep_camel_to_snake`](#ducpy.utils.convert.deep_camel_to_snake)(→ Any)   |                                                                                  |
+| [`deep_snake_to_camel`](#ducpy.utils.convert.deep_snake_to_camel)(→ Any)   |                                                                                  |
+| [`_flatten_dict`](#ducpy.utils.convert._flatten_dict)(→ dict)        | Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.        |
+| [`to_serializable`](#ducpy.utils.convert.to_serializable)(→ Any)       | Convert a value to a JSON-serializable form suitable for the Rust native module. |
 | [`extract_embedded_code`](#ducpy.utils.convert.extract_embedded_code)(→ str) | Extracts the body of a Python function as a clean standalone script.             |
 
 ## Module Contents
@@ -36,16 +37,18 @@ and for flattening/nesting element structures to match the Rust serde layout.
 
 ### ducpy.utils.convert.\_FLATTEN_KEYS
 
+### ducpy.utils.convert.\_IDENTITY_MAP_FIELDS
+
 ### ducpy.utils.convert.deep_camel_to_snake(obj: Any) → Any
 
 ### ducpy.utils.convert.deep_snake_to_camel(obj: Any) → Any
 
-### ducpy.utils.convert.\_flatten_dict(d: dict) → dict
+### ducpy.utils.convert.\_flatten_dict(d: dict, , preserve_stack_base: bool = False) → dict
 
 Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.
 
-Walks the entire dict so that nested flatten keys (e.g. `stack_element_base`
--> `stack_base` -> `styles`) are all merged into the appropriate level.
+Stack elements keep their nested stack_base; layers, groups and regions
+flatten it. Styles are flattened in both representations.
 
 ### ducpy.utils.convert.to_serializable(obj: Any) → Any
 

@@ -1,0 +1,23 @@
+ducpy.tessellate
+================
+
+.. py:module:: ducpy.tessellate
+
+.. autoapi-nested-parse::
+
+   CAD and BIM model tessellation subpackage for ducpy.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /autoapi/ducpy/tessellate/__main__/index
+   /autoapi/ducpy/tessellate/cli/index
+   /autoapi/ducpy/tessellate/runner/index
+   /autoapi/ducpy/tessellate/shims/index
+
+

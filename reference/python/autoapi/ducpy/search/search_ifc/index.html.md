@@ -14,16 +14,16 @@ executed explicitly to capture IfcOpenShell files it opens or creates.
 ## Classes
 
 | [`IfcTextItem`](#ducpy.search.search_ifc.IfcTextItem)   | A searchable value read from a specific IFC entity attribute.     |
-|---------------------------------------------------------|-------------------------------------------------------------------|
-| [`IfcText`](#ducpy.search.search_ifc.IfcText)           | Result of extracting user-facing text from one or more IFC files. |
+|----------------------------------------------------------------|-------------------------------------------------------------------|
+| [`IfcText`](#ducpy.search.search_ifc.IfcText)       | Result of extracting user-facing text from one or more IFC files. |
 
 ## Functions
 
 | [`ifcopenshell_available`](#ducpy.search.search_ifc.ifcopenshell_available)(→ bool)    | Return whether IfcOpenShell can be imported.                            |
-|----------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| [`extract_ifc_file_text`](#ducpy.search.search_ifc.extract_ifc_file_text)(→ IfcText)   | Extract searchable values from a loaded IfcOpenShell file.              |
-| [`extract_ifc_text`](#ducpy.search.search_ifc.extract_ifc_text)(→ IfcText)             | Parse IFC STEP bytes and extract searchable values, or return empty.    |
-| [`extract_ifc_path_text`](#ducpy.search.search_ifc.extract_ifc_path_text)(→ IfcText)   | Open and extract an IFC file from disk without first reading its bytes. |
+|------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| [`extract_ifc_file_text`](#ducpy.search.search_ifc.extract_ifc_file_text)(→ IfcText)  | Extract searchable values from a loaded IfcOpenShell file.              |
+| [`extract_ifc_text`](#ducpy.search.search_ifc.extract_ifc_text)(→ IfcText)       | Parse IFC STEP bytes and extract searchable values, or return empty.    |
+| [`extract_ifc_path_text`](#ducpy.search.search_ifc.extract_ifc_path_text)(→ IfcText)  | Open and extract an IFC file from disk without first reading its bytes. |
 | [`extract_model_ifc_text`](#ducpy.search.search_ifc.extract_model_ifc_text)(→ IfcText) | Extract searchable values from a DUC IFC model element.                 |
 
 ## Module Contents
@@ -46,7 +46,7 @@ A searchable value read from a specific IFC entity attribute.
 
 Result of extracting user-facing text from one or more IFC files.
 
-#### items *: tuple[[IfcTextItem](#ducpy.search.search_ifc.IfcTextItem), Ellipsis]* *= ()*
+#### items *: tuple[[IfcTextItem](#ducpy.search.search_ifc.IfcTextItem), ...]* *= ()*
 
 #### *property* text *: str*
 

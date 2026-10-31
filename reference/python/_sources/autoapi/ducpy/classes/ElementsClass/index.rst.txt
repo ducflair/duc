@@ -684,10 +684,6 @@ Module Contents
       :type:  float
 
 
-   .. py:attribute:: scope
-      :type:  str
-
-
    .. py:attribute:: label
       :type:  str
 

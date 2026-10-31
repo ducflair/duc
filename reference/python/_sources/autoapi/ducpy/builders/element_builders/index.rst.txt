@@ -71,10 +71,6 @@ Module Contents
       :type:  float
 
 
-   .. py:attribute:: scope
-      :type:  str
-
-
    .. py:attribute:: angle
       :type:  float
       :value: 0.0
@@ -189,7 +185,7 @@ Module Contents
 
 
 
-.. py:class:: ElementBuilder(x: float = 0.0, y: float = 0.0, width: float = 1.0, height: float = 1.0, scope: str = DEFAULT_SCOPE)
+.. py:class:: ElementBuilder(x: float = 0.0, y: float = 0.0, width: float = 1.0, height: float = 1.0)
 
    .. py:attribute:: base
 
@@ -213,9 +209,6 @@ Module Contents
 
 
    .. py:method:: with_label(label: str)
-
-
-   .. py:method:: with_scope(scope: str)
 
 
    .. py:method:: with_locked(locked: bool)

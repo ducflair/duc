@@ -1,0 +1,11 @@
+ducpy.tessellate.__main__
+=========================
+
+.. py:module:: ducpy.tessellate.__main__
+
+.. autoapi-nested-parse::
+
+   Module entry point for python -m ducpy.tessellate.
+
+
+

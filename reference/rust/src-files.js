@@ -1,2 +1,2 @@
-createSrcSidebar('[["duc",["",[["api",[],["document.rs","meta.rs","mod.rs","version_control.rs"]],["db",[],["bootstrap.rs","mod.rs","native.rs"]]],["external_file_chunks.rs","lib.rs","parse.rs","serde_utils.rs","serialize.rs","session.rs","types.rs"]]]]');
-//{"start":19,"fragment_lengths":[233]}
+createSrcSidebar('[["duc",["",[["api",[],["document.rs","meta.rs","mod.rs","version_control.rs"]],["db",[],["bootstrap.rs","mod.rs","native.rs"]],["locator",[],["paths.rs"]]],["external_file_chunks.rs","external_file_locators.rs","lib.rs","locator.rs","parse.rs","serde_utils.rs","serialize.rs","session.rs","types.rs"]]]]');
+//{"start":19,"fragment_lengths":[302]}

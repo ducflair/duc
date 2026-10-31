@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_owning_duc_directory","normalize_host_path","normalize_path_segments","resolve_path"]};

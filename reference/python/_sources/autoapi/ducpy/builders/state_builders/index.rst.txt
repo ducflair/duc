@@ -177,21 +177,12 @@ Module Contents
    .. py:method:: with_view_background_color(color: str)
 
 
-   .. py:method:: with_main_scope(scope: str)
-
-
-   .. py:method:: with_scope_exponent_threshold(threshold: int)
-
-
    .. py:method:: build() -> ducpy.classes.DataStateClass.DucGlobalState
 
 
 .. py:class:: LocalStateBuilder(base: BaseStateParams, extra: dict)
 
    Bases: :py:obj:`StateSpecificBuilder`
-
-
-   .. py:method:: with_scope(scope: str)
 
 
    .. py:method:: with_scroll_x(scroll_x: float)
@@ -597,7 +588,7 @@ Module Contents
    .. py:method:: add_message(author_id: str, content: str, *, name: Optional[str] = None, reply_to_id: Optional[str] = None, reactions: Optional[Dict[str, List[str]]] = None, created_at: Optional[int] = None, edited_at: Optional[int] = None, deleted_at: Optional[int] = None)
 
 
-   .. py:method:: with_canvas_anchor(x: float, y: float, *, scope: Optional[str] = None)
+   .. py:method:: with_canvas_anchor(x: float, y: float)
 
 
    .. py:method:: with_element_anchor(element_id: str, *, anchor_x: Optional[float] = None, anchor_y: Optional[float] = None)
