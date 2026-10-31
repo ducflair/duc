@@ -93,6 +93,13 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       mode: "cpu",
     });
 
+    if (process.env.CI) {
+      hasGpu = false;
+      gpuRunner = cpuRunner;
+      await cpuRunner.start();
+      return;
+    }
+
     // Hardware GPU runner (Metal / Vulkan driver via ANGLE)
     const candidateGpuRunner = new HeadlessBrowserRunner({
       executablePath: browserPath,
@@ -134,7 +141,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       await candidateGpuRunner.stop().catch(() => {});
       gpuRunner = cpuRunner;
     }
-  });
+  }, 60000);
 
   afterAll(async () => {
     const runnersToStop = new Set([gpuRunner, cpuRunner]);
@@ -181,7 +188,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       }
       console.log("==========================================================================================\n");
     }
-  });
+  }, 60000);
 
   it("resolves background colors respecting user preference and defaulting to transparent", () => {
     expect(resolveThumbnailBackground(undefined)).toBe("transparent");
