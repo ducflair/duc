@@ -8,15 +8,18 @@ import ducpy as duc
 
 
 def _duc_fixture_paths(test_assets_dir: str) -> list[str]:
-    fixture_dir = os.path.join(test_assets_dir, "duc-files")
-    if not os.path.isdir(fixture_dir) or not os.listdir(fixture_dir):
-        from _dev.dev_utils import get_fixture_cache_dir
-        fixture_dir = str(get_fixture_cache_dir("duc-files"))
-    return sorted(
-        os.path.join(fixture_dir, name)
-        for name in os.listdir(fixture_dir)
-        if name.endswith(".duc")
-    )
+    from _dev.dev_utils import get_fixture_cache_dir, get_duc_fixture_path
+
+    for fixture_dir in (os.path.join(test_assets_dir, "duc-files"),
+                        str(get_fixture_cache_dir("duc-files"))):
+        if os.path.isdir(fixture_dir):
+            paths = sorted(os.path.join(fixture_dir, name) for name in os.listdir(fixture_dir)
+                           if name.endswith(".duc") and os.path.isfile(os.path.join(fixture_dir, name)))
+            if paths:
+                return paths
+    # CI starts with an empty cache; seed representative fixtures through the
+    # same CDN/cache helper used by the other asset-dependent tests.
+    return [str(get_duc_fixture_path(name)) for name in ("heads.duc", "blocks_instances.duc")]
 
 
 def _normalize_external_files_for_validation(data: duc.DucData) -> tuple[Any, list[dict]]:
@@ -223,6 +226,36 @@ def _run_recycle_benchmark(
 
 
 import pytest
+
+
+def test_fixture_discovery_populates_an_empty_cache(tmp_path, monkeypatch):
+    from _dev import dev_utils
+    cache = tmp_path / 'cache'
+    cache.mkdir()
+    monkeypatch.setattr(dev_utils, 'get_fixture_cache_dir', lambda category: cache)
+    downloaded = []
+    def download(name):
+        downloaded.append(name)
+        return cache / name
+    monkeypatch.setattr(dev_utils, 'get_duc_fixture_path', download)
+    paths = _duc_fixture_paths(str(tmp_path / 'assets'))
+    assert downloaded == ['heads.duc', 'blocks_instances.duc']
+    assert paths == [str(cache / name) for name in downloaded]
+
+
+def test_fixture_discovery_preserves_local_files_and_ignores_placeholders(tmp_path, monkeypatch):
+    from _dev import dev_utils
+    local = tmp_path / 'assets' / 'duc-files'
+    local.mkdir(parents=True)
+    (local / 'README.txt').write_text('placeholder')
+    cache = tmp_path / 'cache'
+    cache.mkdir()
+    (cache / 'cached.duc').write_bytes(b'fixture')
+    monkeypatch.setattr(dev_utils, 'get_fixture_cache_dir', lambda category: cache)
+    monkeypatch.setattr(dev_utils, 'get_duc_fixture_path', lambda name: pytest.fail('Unexpected download'))
+    assert _duc_fixture_paths(str(local.parent)) == [str(cache / 'cached.duc')]
+    (local / 'local.duc').write_bytes(b'fixture')
+    assert _duc_fixture_paths(str(local.parent)) == [str(local / 'local.duc')]
 
 
 @pytest.mark.slow
