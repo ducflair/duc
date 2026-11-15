@@ -109,6 +109,9 @@ def to_serializable(obj: Any) -> Any:
     if obj is None:
         return None
     if is_dataclass(obj) and not isinstance(obj, type):
+        from ducpy.serialize import _element_to_camel, _ELEMENT_CLASS_TO_TYPE
+        if type(obj).__name__ in _ELEMENT_CLASS_TO_TYPE or type(obj).__name__ == "ElementWrapper":
+            return _element_to_camel(obj)
         d = {}
         for k, v in asdict(obj).items():
             d[k] = v
