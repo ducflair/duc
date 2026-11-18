@@ -9,10 +9,19 @@ import {
   type DucStreamImportProgress,
 } from "../src/opfs-import";
 import { parseDuc } from "../src/parse";
+import { serializeDuc } from "../src/serialize";
 
 import { getDucFixturePath, ensureAllDucFixtures } from "./fixtures";
 
 describe("DUC streaming API", () => {
+  test("round-trips a locked drawing background", async () => {
+    const globalState = { viewBackgroundColor: "#f8e9b9", lockBackgroundColor: true };
+    const bytes = await serializeDuc({ globalState });
+    const parsed = await parseDuc(new Blob([Uint8Array.from(bytes)]));
+
+    expect(parsed.globalState).toEqual(globalState);
+  });
+
   test("parses a standalone raw SQLite database exported with WAL header bytes", async () => {
     const fixture = await getDucFixturePath("universal.duc");
     const compressed = new Uint8Array(await Bun.file(fixture).arrayBuffer());
@@ -280,6 +289,7 @@ describe("DUC streaming API", () => {
       },
       globalState: {
         viewBackgroundColor: "#ffffff",
+        lockBackgroundColor: false,
       },
     };
 

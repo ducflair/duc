@@ -973,6 +973,7 @@ export const restoreGlobalState = (
     ...defaults,
     viewBackgroundColor:
       importedState?.viewBackgroundColor ?? defaults.viewBackgroundColor,
+    lockBackgroundColor: importedState?.lockBackgroundColor ?? defaults.lockBackgroundColor,
   };
 };
 

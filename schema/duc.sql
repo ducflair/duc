@@ -1,7 +1,7 @@
 -- "DUC_" in ASCII
 -- Apply in order: duc.sql → version_control.sql → search.sql
 PRAGMA application_id = 1146569567;
-PRAGMA user_version = 4000001;
+PRAGMA user_version = 4000002;
 PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 PRAGMA synchronous = NORMAL;
@@ -42,7 +42,8 @@ PRAGMA synchronous = NORMAL;
 -- Project-wide settings shared by all users, saved with the document.
 CREATE TABLE duc_global_state (
     id                                          INTEGER PRIMARY KEY CHECK (id = 1),
-    view_background_color                       TEXT    NOT NULL -- drawing background color
+    view_background_color                       TEXT    NOT NULL, -- drawing background color
+    lock_background_color                       INTEGER NOT NULL DEFAULT 0 CHECK (lock_background_color IN (0, 1))
 );
 
 -- Per-user session state (not shared). DucHead fields flattened inline.

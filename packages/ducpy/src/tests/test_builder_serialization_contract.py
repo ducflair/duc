@@ -36,6 +36,14 @@ def test_external_file_and_revision_identifiers_are_never_case_converted():
         assert extracted.read_bytes() == data
 
 
+def test_replacing_an_external_file_uses_content_addressed_revisions():
+    def build(data):
+        return duc.StateBuilder().build_external_file().with_key('image').with_data(data).with_mime_type('image/png').build()
+    first, second = build(b'old'), build(b'new')
+    assert first.active_revision_id != second.active_revision_id
+    assert second.active_revision_id == build(b'new').active_revision_id
+
+
 def test_stack_elements_keep_nested_stack_base_while_layers_flatten_it():
     layer = duc.StateBuilder().with_id('layer').build_layer().with_label('Layer').build()
     elements = [

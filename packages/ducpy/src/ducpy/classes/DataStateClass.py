@@ -132,6 +132,7 @@ class DucIssue:
 @dataclass
 class DucGlobalState:
     view_background_color: str
+    lock_background_color: bool = False
 
 
 @dataclass

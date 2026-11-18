@@ -35,6 +35,7 @@ export const getZoom = (
 export const getDefaultGlobalState = (): DucGlobalState => {
   return {
     viewBackgroundColor: COLOR_PALETTE.white,
+    lockBackgroundColor: false,
   };
 };
 

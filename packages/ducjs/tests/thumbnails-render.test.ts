@@ -18,6 +18,11 @@ import type { DucModelElement } from "../src/types/elements";
 import { getDucFixturePath, getFixturePath } from "./fixtures";
 
 const OUTPUT_DIR = path.resolve(import.meta.dir, "output");
+const PYTHON_MODEL_FILE_OUTPUT_DIR = path.resolve(
+  import.meta.dir,
+  "../../ducpy/.cache/test-generated-model-files",
+);
+const previousModelFileOutputDir = process.env.DUCPY_MODEL_FILE_OUTPUT_DIR;
 setDefaultTimeout(120_000);
 const CPU_OUTPUT_DIR = path.join(OUTPUT_DIR, "CPU");
 const GPU_OUTPUT_DIR = path.join(OUTPUT_DIR, "GPU");
@@ -82,6 +87,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
   const getStandardRes = () => ({ width: hasGpu ? 1400 : 1000, height: hasGpu ? 1050 : 750 });
 
   beforeAll(async () => {
+    process.env.DUCPY_MODEL_FILE_OUTPUT_DIR = PYTHON_MODEL_FILE_OUTPUT_DIR;
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
     fs.mkdirSync(CPU_OUTPUT_DIR, { recursive: true });
     fs.mkdirSync(GPU_OUTPUT_DIR, { recursive: true });
@@ -148,6 +154,12 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     await Promise.all(
       Array.from(runnersToStop).map((r) => r?.stop().catch(() => {})),
     );
+
+    if (previousModelFileOutputDir === undefined) {
+      delete process.env.DUCPY_MODEL_FILE_OUTPUT_DIR;
+    } else {
+      process.env.DUCPY_MODEL_FILE_OUTPUT_DIR = previousModelFileOutputDir;
+    }
 
     // Print benchmark summary table
     if (benchmarkTable.length > 0) {
