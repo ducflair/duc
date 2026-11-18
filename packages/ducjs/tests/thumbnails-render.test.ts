@@ -704,6 +704,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     }
   }, 120000);
 
+  // The IFC tessellation and headless render each have 120s limits and run sequentially.
   it("renders real Duplex IFC architectural model from universal.duc freshly in WebGL (GPU vs CPU)", async () => {
     const fixture = await loadDucFixture("universal.duc");
     try {
@@ -751,7 +752,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     } finally {
       fixture.cleanup();
     }
-  }, 180000);
+  }, 300000);
 
   it("renders real Python CAD model from universal.duc with ISO and front views (GPU vs CPU)", async () => {
     const fixture = await loadDucFixture("universal.duc");
