@@ -4,6 +4,7 @@ Follows the same hierarchical builder pattern as element_builders.py.
 Only types from types.rs / duc.sql are supported.
 """
 import time
+import hashlib
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
@@ -603,13 +604,15 @@ def create_delta_from_base(base: BaseStateParams, **kwargs) -> Delta:
 
 def create_external_file_from_base(base: BaseStateParams, **kwargs) -> DucExternalFile:
     file_id = base.id or generate_random_id()
-    rev_id = f"{file_id}_rev1"
     created = now_ms()
     data = kwargs.get('data', b"")
+    digest = hashlib.sha256(data).hexdigest()
+    rev_id = f"{file_id}_{digest}"
     revision = ExternalFileRevision(
         id=rev_id,
         size_bytes=len(data),
         mime_type=kwargs.get('mime_type', ""),
+        checksum=digest,
         created=created,
         last_retrieved=kwargs.get('last_retrieved')
     )
