@@ -717,6 +717,11 @@ fn migrates_legacy_payloads_losslessly_into_bounded_chunks() {
     let conn = Connection::open_in_memory().expect("open database");
     conn.execute_batch(LEGACY_SCHEMA)
         .expect("apply legacy schema");
+    conn.execute(
+        "INSERT INTO duc_global_state (id, view_background_color, main_scope) VALUES (1, '#f8e9b9', 'mm')",
+        [],
+    )
+    .expect("insert legacy background color");
 
     let payload: Vec<u8> = (0..(8 * 1024 * 1024 + 17))
         .map(|index| (index % 251) as u8)
@@ -784,6 +789,16 @@ fn migrates_legacy_payloads_losslessly_into_bounded_chunks() {
             .expect("read user_version"),
         CURRENT_VERSION
     );
+    let (color, locked): (String, bool) = conn
+        .query_row(
+            "SELECT view_background_color, lock_background_color FROM duc_global_state",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .expect("read migrated background settings");
+    assert_eq!(color, "#f8e9b9");
+    assert!(!locked);
+
     let expected_layout = vec![(0, 0, 8_388_608), (1, 8_388_608, 17)];
     assert_eq!(
         chunk_layout(

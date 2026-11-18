@@ -469,11 +469,9 @@ fn write_global_state(tx: &Transaction, gs: &Option<DucGlobalState>) -> Serializ
     let Some(gs) = gs else { return Ok(()) };
     tx.execute(
         "INSERT OR REPLACE INTO duc_global_state
-            (id, view_background_color)
-         VALUES (1, ?1)",
-        params![
-            gs.view_background_color,
-        ],
+            (id, view_background_color, lock_background_color)
+         VALUES (1, ?1, ?2)",
+        params![gs.view_background_color, gs.lock_background_color],
     )?;
     Ok(())
 }

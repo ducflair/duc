@@ -211,6 +211,7 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
     ];
 
     let global_state = Some(DucGlobalState {
+        lock_background_color: true,
         view_background_color: "#101820".to_string(),
     });
 

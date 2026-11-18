@@ -693,12 +693,13 @@ fn read_issue_anchor(conn: &Connection, issue_id: &str) -> ParseResult<Option<Du
 
 fn read_global_state(conn: &Connection) -> ParseResult<Option<DucGlobalState>> {
     let mut stmt = conn.prepare(
-        "SELECT view_background_color
+        "SELECT view_background_color, lock_background_color
          FROM duc_global_state WHERE id = 1",
     )?;
     let result = stmt.query_row([], |row| {
         Ok(DucGlobalState {
             view_background_color: row.get(0)?,
+            lock_background_color: row.get(1)?,
         })
     });
 

@@ -123,6 +123,10 @@ class GlobalStateBuilder(StateSpecificBuilder):
         self.extra["view_background_color"] = color
         return self
 
+    def with_lock_background_color(self, locked: bool):
+        self.extra["lock_background_color"] = locked
+        return self
+
     def build(self) -> DucGlobalState:
         return create_global_state_from_base(self.base, **self.extra)
 
@@ -437,6 +441,7 @@ class StackBaseBuilder(StateSpecificBuilder):
 def create_global_state_from_base(base: BaseStateParams, **kwargs) -> DucGlobalState:
     return DucGlobalState(
         view_background_color=kwargs.get('view_background_color', "#FFFFFF"),
+        lock_background_color=kwargs.get('lock_background_color', False),
     )
 
 
