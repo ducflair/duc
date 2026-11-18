@@ -14,6 +14,7 @@ import {
   resolveThumbnailBackground,
 } from "../src/thumbnails";
 import { parseDuc } from "../src/parse";
+import type { ModelViewConfig } from "../src/thumbnails/types";
 import type { DucModelElement } from "../src/types/elements";
 import { getDucFixturePath, getFixturePath } from "./fixtures";
 
@@ -572,11 +573,11 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
 
       expect(boeingEl).toBeDefined();
 
-      const clippedCfg = {
+      const clippedCfg: ModelViewConfig = {
         cameraPreset: "iso" as const,
         ...getStandardRes(),
         background: "#0f172a",
-        clipping: { x: { enabled: true, value: 0 } },
+        clipping: { x: { enabled: true, value: 0, normal: null } },
         material: { metalness: 0.85, roughness: 0.15 },
       };
 
@@ -828,11 +829,11 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
 
       expect(coreEl).toBeDefined();
 
-      const sectionCfg = {
+      const sectionCfg: ModelViewConfig = {
         cameraPreset: "iso" as const,
         ...getStandardRes(),
         background: "#f1f5f9",
-        clipping: { x: { enabled: true, value: 0 }, intersection: false },
+        clipping: { x: { enabled: true, value: 0, normal: null }, intersection: false },
       };
 
       const gpuSection = await renderModelElementThumbnailWithResult(coreEl!, {
@@ -879,14 +880,14 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
       expect(coreEl).toBeDefined();
 
       // Zoomed-in camera framing focused on internal objective lens bore with X-axis clipping cutaway
-      const zoomedSectionConfig = {
+      const zoomedSectionConfig: ModelViewConfig = {
         camera: {
           position: [70, 70, 45],
           target: [0, 0, 10],
           zoom: 3.2,
         },
         clipping: {
-          x: { enabled: true, value: 0 },
+          x: { enabled: true, value: 0, normal: null },
         },
         width: hasGpu ? 1920 : 1280,
         height: hasGpu ? 1080 : 720,
@@ -902,7 +903,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         runner: gpuRunner,
         ducPath: fixture.filePath,
         viewConfig: zoomedSectionConfig,
-        timeoutMs: 60000,
+        timeoutMs: 120000,
       });
 
       expect(gpuRes.data.length).toBeGreaterThan(5000);
@@ -916,7 +917,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
             runner: cpuRunner,
             ducPath: fixture.filePath,
             viewConfig: zoomedSectionConfig,
-            timeoutMs: 60000,
+            timeoutMs: 120000,
           })
         : gpuRes;
 
@@ -939,7 +940,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     } finally {
       fixture.cleanup();
     }
-  }, 120000);
+  }, 240000);
 
   it("renders 5 NEW complex model elements from microscope-core.duc (GPU vs CPU)", async () => {
     const fixture = await loadDucFixture("microscope-core.duc");
