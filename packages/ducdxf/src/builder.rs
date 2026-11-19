@@ -224,6 +224,7 @@ impl<'a> CadToDucBuilder<'a> {
             layers,
             duc_local_state: None,
             duc_global_state: Some(DucGlobalState {
+                lock_background_color: false,
                 view_background_color: self
                     .options
                     .background_color

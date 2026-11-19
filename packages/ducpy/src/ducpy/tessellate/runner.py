@@ -95,8 +95,8 @@ def tessellate_external_file(
 
     Args:
         file_path: Path to the CAD or IFC file.
-        model_type: Optional explicit type ('step', 'stl', 'ifc', 'dxf').
-            If not specified, inferred from file extension.
+        model_type: Optional explicit type ('step', 'stl', 'ifc', 'dxf'), inferred from
+        the file extension when omitted.
 
     Returns:
         Dict with "success", "kind", "payload" (JSON string or dict).
@@ -287,8 +287,35 @@ def tessellate_model_code(
         builtins.show = show  # type: ignore
 
         scopture_install_fonts(mounted_files)
-        scopture_install_ifc_output_capture(output_path=str(output_path))
-        scopture_install_dxf_output_capture(output_path=str(output_path))
+
+        model_file_output_dir = Path(
+            os.environ.get("DUCPY_MODEL_FILE_OUTPUT_DIR") or work_path
+        ).resolve()
+
+        def sandbox_model_file_path(
+            filename: str | os.PathLike[str], _cwd: str | Path
+        ) -> Path:
+            requested_path = Path(filename)
+            if requested_path.is_absolute():
+                return requested_path
+
+            resolved_path = (model_file_output_dir / requested_path).resolve()
+            try:
+                resolved_path.relative_to(model_file_output_dir)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Model output path escapes its output directory: {filename}"
+                ) from exc
+            return resolved_path
+
+        scopture_install_ifc_output_capture(
+            output_path=str(output_path),
+            sandbox_path=sandbox_model_file_path,
+        )
+        scopture_install_dxf_output_capture(
+            output_path=str(output_path),
+            sandbox_path=sandbox_model_file_path,
+        )
         scopture_install_model_modules(model_modules, globals_dict)
 
         stdout_buf = io.StringIO()

@@ -197,6 +197,8 @@ export type DucGlobalState = {
    * The background color of the drawing
    */
   viewBackgroundColor: string;
+  /** Use this drawing’s background color across themes. */
+  lockBackgroundColor: boolean;
 };
 
 export type DucLocalState = {

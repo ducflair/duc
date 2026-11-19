@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 
 const isWindows = process.platform === 'win32';
 const REQUIRED_WASM_PACK_MAJOR = 0;
-const REQUIRED_WASM_PACK_MINOR = 14;
+const REQUIRED_WASM_PACK_MINOR = 15;
 const WASM_PACK_EXECUTABLE = isWindows ? 'wasm-pack.exe' : 'wasm-pack';
 
 function getWasmPackCandidates() {
@@ -73,7 +73,7 @@ function ensurePinnedWasmPackVersion() {
   if (!pinned) {
     throw new Error(
       `ducjs requires wasm-pack ${REQUIRED_WASM_PACK_MAJOR}.${REQUIRED_WASM_PACK_MINOR}.x, ` +
-      `but found ${version.raw} at ${bin}. Please install wasm-pack 0.14.x.`,
+      `but found ${version.raw} at ${bin}. Please install wasm-pack ${REQUIRED_WASM_PACK_MAJOR}.${REQUIRED_WASM_PACK_MINOR}.x.`,
     );
   }
 

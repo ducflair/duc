@@ -1437,10 +1437,11 @@ pub struct DucRegion {
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DucGlobalState {
-    /** The name of the drawing */
-    /** The background color of the drawing */
-    /** The background color of the drawing */
+    /// The background color of the drawing.
     pub view_background_color: String,
+    /// Use the stored background color regardless of the viewer's theme.
+    #[serde(default)]
+    pub lock_background_color: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]

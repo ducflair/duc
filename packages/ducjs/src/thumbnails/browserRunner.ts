@@ -202,7 +202,7 @@ export class HeadlessBrowserRunner {
             `Timed out waiting for Chrome DevTools websocket URL. Stderr: ${stderrBuffer.slice(0, 500)}`,
           ),
         );
-      }, 10000);
+      }, 30000);
 
       const onData = (data: Buffer) => {
         stderrBuffer += data.toString();

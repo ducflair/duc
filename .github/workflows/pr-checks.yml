@@ -226,7 +226,7 @@ jobs:
 
       - name: Install wasm-pack
         if: needs.release-check.outputs.needs_wasm == 'true'
-        run: cargo install wasm-pack --version 0.14.0 --locked --force
+        run: cargo install wasm-pack --version 0.15.0 --locked --force
 
       - name: Setup Python
         if: needs.release-check.outputs.needs_python == 'true'

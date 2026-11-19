@@ -351,6 +351,7 @@ pub fn convert_dwf_to_duc_state(
         layers: vec![],
         duc_local_state: None,
         duc_global_state: Some(DucGlobalState {
+            lock_background_color: false,
             view_background_color: options.background_color.clone().unwrap_or_else(|| "#ffffff".to_string()),
         }),
         version_graph: None,

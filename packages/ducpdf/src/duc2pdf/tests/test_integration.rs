@@ -58,6 +58,7 @@ mod integration_tests {
                 decimal_places: 2,
             }),
             duc_global_state: Some(DucGlobalState {
+                lock_background_color: false,
                 view_background_color: "#ffffff".to_string(),
             }),
             version_graph: None,

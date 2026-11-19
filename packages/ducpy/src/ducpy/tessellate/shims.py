@@ -356,7 +356,7 @@ def scopture_install_ifc_output_capture(
         if requested_dir:
             os.makedirs(requested_dir, exist_ok=True)
 
-        result = original_write(self, requested, *args, **kwargs)
+        result = original_write(self, requested_path, *args, **kwargs)
 
         if output_path and os.path.abspath(requested_path) != os.path.abspath(output_path):
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
