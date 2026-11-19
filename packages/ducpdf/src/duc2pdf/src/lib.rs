@@ -219,33 +219,16 @@ pub fn validate_coordinates_with_scale(
 
 /// Calculate bounding box for DUC data in millimeters
 pub fn calculate_bounding_box(data: &duc::types::ExportedDataState) -> (f64, f64, f64, f64) {
-    if data.elements.is_empty() {
-        return (0.0, 0.0, 0.0, 0.0);
-    }
-
-    let mut min_x = f64::MAX;
-    let mut min_y = f64::MAX;
-    let mut max_x = f64::MIN;
-    let mut max_y = f64::MIN;
+    let mut min_x = f64::INFINITY;
+    let mut min_y = f64::INFINITY;
+    let mut max_x = f64::NEG_INFINITY;
+    let mut max_y = f64::NEG_INFINITY;
 
     for element_wrapper in &data.elements {
-        let base = match &element_wrapper.element {
-            duc::types::DucElementEnum::DucRectangleElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucPolygonElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucEllipseElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucEmbeddableElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucPdfElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucTableElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucImageElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucTextElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucLinearElement(elem) => &elem.linear_base.base,
-            duc::types::DucElementEnum::DucArrowElement(elem) => &elem.linear_base.base,
-            duc::types::DucElementEnum::DucFreeDrawElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucFrameElement(elem) => &elem.stack_element_base.base,
-            duc::types::DucElementEnum::DucPlotElement(elem) => &elem.stack_element_base.base,
-            duc::types::DucElementEnum::DucDocElement(elem) => &elem.base,
-            duc::types::DucElementEnum::DucModelElement(elem) => &elem.base,
-        };
+        let base = builder::DucToPdfBuilder::get_element_base(&element_wrapper.element);
+        if base.is_deleted || !base.is_visible {
+            continue;
+        }
 
         // Assume all coordinates are already in millimeters
         let (x_mm, y_mm, width_mm, height_mm) = (base.x, base.y, base.width, base.height);
@@ -256,7 +239,11 @@ pub fn calculate_bounding_box(data: &duc::types::ExportedDataState) -> (f64, f64
         max_y = max_y.max(y_mm + height_mm);
     }
 
-    (min_x, min_y, max_x - min_x, max_y - min_y)
+    if min_x.is_finite() {
+        (min_x, min_y, max_x - min_x, max_y - min_y)
+    } else {
+        (0.0, 0.0, 0.0, 0.0)
+    }
 }
 
 /// Calculate required scale to fit content within comfortable bounds
