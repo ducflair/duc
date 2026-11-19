@@ -1437,420 +1437,421 @@
 <a href=#1437 id=1437 data-nosnippet>1437</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 <a href=#1438 id=1438 data-nosnippet>1438</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
 <a href=#1439 id=1439 data-nosnippet>1439</a></span><span class="kw">pub struct </span>DucGlobalState {
-<a href=#1440 id=1440 data-nosnippet>1440</a>    <span class="doccomment">/** The name of the drawing */
-<a href=#1441 id=1441 data-nosnippet>1441</a>    /** The background color of the drawing */
-<a href=#1442 id=1442 data-nosnippet>1442</a>    /** The background color of the drawing */
-<a href=#1443 id=1443 data-nosnippet>1443</a>    </span><span class="kw">pub </span>view_background_color: String,
-<a href=#1444 id=1444 data-nosnippet>1444</a>}
-<a href=#1445 id=1445 data-nosnippet>1445</a>
-<a href=#1446 id=1446 data-nosnippet>1446</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1447 id=1447 data-nosnippet>1447</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1448 id=1448 data-nosnippet>1448</a></span><span class="kw">pub struct </span>DucLocalState {
-<a href=#1449 id=1449 data-nosnippet>1449</a>    <span class="kw">pub </span>scroll_x: f64,
-<a href=#1450 id=1450 data-nosnippet>1450</a>    <span class="kw">pub </span>scroll_y: f64,
-<a href=#1451 id=1451 data-nosnippet>1451</a>    <span class="kw">pub </span>zoom: f64,
-<a href=#1452 id=1452 data-nosnippet>1452</a>    <span class="kw">pub </span>is_binding_enabled: bool,
-<a href=#1453 id=1453 data-nosnippet>1453</a>    <span class="doccomment">/** Current item is usually a quick access state to apply as default to certain things when drawing */
-<a href=#1454 id=1454 data-nosnippet>1454</a>    </span><span class="kw">pub </span>current_item_stroke: <span class="prelude-ty">Option</span>&lt;ElementStroke&gt;,
-<a href=#1455 id=1455 data-nosnippet>1455</a>    <span class="kw">pub </span>current_item_background: <span class="prelude-ty">Option</span>&lt;ElementBackground&gt;,
-<a href=#1456 id=1456 data-nosnippet>1456</a>    <span class="kw">pub </span>current_item_opacity: f32,
-<a href=#1457 id=1457 data-nosnippet>1457</a>    <span class="kw">pub </span>current_item_font_family: String,
-<a href=#1458 id=1458 data-nosnippet>1458</a>    <span class="kw">pub </span>current_item_font_size: f64,
-<a href=#1459 id=1459 data-nosnippet>1459</a>    <span class="kw">pub </span>current_item_text_align: TEXT_ALIGN,
-<a href=#1460 id=1460 data-nosnippet>1460</a>    <span class="kw">pub </span>current_item_start_line_head: <span class="prelude-ty">Option</span>&lt;DucHead&gt;,
-<a href=#1461 id=1461 data-nosnippet>1461</a>    <span class="kw">pub </span>current_item_end_line_head: <span class="prelude-ty">Option</span>&lt;DucHead&gt;,
-<a href=#1462 id=1462 data-nosnippet>1462</a>    <span class="kw">pub </span>current_item_roundness: f64,
-<a href=#1463 id=1463 data-nosnippet>1463</a>    <span class="doccomment">/** Pen mode is enabled, creates a better experience for drawing with a pen */
-<a href=#1464 id=1464 data-nosnippet>1464</a>    </span><span class="kw">pub </span>pen_mode: bool,
-<a href=#1465 id=1465 data-nosnippet>1465</a>    <span class="doccomment">/** In view mode the user is not allowed to edit the canvas. */
-<a href=#1466 id=1466 data-nosnippet>1466</a>    </span><span class="kw">pub </span>view_mode_enabled: bool,
-<a href=#1467 id=1467 data-nosnippet>1467</a>    <span class="doccomment">/** Object snapping on the environment is enabled */
-<a href=#1468 id=1468 data-nosnippet>1468</a>    </span><span class="kw">pub </span>objects_snap_mode_enabled: bool,
-<a href=#1469 id=1469 data-nosnippet>1469</a>    <span class="doccomment">/** Available grids are visible */
-<a href=#1470 id=1470 data-nosnippet>1470</a>    </span><span class="kw">pub </span>grid_mode_enabled: bool,
-<a href=#1471 id=1471 data-nosnippet>1471</a>    <span class="doccomment">/** Whether to disable the fill on all shapes */
-<a href=#1472 id=1472 data-nosnippet>1472</a>    </span><span class="kw">pub </span>outline_mode_enabled: bool,
-<a href=#1473 id=1473 data-nosnippet>1473</a>    <span class="doccomment">/**
-<a href=#1474 id=1474 data-nosnippet>1474</a>     * When enabled, the version graph is not updated automatically.
-<a href=#1475 id=1475 data-nosnippet>1475</a>     * The user needs to manually update the graph for new versions to be saved in version control.
-<a href=#1476 id=1476 data-nosnippet>1476</a>     */
-<a href=#1477 id=1477 data-nosnippet>1477</a>    </span><span class="kw">pub </span>manual_save_mode: bool,
-<a href=#1478 id=1478 data-nosnippet>1478</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
-<a href=#1479 id=1479 data-nosnippet>1479</a>    </span><span class="kw">pub </span>decimal_places: i32,
-<a href=#1480 id=1480 data-nosnippet>1480</a>}
-<a href=#1481 id=1481 data-nosnippet>1481</a>
-<a href=#1482 id=1482 data-nosnippet>1482</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1483 id=1483 data-nosnippet>1483</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1484 id=1484 data-nosnippet>1484</a></span><span class="kw">pub struct </span>DucLayerOverrides {
-<a href=#1485 id=1485 data-nosnippet>1485</a>    <span class="kw">pub </span>stroke: ElementStroke,
-<a href=#1486 id=1486 data-nosnippet>1486</a>    <span class="kw">pub </span>background: ElementBackground,
-<a href=#1487 id=1487 data-nosnippet>1487</a>}
-<a href=#1488 id=1488 data-nosnippet>1488</a>
-<a href=#1489 id=1489 data-nosnippet>1489</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1490 id=1490 data-nosnippet>1490</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1491 id=1491 data-nosnippet>1491</a></span><span class="kw">pub struct </span>DucLayer {
-<a href=#1492 id=1492 data-nosnippet>1492</a>    <span class="kw">pub </span>id: String,
-<a href=#1493 id=1493 data-nosnippet>1493</a>    <span class="attr">#[serde(flatten)]
-<a href=#1494 id=1494 data-nosnippet>1494</a>    </span><span class="kw">pub </span>stack_base: DucStackBase,
-<a href=#1495 id=1495 data-nosnippet>1495</a>    <span class="kw">pub </span>readonly: bool,
-<a href=#1496 id=1496 data-nosnippet>1496</a>    <span class="doccomment">/** A container for the default styling properties that elements on this layer will inherit */
-<a href=#1497 id=1497 data-nosnippet>1497</a>    </span><span class="kw">pub </span>overrides: <span class="prelude-ty">Option</span>&lt;DucLayerOverrides&gt;,
-<a href=#1498 id=1498 data-nosnippet>1498</a>}
-<a href=#1499 id=1499 data-nosnippet>1499</a>
-<a href=#1500 id=1500 data-nosnippet>1500</a><span class="comment">// =============== VERSION CONTROL ===============
-<a href=#1501 id=1501 data-nosnippet>1501</a>
-<a href=#1502 id=1502 data-nosnippet>1502</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1503 id=1503 data-nosnippet>1503</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1504 id=1504 data-nosnippet>1504</a></span><span class="kw">pub struct </span>VersionBase {
-<a href=#1505 id=1505 data-nosnippet>1505</a>    <span class="kw">pub </span>id: String,
-<a href=#1506 id=1506 data-nosnippet>1506</a>    <span class="kw">pub </span>parent_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1507 id=1507 data-nosnippet>1507</a>    <span class="kw">pub </span>timestamp: i64,
-<a href=#1508 id=1508 data-nosnippet>1508</a>    <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1509 id=1509 data-nosnippet>1509</a>    <span class="kw">pub </span>is_manual_save: bool,
-<a href=#1510 id=1510 data-nosnippet>1510</a>    <span class="kw">pub </span>user_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1511 id=1511 data-nosnippet>1511</a>}
-<a href=#1512 id=1512 data-nosnippet>1512</a>
-<a href=#1513 id=1513 data-nosnippet>1513</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1514 id=1514 data-nosnippet>1514</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1515 id=1515 data-nosnippet>1515</a></span><span class="kw">pub struct </span>Checkpoint {
-<a href=#1516 id=1516 data-nosnippet>1516</a>    <span class="attr">#[serde(flatten)]
-<a href=#1517 id=1517 data-nosnippet>1517</a>    </span><span class="kw">pub </span>base: VersionBase,
-<a href=#1518 id=1518 data-nosnippet>1518</a>    <span class="kw">pub </span>version_number: i64,
-<a href=#1519 id=1519 data-nosnippet>1519</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
-<a href=#1520 id=1520 data-nosnippet>1520</a>    </span><span class="kw">pub </span>schema_version: i32,
-<a href=#1521 id=1521 data-nosnippet>1521</a>    <span class="kw">pub </span>is_schema_boundary: bool,
-<a href=#1522 id=1522 data-nosnippet>1522</a>    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
-<a href=#1523 id=1523 data-nosnippet>1523</a>    </span><span class="kw">pub </span>data: Vec&lt;u8&gt;,
-<a href=#1524 id=1524 data-nosnippet>1524</a>    <span class="kw">pub </span>size_bytes: i64,
-<a href=#1525 id=1525 data-nosnippet>1525</a>}
-<a href=#1526 id=1526 data-nosnippet>1526</a>
-<a href=#1527 id=1527 data-nosnippet>1527</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1528 id=1528 data-nosnippet>1528</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1529 id=1529 data-nosnippet>1529</a></span><span class="kw">pub struct </span>Delta {
-<a href=#1530 id=1530 data-nosnippet>1530</a>    <span class="attr">#[serde(flatten)]
-<a href=#1531 id=1531 data-nosnippet>1531</a>    </span><span class="kw">pub </span>base: VersionBase,
-<a href=#1532 id=1532 data-nosnippet>1532</a>    <span class="kw">pub </span>version_number: i64,
-<a href=#1533 id=1533 data-nosnippet>1533</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
-<a href=#1534 id=1534 data-nosnippet>1534</a>    </span><span class="kw">pub </span>schema_version: i32,
-<a href=#1535 id=1535 data-nosnippet>1535</a>    <span class="kw">pub </span>base_checkpoint_id: String,
-<a href=#1536 id=1536 data-nosnippet>1536</a>    <span class="doccomment">/** Compressed binary data for the delta (gzip). When present, patch_string is ignored. */
-<a href=#1537 id=1537 data-nosnippet>1537</a>    </span><span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
-<a href=#1538 id=1538 data-nosnippet>1538</a>    </span><span class="kw">pub </span>payload: Vec&lt;u8&gt;,
-<a href=#1539 id=1539 data-nosnippet>1539</a>    <span class="kw">pub </span>size_bytes: i64,
-<a href=#1540 id=1540 data-nosnippet>1540</a>}
-<a href=#1541 id=1541 data-nosnippet>1541</a>
-<a href=#1542 id=1542 data-nosnippet>1542</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1543 id=1543 data-nosnippet>1543</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1544 id=1544 data-nosnippet>1544</a></span><span class="kw">pub struct </span>SchemaMigration {
-<a href=#1545 id=1545 data-nosnippet>1545</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
-<a href=#1546 id=1546 data-nosnippet>1546</a>    </span><span class="kw">pub </span>from_schema_version: i32,
-<a href=#1547 id=1547 data-nosnippet>1547</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
-<a href=#1548 id=1548 data-nosnippet>1548</a>    </span><span class="kw">pub </span>to_schema_version: i32,
-<a href=#1549 id=1549 data-nosnippet>1549</a>    <span class="kw">pub </span>migration_name: String,
-<a href=#1550 id=1550 data-nosnippet>1550</a>    <span class="kw">pub </span>migration_checksum: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1551 id=1551 data-nosnippet>1551</a>    <span class="kw">pub </span>applied_at: i64,
-<a href=#1552 id=1552 data-nosnippet>1552</a>    <span class="kw">pub </span>boundary_checkpoint_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1553 id=1553 data-nosnippet>1553</a>}
-<a href=#1554 id=1554 data-nosnippet>1554</a>
-<a href=#1555 id=1555 data-nosnippet>1555</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1556 id=1556 data-nosnippet>1556</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1557 id=1557 data-nosnippet>1557</a></span><span class="kw">pub struct </span>VersionChain {
-<a href=#1558 id=1558 data-nosnippet>1558</a>    <span class="kw">pub </span>id: String,
-<a href=#1559 id=1559 data-nosnippet>1559</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
-<a href=#1560 id=1560 data-nosnippet>1560</a>    </span><span class="kw">pub </span>schema_version: i32,
-<a href=#1561 id=1561 data-nosnippet>1561</a>    <span class="kw">pub </span>start_version: i64,
-<a href=#1562 id=1562 data-nosnippet>1562</a>    <span class="kw">pub </span>end_version: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#1563 id=1563 data-nosnippet>1563</a>    <span class="kw">pub </span>migration: <span class="prelude-ty">Option</span>&lt;SchemaMigration&gt;,
-<a href=#1564 id=1564 data-nosnippet>1564</a>    <span class="kw">pub </span>root_checkpoint_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1565 id=1565 data-nosnippet>1565</a>}
-<a href=#1566 id=1566 data-nosnippet>1566</a>
-<a href=#1567 id=1567 data-nosnippet>1567</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1568 id=1568 data-nosnippet>1568</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1569 id=1569 data-nosnippet>1569</a></span><span class="kw">pub struct </span>VersionGraphMetadata {
-<a href=#1570 id=1570 data-nosnippet>1570</a>    <span class="kw">pub </span>current_version: i64,
-<a href=#1571 id=1571 data-nosnippet>1571</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
-<a href=#1572 id=1572 data-nosnippet>1572</a>    </span><span class="kw">pub </span>current_schema_version: i32,
-<a href=#1573 id=1573 data-nosnippet>1573</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
-<a href=#1574 id=1574 data-nosnippet>1574</a>    </span><span class="kw">pub </span>chain_count: i32,
-<a href=#1575 id=1575 data-nosnippet>1575</a>    <span class="kw">pub </span>total_size: i64,
-<a href=#1576 id=1576 data-nosnippet>1576</a>}
-<a href=#1577 id=1577 data-nosnippet>1577</a>
-<a href=#1578 id=1578 data-nosnippet>1578</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1579 id=1579 data-nosnippet>1579</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1580 id=1580 data-nosnippet>1580</a></span><span class="kw">pub struct </span>VersionGraph {
-<a href=#1581 id=1581 data-nosnippet>1581</a>    <span class="doccomment">/** The ID of the user-designated checkpoint version. */
-<a href=#1582 id=1582 data-nosnippet>1582</a>    </span><span class="kw">pub </span>user_checkpoint_version_id: String,
-<a href=#1583 id=1583 data-nosnippet>1583</a>    <span class="doccomment">/** The ID of the latest version in the graph. */
-<a href=#1584 id=1584 data-nosnippet>1584</a>    </span><span class="kw">pub </span>latest_version_id: String,
-<a href=#1585 id=1585 data-nosnippet>1585</a>    <span class="kw">pub </span>chains: Vec&lt;VersionChain&gt;,
-<a href=#1586 id=1586 data-nosnippet>1586</a>    <span class="doccomment">/** An array of all checkpoint versions. */
-<a href=#1587 id=1587 data-nosnippet>1587</a>    </span><span class="kw">pub </span>checkpoints: Vec&lt;Checkpoint&gt;,
-<a href=#1588 id=1588 data-nosnippet>1588</a>    <span class="doccomment">/** An array of all delta versions (patches). */
-<a href=#1589 id=1589 data-nosnippet>1589</a>    </span><span class="kw">pub </span>deltas: Vec&lt;Delta&gt;,
-<a href=#1590 id=1590 data-nosnippet>1590</a>    <span class="kw">pub </span>metadata: VersionGraphMetadata,
-<a href=#1591 id=1591 data-nosnippet>1591</a>}
-<a href=#1592 id=1592 data-nosnippet>1592</a>
-<a href=#1593 id=1593 data-nosnippet>1593</a><span class="comment">// =============== EXTERNAL FILES ===============
-<a href=#1594 id=1594 data-nosnippet>1594</a>
-<a href=#1595 id=1595 data-nosnippet>1595</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
-<a href=#1596 id=1596 data-nosnippet>1596</a>#[serde(rename_all = <span class="string">"lowercase"</span>)]
-<a href=#1597 id=1597 data-nosnippet>1597</a></span><span class="kw">pub enum </span>ExternalFileLocatorKind {
-<a href=#1598 id=1598 data-nosnippet>1598</a>    Relative,
-<a href=#1599 id=1599 data-nosnippet>1599</a>    Absolute,
-<a href=#1600 id=1600 data-nosnippet>1600</a>}
-<a href=#1601 id=1601 data-nosnippet>1601</a>
-<a href=#1602 id=1602 data-nosnippet>1602</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1603 id=1603 data-nosnippet>1603</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1604 id=1604 data-nosnippet>1604</a></span><span class="kw">pub struct </span>ExternalFileLocator {
-<a href=#1605 id=1605 data-nosnippet>1605</a>    <span class="kw">pub </span>kind: ExternalFileLocatorKind,
-<a href=#1606 id=1606 data-nosnippet>1606</a>    <span class="kw">pub </span>path: String,
-<a href=#1607 id=1607 data-nosnippet>1607</a>    <span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1608 id=1608 data-nosnippet>1608</a>    </span><span class="kw">pub </span>original_path: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1609 id=1609 data-nosnippet>1609</a>}
-<a href=#1610 id=1610 data-nosnippet>1610</a>
-<a href=#1611 id=1611 data-nosnippet>1611</a><span class="doccomment">/// Revision metadata without the heavy data blob.
-<a href=#1612 id=1612 data-nosnippet>1612</a>/// Used inside `DucExternalFile.revisions` so the file record stays lightweight.
-<a href=#1613 id=1613 data-nosnippet>1613</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1614 id=1614 data-nosnippet>1614</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1615 id=1615 data-nosnippet>1615</a></span><span class="kw">pub struct </span>ExternalFileRevisionMeta {
-<a href=#1616 id=1616 data-nosnippet>1616</a>    <span class="kw">pub </span>id: String,
-<a href=#1617 id=1617 data-nosnippet>1617</a>    <span class="kw">pub </span>size_bytes: i64,
-<a href=#1618 id=1618 data-nosnippet>1618</a>    <span class="doccomment">/// Content hash for integrity checks and optional deduplication.
-<a href=#1619 id=1619 data-nosnippet>1619</a>    </span><span class="kw">pub </span>checksum: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1620 id=1620 data-nosnippet>1620</a>    <span class="doccomment">/// Original upload filename shown to the user.
-<a href=#1621 id=1621 data-nosnippet>1621</a>    </span><span class="kw">pub </span>source_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1622 id=1622 data-nosnippet>1622</a>    <span class="kw">pub </span>mime_type: String,
-<a href=#1623 id=1623 data-nosnippet>1623</a>    <span class="doccomment">/// Optional note describing what changed in this revision.
-<a href=#1624 id=1624 data-nosnippet>1624</a>    </span><span class="kw">pub </span>message: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1625 id=1625 data-nosnippet>1625</a>    <span class="doccomment">/// Epoch ms when this revision was created.
-<a href=#1626 id=1626 data-nosnippet>1626</a>    </span><span class="kw">pub </span>created: i64,
-<a href=#1627 id=1627 data-nosnippet>1627</a>    <span class="doccomment">/// Epoch ms when this revision was last loaded onto the scene.
-<a href=#1628 id=1628 data-nosnippet>1628</a>    </span><span class="kw">pub </span>last_retrieved: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#1629 id=1629 data-nosnippet>1629</a>    <span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1630 id=1630 data-nosnippet>1630</a>    </span><span class="kw">pub </span>locator: <span class="prelude-ty">Option</span>&lt;ExternalFileLocator&gt;,
-<a href=#1631 id=1631 data-nosnippet>1631</a>}
-<a href=#1632 id=1632 data-nosnippet>1632</a>
-<a href=#1633 id=1633 data-nosnippet>1633</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1634 id=1634 data-nosnippet>1634</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1635 id=1635 data-nosnippet>1635</a></span><span class="kw">pub struct </span>DucExternalFile {
-<a href=#1636 id=1636 data-nosnippet>1636</a>    <span class="kw">pub </span>id: String,
-<a href=#1637 id=1637 data-nosnippet>1637</a>    <span class="kw">pub </span>active_revision_id: String,
-<a href=#1638 id=1638 data-nosnippet>1638</a>    <span class="doccomment">/// Epoch ms when the logical file was last mutated (revision added or active changed).
-<a href=#1639 id=1639 data-nosnippet>1639</a>    </span><span class="kw">pub </span>updated: i64,
-<a href=#1640 id=1640 data-nosnippet>1640</a>    <span class="doccomment">/// All revisions of this file (metadata only, no data blobs).
-<a href=#1641 id=1641 data-nosnippet>1641</a>    </span><span class="kw">pub </span>revisions: HashMap&lt;String, ExternalFileRevisionMeta&gt;,
-<a href=#1642 id=1642 data-nosnippet>1642</a>    <span class="kw">pub </span>version: <span class="prelude-ty">Option</span>&lt;i32&gt;,
-<a href=#1643 id=1643 data-nosnippet>1643</a>}
-<a href=#1644 id=1644 data-nosnippet>1644</a>
-<a href=#1645 id=1645 data-nosnippet>1645</a><span class="doccomment">/// Result of on-demand file loading — includes both metadata and data blobs.
-<a href=#1646 id=1646 data-nosnippet>1646</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1647 id=1647 data-nosnippet>1647</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1648 id=1648 data-nosnippet>1648</a></span><span class="kw">pub struct </span>ExternalFileLoaded {
-<a href=#1649 id=1649 data-nosnippet>1649</a>    <span class="attr">#[serde(flatten)]
-<a href=#1650 id=1650 data-nosnippet>1650</a>    </span><span class="kw">pub </span>file: DucExternalFile,
-<a href=#1651 id=1651 data-nosnippet>1651</a>    <span class="doccomment">/// Revision data blobs keyed by revision id.
-<a href=#1652 id=1652 data-nosnippet>1652</a>    </span><span class="kw">pub </span>data: HashMap&lt;String, serde_bytes::ByteBuf&gt;,
-<a href=#1653 id=1653 data-nosnippet>1653</a>}
-<a href=#1654 id=1654 data-nosnippet>1654</a>
-<a href=#1655 id=1655 data-nosnippet>1655</a><span class="doccomment">/// Lightweight summary of an external file used for lazy/metadata-only access
-<a href=#1656 id=1656 data-nosnippet>1656</a>/// (active revision's metadata + file-level version, no data blob).
-<a href=#1657 id=1657 data-nosnippet>1657</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1658 id=1658 data-nosnippet>1658</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1659 id=1659 data-nosnippet>1659</a></span><span class="kw">pub struct </span>ExternalFileMeta {
-<a href=#1660 id=1660 data-nosnippet>1660</a>    <span class="kw">pub </span>id: String,
-<a href=#1661 id=1661 data-nosnippet>1661</a>    <span class="kw">pub </span>active_revision_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1662 id=1662 data-nosnippet>1662</a>    <span class="kw">pub </span>mime_type: String,
-<a href=#1663 id=1663 data-nosnippet>1663</a>    <span class="kw">pub </span>created: i64,
-<a href=#1664 id=1664 data-nosnippet>1664</a>    <span class="kw">pub </span>last_retrieved: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#1665 id=1665 data-nosnippet>1665</a>    <span class="kw">pub </span>version: <span class="prelude-ty">Option</span>&lt;i32&gt;,
-<a href=#1666 id=1666 data-nosnippet>1666</a>}
-<a href=#1667 id=1667 data-nosnippet>1667</a>
-<a href=#1668 id=1668 data-nosnippet>1668</a><span class="comment">// =============== PROJECT CHARTER &amp; ISSUES ===============
-<a href=#1669 id=1669 data-nosnippet>1669</a>
-<a href=#1670 id=1670 data-nosnippet>1670</a></span><span class="doccomment">/** A person, organization, team, system, or agent relevant to the project. */
-<a href=#1671 id=1671 data-nosnippet>1671</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1672 id=1672 data-nosnippet>1672</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1673 id=1673 data-nosnippet>1673</a></span><span class="kw">pub struct </span>Actor {
-<a href=#1674 id=1674 data-nosnippet>1674</a>    <span class="doccomment">/** Stable identifier within the project context. */
-<a href=#1675 id=1675 data-nosnippet>1675</a>    </span><span class="kw">pub </span>identifier: String,
-<a href=#1676 id=1676 data-nosnippet>1676</a>    <span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1677 id=1677 data-nosnippet>1677</a>}
-<a href=#1678 id=1678 data-nosnippet>1678</a>
-<a href=#1679 id=1679 data-nosnippet>1679</a><span class="doccomment">/** Current phase of the pre-execution cycle. */
-<a href=#1680 id=1680 data-nosnippet>1680</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1681 id=1681 data-nosnippet>1681</a>#[serde(rename_all = <span class="string">"lowercase"</span>)]
-<a href=#1682 id=1682 data-nosnippet>1682</a></span><span class="kw">pub enum </span>DucCharterPhase {
-<a href=#1683 id=1683 data-nosnippet>1683</a>    Intent,
-<a href=#1684 id=1684 data-nosnippet>1684</a>    Review,
-<a href=#1685 id=1685 data-nosnippet>1685</a>    Delivery,
-<a href=#1686 id=1686 data-nosnippet>1686</a>    Closed,
-<a href=#1687 id=1687 data-nosnippet>1687</a>}
-<a href=#1688 id=1688 data-nosnippet>1688</a>
-<a href=#1689 id=1689 data-nosnippet>1689</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1690 id=1690 data-nosnippet>1690</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1691 id=1691 data-nosnippet>1691</a></span><span class="kw">pub struct </span>DucCharterRequirement {
-<a href=#1692 id=1692 data-nosnippet>1692</a>    <span class="kw">pub </span>id: String,
-<a href=#1693 id=1693 data-nosnippet>1693</a>    <span class="kw">pub </span>statement: String,
-<a href=#1694 id=1694 data-nosnippet>1694</a>    <span class="kw">pub </span>must: bool,
-<a href=#1695 id=1695 data-nosnippet>1695</a>    <span class="kw">pub </span>acceptance_criteria: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
-<a href=#1696 id=1696 data-nosnippet>1696</a>}
-<a href=#1697 id=1697 data-nosnippet>1697</a>
-<a href=#1698 id=1698 data-nosnippet>1698</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1699 id=1699 data-nosnippet>1699</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1700 id=1700 data-nosnippet>1700</a></span><span class="kw">pub struct </span>DucCharterConstraint {
-<a href=#1701 id=1701 data-nosnippet>1701</a>    <span class="kw">pub </span>id: String,
-<a href=#1702 id=1702 data-nosnippet>1702</a>    <span class="kw">pub </span>statement: String,
-<a href=#1703 id=1703 data-nosnippet>1703</a>    <span class="kw">pub </span>hard: bool,
-<a href=#1704 id=1704 data-nosnippet>1704</a>}
-<a href=#1705 id=1705 data-nosnippet>1705</a>
-<a href=#1706 id=1706 data-nosnippet>1706</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1707 id=1707 data-nosnippet>1707</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1708 id=1708 data-nosnippet>1708</a></span><span class="kw">pub struct </span>DucCharterDecision {
-<a href=#1709 id=1709 data-nosnippet>1709</a>    <span class="kw">pub </span>id: String,
-<a href=#1710 id=1710 data-nosnippet>1710</a>    <span class="kw">pub </span>accepted: bool,
-<a href=#1711 id=1711 data-nosnippet>1711</a>    <span class="kw">pub </span>decision: String,
-<a href=#1712 id=1712 data-nosnippet>1712</a>    <span class="kw">pub </span>rationale: String,
-<a href=#1713 id=1713 data-nosnippet>1713</a>    <span class="kw">pub </span>issue_ids: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
-<a href=#1714 id=1714 data-nosnippet>1714</a>    <span class="kw">pub </span>decided_at: i64,
-<a href=#1715 id=1715 data-nosnippet>1715</a>}
-<a href=#1716 id=1716 data-nosnippet>1716</a>
-<a href=#1717 id=1717 data-nosnippet>1717</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1718 id=1718 data-nosnippet>1718</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1719 id=1719 data-nosnippet>1719</a></span><span class="kw">pub struct </span>DucCharterStakeholder {
-<a href=#1720 id=1720 data-nosnippet>1720</a>    <span class="kw">pub </span>actor: Actor,
-<a href=#1721 id=1721 data-nosnippet>1721</a>    <span class="kw">pub </span>role: String,
-<a href=#1722 id=1722 data-nosnippet>1722</a>}
-<a href=#1723 id=1723 data-nosnippet>1723</a>
-<a href=#1724 id=1724 data-nosnippet>1724</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1725 id=1725 data-nosnippet>1725</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1726 id=1726 data-nosnippet>1726</a></span><span class="kw">pub struct </span>DucCharter {
-<a href=#1727 id=1727 data-nosnippet>1727</a>    <span class="kw">pub </span>title: String,
-<a href=#1728 id=1728 data-nosnippet>1728</a>    <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1729 id=1729 data-nosnippet>1729</a>    <span class="kw">pub </span>objective: String,
-<a href=#1730 id=1730 data-nosnippet>1730</a>    <span class="kw">pub </span>phase: DucCharterPhase,
-<a href=#1731 id=1731 data-nosnippet>1731</a>    <span class="kw">pub </span>closed_reason: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1732 id=1732 data-nosnippet>1732</a>    <span class="kw">pub </span>requirements: Vec&lt;DucCharterRequirement&gt;,
-<a href=#1733 id=1733 data-nosnippet>1733</a>    <span class="kw">pub </span>constraints: Vec&lt;DucCharterConstraint&gt;,
-<a href=#1734 id=1734 data-nosnippet>1734</a>    <span class="kw">pub </span>decisions: Vec&lt;DucCharterDecision&gt;,
-<a href=#1735 id=1735 data-nosnippet>1735</a>    <span class="kw">pub </span>stakeholders: <span class="prelude-ty">Option</span>&lt;Vec&lt;DucCharterStakeholder&gt;&gt;,
-<a href=#1736 id=1736 data-nosnippet>1736</a>    <span class="kw">pub </span>updated_at: i64,
-<a href=#1737 id=1737 data-nosnippet>1737</a>}
-<a href=#1738 id=1738 data-nosnippet>1738</a>
-<a href=#1739 id=1739 data-nosnippet>1739</a><span class="doccomment">/** State of an issue thread. */
-<a href=#1740 id=1740 data-nosnippet>1740</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1741 id=1741 data-nosnippet>1741</a>#[serde(rename_all = <span class="string">"lowercase"</span>)]
-<a href=#1742 id=1742 data-nosnippet>1742</a></span><span class="kw">pub enum </span>DucIssueStatus {
-<a href=#1743 id=1743 data-nosnippet>1743</a>    Open,
-<a href=#1744 id=1744 data-nosnippet>1744</a>    Closed,
-<a href=#1745 id=1745 data-nosnippet>1745</a>    Dismissed,
-<a href=#1746 id=1746 data-nosnippet>1746</a>}
-<a href=#1747 id=1747 data-nosnippet>1747</a>
-<a href=#1748 id=1748 data-nosnippet>1748</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1749 id=1749 data-nosnippet>1749</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1750 id=1750 data-nosnippet>1750</a></span><span class="kw">pub struct </span>DucIssueMessage {
-<a href=#1751 id=1751 data-nosnippet>1751</a>    <span class="kw">pub </span>id: String,
-<a href=#1752 id=1752 data-nosnippet>1752</a>    <span class="kw">pub </span>author: Actor,
-<a href=#1753 id=1753 data-nosnippet>1753</a>    <span class="kw">pub </span>content: String,
-<a href=#1754 id=1754 data-nosnippet>1754</a>    <span class="kw">pub </span>reply_to_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1755 id=1755 data-nosnippet>1755</a>    <span class="kw">pub </span>reactions: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, Vec&lt;String&gt;&gt;&gt;,
-<a href=#1756 id=1756 data-nosnippet>1756</a>    <span class="kw">pub </span>created_at: i64,
-<a href=#1757 id=1757 data-nosnippet>1757</a>    <span class="kw">pub </span>edited_at: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#1758 id=1758 data-nosnippet>1758</a>    <span class="kw">pub </span>deleted_at: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#1759 id=1759 data-nosnippet>1759</a>}
-<a href=#1760 id=1760 data-nosnippet>1760</a>
-<a href=#1761 id=1761 data-nosnippet>1761</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1762 id=1762 data-nosnippet>1762</a>#[serde(
-<a href=#1763 id=1763 data-nosnippet>1763</a>    tag = <span class="string">"type"</span>,
-<a href=#1764 id=1764 data-nosnippet>1764</a>    rename_all = <span class="string">"camelCase"</span>,
-<a href=#1765 id=1765 data-nosnippet>1765</a>    rename_all_fields = <span class="string">"camelCase"
-<a href=#1766 id=1766 data-nosnippet>1766</a></span>)]
-<a href=#1767 id=1767 data-nosnippet>1767</a></span><span class="kw">pub enum </span>DucIssueAnchor {
-<a href=#1768 id=1768 data-nosnippet>1768</a>    Canvas {
-<a href=#1769 id=1769 data-nosnippet>1769</a>        x: f64,
-<a href=#1770 id=1770 data-nosnippet>1770</a>        y: f64,
-<a href=#1771 id=1771 data-nosnippet>1771</a>    },
-<a href=#1772 id=1772 data-nosnippet>1772</a>    Element {
-<a href=#1773 id=1773 data-nosnippet>1773</a>        element_id: String,
-<a href=#1774 id=1774 data-nosnippet>1774</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1775 id=1775 data-nosnippet>1775</a>        </span>anchor_x: <span class="prelude-ty">Option</span>&lt;f64&gt;,
-<a href=#1776 id=1776 data-nosnippet>1776</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1777 id=1777 data-nosnippet>1777</a>        </span>anchor_y: <span class="prelude-ty">Option</span>&lt;f64&gt;,
-<a href=#1778 id=1778 data-nosnippet>1778</a>    },
-<a href=#1779 id=1779 data-nosnippet>1779</a>    Model {
-<a href=#1780 id=1780 data-nosnippet>1780</a>        element_id: String,
-<a href=#1781 id=1781 data-nosnippet>1781</a>        point: [f64; <span class="number">3</span>],
-<a href=#1782 id=1782 data-nosnippet>1782</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1783 id=1783 data-nosnippet>1783</a>        </span>normal: <span class="prelude-ty">Option</span>&lt;[f64; <span class="number">3</span>]&gt;,
-<a href=#1784 id=1784 data-nosnippet>1784</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1785 id=1785 data-nosnippet>1785</a>        </span>viewer_state: <span class="prelude-ty">Option</span>&lt;Viewer3DState&gt;,
-<a href=#1786 id=1786 data-nosnippet>1786</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1787 id=1787 data-nosnippet>1787</a>        </span>topology_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1788 id=1788 data-nosnippet>1788</a>    },
-<a href=#1789 id=1789 data-nosnippet>1789</a>}
-<a href=#1790 id=1790 data-nosnippet>1790</a>
-<a href=#1791 id=1791 data-nosnippet>1791</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1792 id=1792 data-nosnippet>1792</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1793 id=1793 data-nosnippet>1793</a></span><span class="kw">pub struct </span>DucIssue {
-<a href=#1794 id=1794 data-nosnippet>1794</a>    <span class="kw">pub </span>id: String,
-<a href=#1795 id=1795 data-nosnippet>1795</a>    <span class="kw">pub </span>local_id: i64,
-<a href=#1796 id=1796 data-nosnippet>1796</a>    <span class="kw">pub </span>title: String,
-<a href=#1797 id=1797 data-nosnippet>1797</a>    <span class="kw">pub </span>status: DucIssueStatus,
-<a href=#1798 id=1798 data-nosnippet>1798</a>    <span class="kw">pub </span>dismissed_reason: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1799 id=1799 data-nosnippet>1799</a>    <span class="kw">pub </span>messages: Vec&lt;DucIssueMessage&gt;,
-<a href=#1800 id=1800 data-nosnippet>1800</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1801 id=1801 data-nosnippet>1801</a>    </span><span class="kw">pub </span>due_date: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#1802 id=1802 data-nosnippet>1802</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1803 id=1803 data-nosnippet>1803</a>    </span><span class="kw">pub </span>anchor: <span class="prelude-ty">Option</span>&lt;DucIssueAnchor&gt;,
-<a href=#1804 id=1804 data-nosnippet>1804</a>    <span class="kw">pub </span>author_id: String,
-<a href=#1805 id=1805 data-nosnippet>1805</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1806 id=1806 data-nosnippet>1806</a>    </span><span class="kw">pub </span>assignee_ids: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
-<a href=#1807 id=1807 data-nosnippet>1807</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1808 id=1808 data-nosnippet>1808</a>    </span><span class="kw">pub </span>follower_ids: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
-<a href=#1809 id=1809 data-nosnippet>1809</a>    <span class="kw">pub </span>created_at: i64,
-<a href=#1810 id=1810 data-nosnippet>1810</a>    <span class="kw">pub </span>updated_at: i64,
-<a href=#1811 id=1811 data-nosnippet>1811</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1812 id=1812 data-nosnippet>1812</a>    </span><span class="kw">pub </span>deleted_at: <span class="prelude-ty">Option</span>&lt;i64&gt;,
-<a href=#1813 id=1813 data-nosnippet>1813</a>}
-<a href=#1814 id=1814 data-nosnippet>1814</a>
-<a href=#1815 id=1815 data-nosnippet>1815</a><span class="comment">// =============== ROOT TYPE ===============
-<a href=#1816 id=1816 data-nosnippet>1816</a>
-<a href=#1817 id=1817 data-nosnippet>1817</a></span><span class="doccomment">/** Root data structure for the stored data state */
-<a href=#1818 id=1818 data-nosnippet>1818</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-<a href=#1819 id=1819 data-nosnippet>1819</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
-<a href=#1820 id=1820 data-nosnippet>1820</a></span><span class="kw">pub struct </span>ExportedDataState {
-<a href=#1821 id=1821 data-nosnippet>1821</a>    <span class="doccomment">/** Actual file id */
-<a href=#1822 id=1822 data-nosnippet>1822</a>    </span><span class="kw">pub </span>id: <span class="prelude-ty">Option</span>&lt;String&gt;,
-<a href=#1823 id=1823 data-nosnippet>1823</a>    <span class="kw">pub </span>version: String,
-<a href=#1824 id=1824 data-nosnippet>1824</a>    <span class="kw">pub </span>source: String,
-<a href=#1825 id=1825 data-nosnippet>1825</a>    <span class="attr">#[serde(rename = <span class="string">"type"</span>)]
-<a href=#1826 id=1826 data-nosnippet>1826</a>    </span><span class="kw">pub </span>data_type: String,
-<a href=#1827 id=1827 data-nosnippet>1827</a>    <span class="kw">pub </span>dictionary: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, String&gt;&gt;,
-<a href=#1828 id=1828 data-nosnippet>1828</a>    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>, default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1829 id=1829 data-nosnippet>1829</a>    </span><span class="kw">pub </span>thumbnail: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,
-<a href=#1830 id=1830 data-nosnippet>1830</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1831 id=1831 data-nosnippet>1831</a>    </span><span class="kw">pub </span>charter: <span class="prelude-ty">Option</span>&lt;DucCharter&gt;,
-<a href=#1832 id=1832 data-nosnippet>1832</a>    <span class="attr">#[serde(default)]
-<a href=#1833 id=1833 data-nosnippet>1833</a>    </span><span class="kw">pub </span>issues: Vec&lt;DucIssue&gt;,
-<a href=#1834 id=1834 data-nosnippet>1834</a>    <span class="kw">pub </span>elements: Vec&lt;ElementWrapper&gt;,
-<a href=#1835 id=1835 data-nosnippet>1835</a>    <span class="kw">pub </span>blocks: Vec&lt;DucBlock&gt;,
-<a href=#1836 id=1836 data-nosnippet>1836</a>    <span class="kw">pub </span>block_instances: Vec&lt;DucBlockInstance&gt;,
-<a href=#1837 id=1837 data-nosnippet>1837</a>    <span class="kw">pub </span>block_collections: Vec&lt;DucBlockCollection&gt;,
-<a href=#1838 id=1838 data-nosnippet>1838</a>    <span class="kw">pub </span>groups: Vec&lt;DucGroup&gt;,
-<a href=#1839 id=1839 data-nosnippet>1839</a>    <span class="kw">pub </span>regions: Vec&lt;DucRegion&gt;,
-<a href=#1840 id=1840 data-nosnippet>1840</a>    <span class="kw">pub </span>layers: Vec&lt;DucLayer&gt;,
-<a href=#1841 id=1841 data-nosnippet>1841</a>    <span class="doccomment">/** The user's current session state for a specific project */
-<a href=#1842 id=1842 data-nosnippet>1842</a>    </span><span class="attr">#[serde(rename = <span class="string">"localState"</span>)]
-<a href=#1843 id=1843 data-nosnippet>1843</a>    </span><span class="kw">pub </span>duc_local_state: <span class="prelude-ty">Option</span>&lt;DucLocalState&gt;,
-<a href=#1844 id=1844 data-nosnippet>1844</a>    <span class="doccomment">/** Project-wide settings that are saved with the document and shared by all users */
-<a href=#1845 id=1845 data-nosnippet>1845</a>    </span><span class="attr">#[serde(rename = <span class="string">"globalState"</span>)]
-<a href=#1846 id=1846 data-nosnippet>1846</a>    </span><span class="kw">pub </span>duc_global_state: <span class="prelude-ty">Option</span>&lt;DucGlobalState&gt;,
-<a href=#1847 id=1847 data-nosnippet>1847</a>    <span class="doccomment">/** In case it is needed to embed the version control into the file format */
-<a href=#1848 id=1848 data-nosnippet>1848</a>    </span><span class="kw">pub </span>version_graph: <span class="prelude-ty">Option</span>&lt;VersionGraph&gt;,
-<a href=#1849 id=1849 data-nosnippet>1849</a>    <span class="attr">#[serde(rename = <span class="string">"files"</span>)]
-<a href=#1850 id=1850 data-nosnippet>1850</a>    </span><span class="kw">pub </span>external_files: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, DucExternalFile&gt;&gt;,
-<a href=#1851 id=1851 data-nosnippet>1851</a>    <span class="doccomment">/// Binary data blobs for external file revisions, keyed by revision id.
-<a href=#1852 id=1852 data-nosnippet>1852</a>    /// Separated from `external_files` so metadata can travel without heavy blobs.
-<a href=#1853 id=1853 data-nosnippet>1853</a>    </span><span class="attr">#[serde(rename = <span class="string">"filesData"</span>, default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
-<a href=#1854 id=1854 data-nosnippet>1854</a>    </span><span class="kw">pub </span>external_files_data: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, serde_bytes::ByteBuf&gt;&gt;,
-<a href=#1855 id=1855 data-nosnippet>1855</a>}
+<a href=#1440 id=1440 data-nosnippet>1440</a>    <span class="doccomment">/// The background color of the drawing.
+<a href=#1441 id=1441 data-nosnippet>1441</a>    </span><span class="kw">pub </span>view_background_color: String,
+<a href=#1442 id=1442 data-nosnippet>1442</a>    <span class="doccomment">/// Use the stored background color regardless of the viewer's theme.
+<a href=#1443 id=1443 data-nosnippet>1443</a>    </span><span class="attr">#[serde(default)]
+<a href=#1444 id=1444 data-nosnippet>1444</a>    </span><span class="kw">pub </span>lock_background_color: bool,
+<a href=#1445 id=1445 data-nosnippet>1445</a>}
+<a href=#1446 id=1446 data-nosnippet>1446</a>
+<a href=#1447 id=1447 data-nosnippet>1447</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1448 id=1448 data-nosnippet>1448</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1449 id=1449 data-nosnippet>1449</a></span><span class="kw">pub struct </span>DucLocalState {
+<a href=#1450 id=1450 data-nosnippet>1450</a>    <span class="kw">pub </span>scroll_x: f64,
+<a href=#1451 id=1451 data-nosnippet>1451</a>    <span class="kw">pub </span>scroll_y: f64,
+<a href=#1452 id=1452 data-nosnippet>1452</a>    <span class="kw">pub </span>zoom: f64,
+<a href=#1453 id=1453 data-nosnippet>1453</a>    <span class="kw">pub </span>is_binding_enabled: bool,
+<a href=#1454 id=1454 data-nosnippet>1454</a>    <span class="doccomment">/** Current item is usually a quick access state to apply as default to certain things when drawing */
+<a href=#1455 id=1455 data-nosnippet>1455</a>    </span><span class="kw">pub </span>current_item_stroke: <span class="prelude-ty">Option</span>&lt;ElementStroke&gt;,
+<a href=#1456 id=1456 data-nosnippet>1456</a>    <span class="kw">pub </span>current_item_background: <span class="prelude-ty">Option</span>&lt;ElementBackground&gt;,
+<a href=#1457 id=1457 data-nosnippet>1457</a>    <span class="kw">pub </span>current_item_opacity: f32,
+<a href=#1458 id=1458 data-nosnippet>1458</a>    <span class="kw">pub </span>current_item_font_family: String,
+<a href=#1459 id=1459 data-nosnippet>1459</a>    <span class="kw">pub </span>current_item_font_size: f64,
+<a href=#1460 id=1460 data-nosnippet>1460</a>    <span class="kw">pub </span>current_item_text_align: TEXT_ALIGN,
+<a href=#1461 id=1461 data-nosnippet>1461</a>    <span class="kw">pub </span>current_item_start_line_head: <span class="prelude-ty">Option</span>&lt;DucHead&gt;,
+<a href=#1462 id=1462 data-nosnippet>1462</a>    <span class="kw">pub </span>current_item_end_line_head: <span class="prelude-ty">Option</span>&lt;DucHead&gt;,
+<a href=#1463 id=1463 data-nosnippet>1463</a>    <span class="kw">pub </span>current_item_roundness: f64,
+<a href=#1464 id=1464 data-nosnippet>1464</a>    <span class="doccomment">/** Pen mode is enabled, creates a better experience for drawing with a pen */
+<a href=#1465 id=1465 data-nosnippet>1465</a>    </span><span class="kw">pub </span>pen_mode: bool,
+<a href=#1466 id=1466 data-nosnippet>1466</a>    <span class="doccomment">/** In view mode the user is not allowed to edit the canvas. */
+<a href=#1467 id=1467 data-nosnippet>1467</a>    </span><span class="kw">pub </span>view_mode_enabled: bool,
+<a href=#1468 id=1468 data-nosnippet>1468</a>    <span class="doccomment">/** Object snapping on the environment is enabled */
+<a href=#1469 id=1469 data-nosnippet>1469</a>    </span><span class="kw">pub </span>objects_snap_mode_enabled: bool,
+<a href=#1470 id=1470 data-nosnippet>1470</a>    <span class="doccomment">/** Available grids are visible */
+<a href=#1471 id=1471 data-nosnippet>1471</a>    </span><span class="kw">pub </span>grid_mode_enabled: bool,
+<a href=#1472 id=1472 data-nosnippet>1472</a>    <span class="doccomment">/** Whether to disable the fill on all shapes */
+<a href=#1473 id=1473 data-nosnippet>1473</a>    </span><span class="kw">pub </span>outline_mode_enabled: bool,
+<a href=#1474 id=1474 data-nosnippet>1474</a>    <span class="doccomment">/**
+<a href=#1475 id=1475 data-nosnippet>1475</a>     * When enabled, the version graph is not updated automatically.
+<a href=#1476 id=1476 data-nosnippet>1476</a>     * The user needs to manually update the graph for new versions to be saved in version control.
+<a href=#1477 id=1477 data-nosnippet>1477</a>     */
+<a href=#1478 id=1478 data-nosnippet>1478</a>    </span><span class="kw">pub </span>manual_save_mode: bool,
+<a href=#1479 id=1479 data-nosnippet>1479</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
+<a href=#1480 id=1480 data-nosnippet>1480</a>    </span><span class="kw">pub </span>decimal_places: i32,
+<a href=#1481 id=1481 data-nosnippet>1481</a>}
+<a href=#1482 id=1482 data-nosnippet>1482</a>
+<a href=#1483 id=1483 data-nosnippet>1483</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1484 id=1484 data-nosnippet>1484</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1485 id=1485 data-nosnippet>1485</a></span><span class="kw">pub struct </span>DucLayerOverrides {
+<a href=#1486 id=1486 data-nosnippet>1486</a>    <span class="kw">pub </span>stroke: ElementStroke,
+<a href=#1487 id=1487 data-nosnippet>1487</a>    <span class="kw">pub </span>background: ElementBackground,
+<a href=#1488 id=1488 data-nosnippet>1488</a>}
+<a href=#1489 id=1489 data-nosnippet>1489</a>
+<a href=#1490 id=1490 data-nosnippet>1490</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1491 id=1491 data-nosnippet>1491</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1492 id=1492 data-nosnippet>1492</a></span><span class="kw">pub struct </span>DucLayer {
+<a href=#1493 id=1493 data-nosnippet>1493</a>    <span class="kw">pub </span>id: String,
+<a href=#1494 id=1494 data-nosnippet>1494</a>    <span class="attr">#[serde(flatten)]
+<a href=#1495 id=1495 data-nosnippet>1495</a>    </span><span class="kw">pub </span>stack_base: DucStackBase,
+<a href=#1496 id=1496 data-nosnippet>1496</a>    <span class="kw">pub </span>readonly: bool,
+<a href=#1497 id=1497 data-nosnippet>1497</a>    <span class="doccomment">/** A container for the default styling properties that elements on this layer will inherit */
+<a href=#1498 id=1498 data-nosnippet>1498</a>    </span><span class="kw">pub </span>overrides: <span class="prelude-ty">Option</span>&lt;DucLayerOverrides&gt;,
+<a href=#1499 id=1499 data-nosnippet>1499</a>}
+<a href=#1500 id=1500 data-nosnippet>1500</a>
+<a href=#1501 id=1501 data-nosnippet>1501</a><span class="comment">// =============== VERSION CONTROL ===============
+<a href=#1502 id=1502 data-nosnippet>1502</a>
+<a href=#1503 id=1503 data-nosnippet>1503</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1504 id=1504 data-nosnippet>1504</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1505 id=1505 data-nosnippet>1505</a></span><span class="kw">pub struct </span>VersionBase {
+<a href=#1506 id=1506 data-nosnippet>1506</a>    <span class="kw">pub </span>id: String,
+<a href=#1507 id=1507 data-nosnippet>1507</a>    <span class="kw">pub </span>parent_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1508 id=1508 data-nosnippet>1508</a>    <span class="kw">pub </span>timestamp: i64,
+<a href=#1509 id=1509 data-nosnippet>1509</a>    <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1510 id=1510 data-nosnippet>1510</a>    <span class="kw">pub </span>is_manual_save: bool,
+<a href=#1511 id=1511 data-nosnippet>1511</a>    <span class="kw">pub </span>user_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1512 id=1512 data-nosnippet>1512</a>}
+<a href=#1513 id=1513 data-nosnippet>1513</a>
+<a href=#1514 id=1514 data-nosnippet>1514</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1515 id=1515 data-nosnippet>1515</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1516 id=1516 data-nosnippet>1516</a></span><span class="kw">pub struct </span>Checkpoint {
+<a href=#1517 id=1517 data-nosnippet>1517</a>    <span class="attr">#[serde(flatten)]
+<a href=#1518 id=1518 data-nosnippet>1518</a>    </span><span class="kw">pub </span>base: VersionBase,
+<a href=#1519 id=1519 data-nosnippet>1519</a>    <span class="kw">pub </span>version_number: i64,
+<a href=#1520 id=1520 data-nosnippet>1520</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
+<a href=#1521 id=1521 data-nosnippet>1521</a>    </span><span class="kw">pub </span>schema_version: i32,
+<a href=#1522 id=1522 data-nosnippet>1522</a>    <span class="kw">pub </span>is_schema_boundary: bool,
+<a href=#1523 id=1523 data-nosnippet>1523</a>    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
+<a href=#1524 id=1524 data-nosnippet>1524</a>    </span><span class="kw">pub </span>data: Vec&lt;u8&gt;,
+<a href=#1525 id=1525 data-nosnippet>1525</a>    <span class="kw">pub </span>size_bytes: i64,
+<a href=#1526 id=1526 data-nosnippet>1526</a>}
+<a href=#1527 id=1527 data-nosnippet>1527</a>
+<a href=#1528 id=1528 data-nosnippet>1528</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1529 id=1529 data-nosnippet>1529</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1530 id=1530 data-nosnippet>1530</a></span><span class="kw">pub struct </span>Delta {
+<a href=#1531 id=1531 data-nosnippet>1531</a>    <span class="attr">#[serde(flatten)]
+<a href=#1532 id=1532 data-nosnippet>1532</a>    </span><span class="kw">pub </span>base: VersionBase,
+<a href=#1533 id=1533 data-nosnippet>1533</a>    <span class="kw">pub </span>version_number: i64,
+<a href=#1534 id=1534 data-nosnippet>1534</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
+<a href=#1535 id=1535 data-nosnippet>1535</a>    </span><span class="kw">pub </span>schema_version: i32,
+<a href=#1536 id=1536 data-nosnippet>1536</a>    <span class="kw">pub </span>base_checkpoint_id: String,
+<a href=#1537 id=1537 data-nosnippet>1537</a>    <span class="doccomment">/** Compressed binary data for the delta (gzip). When present, patch_string is ignored. */
+<a href=#1538 id=1538 data-nosnippet>1538</a>    </span><span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>)]
+<a href=#1539 id=1539 data-nosnippet>1539</a>    </span><span class="kw">pub </span>payload: Vec&lt;u8&gt;,
+<a href=#1540 id=1540 data-nosnippet>1540</a>    <span class="kw">pub </span>size_bytes: i64,
+<a href=#1541 id=1541 data-nosnippet>1541</a>}
+<a href=#1542 id=1542 data-nosnippet>1542</a>
+<a href=#1543 id=1543 data-nosnippet>1543</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1544 id=1544 data-nosnippet>1544</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1545 id=1545 data-nosnippet>1545</a></span><span class="kw">pub struct </span>SchemaMigration {
+<a href=#1546 id=1546 data-nosnippet>1546</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
+<a href=#1547 id=1547 data-nosnippet>1547</a>    </span><span class="kw">pub </span>from_schema_version: i32,
+<a href=#1548 id=1548 data-nosnippet>1548</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
+<a href=#1549 id=1549 data-nosnippet>1549</a>    </span><span class="kw">pub </span>to_schema_version: i32,
+<a href=#1550 id=1550 data-nosnippet>1550</a>    <span class="kw">pub </span>migration_name: String,
+<a href=#1551 id=1551 data-nosnippet>1551</a>    <span class="kw">pub </span>migration_checksum: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1552 id=1552 data-nosnippet>1552</a>    <span class="kw">pub </span>applied_at: i64,
+<a href=#1553 id=1553 data-nosnippet>1553</a>    <span class="kw">pub </span>boundary_checkpoint_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1554 id=1554 data-nosnippet>1554</a>}
+<a href=#1555 id=1555 data-nosnippet>1555</a>
+<a href=#1556 id=1556 data-nosnippet>1556</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1557 id=1557 data-nosnippet>1557</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1558 id=1558 data-nosnippet>1558</a></span><span class="kw">pub struct </span>VersionChain {
+<a href=#1559 id=1559 data-nosnippet>1559</a>    <span class="kw">pub </span>id: String,
+<a href=#1560 id=1560 data-nosnippet>1560</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
+<a href=#1561 id=1561 data-nosnippet>1561</a>    </span><span class="kw">pub </span>schema_version: i32,
+<a href=#1562 id=1562 data-nosnippet>1562</a>    <span class="kw">pub </span>start_version: i64,
+<a href=#1563 id=1563 data-nosnippet>1563</a>    <span class="kw">pub </span>end_version: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#1564 id=1564 data-nosnippet>1564</a>    <span class="kw">pub </span>migration: <span class="prelude-ty">Option</span>&lt;SchemaMigration&gt;,
+<a href=#1565 id=1565 data-nosnippet>1565</a>    <span class="kw">pub </span>root_checkpoint_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1566 id=1566 data-nosnippet>1566</a>}
+<a href=#1567 id=1567 data-nosnippet>1567</a>
+<a href=#1568 id=1568 data-nosnippet>1568</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1569 id=1569 data-nosnippet>1569</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1570 id=1570 data-nosnippet>1570</a></span><span class="kw">pub struct </span>VersionGraphMetadata {
+<a href=#1571 id=1571 data-nosnippet>1571</a>    <span class="kw">pub </span>current_version: i64,
+<a href=#1572 id=1572 data-nosnippet>1572</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
+<a href=#1573 id=1573 data-nosnippet>1573</a>    </span><span class="kw">pub </span>current_schema_version: i32,
+<a href=#1574 id=1574 data-nosnippet>1574</a>    <span class="attr">#[serde(deserialize_with = <span class="string">"crate::serde_utils::trunc_i32"</span>)]
+<a href=#1575 id=1575 data-nosnippet>1575</a>    </span><span class="kw">pub </span>chain_count: i32,
+<a href=#1576 id=1576 data-nosnippet>1576</a>    <span class="kw">pub </span>total_size: i64,
+<a href=#1577 id=1577 data-nosnippet>1577</a>}
+<a href=#1578 id=1578 data-nosnippet>1578</a>
+<a href=#1579 id=1579 data-nosnippet>1579</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1580 id=1580 data-nosnippet>1580</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1581 id=1581 data-nosnippet>1581</a></span><span class="kw">pub struct </span>VersionGraph {
+<a href=#1582 id=1582 data-nosnippet>1582</a>    <span class="doccomment">/** The ID of the user-designated checkpoint version. */
+<a href=#1583 id=1583 data-nosnippet>1583</a>    </span><span class="kw">pub </span>user_checkpoint_version_id: String,
+<a href=#1584 id=1584 data-nosnippet>1584</a>    <span class="doccomment">/** The ID of the latest version in the graph. */
+<a href=#1585 id=1585 data-nosnippet>1585</a>    </span><span class="kw">pub </span>latest_version_id: String,
+<a href=#1586 id=1586 data-nosnippet>1586</a>    <span class="kw">pub </span>chains: Vec&lt;VersionChain&gt;,
+<a href=#1587 id=1587 data-nosnippet>1587</a>    <span class="doccomment">/** An array of all checkpoint versions. */
+<a href=#1588 id=1588 data-nosnippet>1588</a>    </span><span class="kw">pub </span>checkpoints: Vec&lt;Checkpoint&gt;,
+<a href=#1589 id=1589 data-nosnippet>1589</a>    <span class="doccomment">/** An array of all delta versions (patches). */
+<a href=#1590 id=1590 data-nosnippet>1590</a>    </span><span class="kw">pub </span>deltas: Vec&lt;Delta&gt;,
+<a href=#1591 id=1591 data-nosnippet>1591</a>    <span class="kw">pub </span>metadata: VersionGraphMetadata,
+<a href=#1592 id=1592 data-nosnippet>1592</a>}
+<a href=#1593 id=1593 data-nosnippet>1593</a>
+<a href=#1594 id=1594 data-nosnippet>1594</a><span class="comment">// =============== EXTERNAL FILES ===============
+<a href=#1595 id=1595 data-nosnippet>1595</a>
+<a href=#1596 id=1596 data-nosnippet>1596</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+<a href=#1597 id=1597 data-nosnippet>1597</a>#[serde(rename_all = <span class="string">"lowercase"</span>)]
+<a href=#1598 id=1598 data-nosnippet>1598</a></span><span class="kw">pub enum </span>ExternalFileLocatorKind {
+<a href=#1599 id=1599 data-nosnippet>1599</a>    Relative,
+<a href=#1600 id=1600 data-nosnippet>1600</a>    Absolute,
+<a href=#1601 id=1601 data-nosnippet>1601</a>}
+<a href=#1602 id=1602 data-nosnippet>1602</a>
+<a href=#1603 id=1603 data-nosnippet>1603</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1604 id=1604 data-nosnippet>1604</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1605 id=1605 data-nosnippet>1605</a></span><span class="kw">pub struct </span>ExternalFileLocator {
+<a href=#1606 id=1606 data-nosnippet>1606</a>    <span class="kw">pub </span>kind: ExternalFileLocatorKind,
+<a href=#1607 id=1607 data-nosnippet>1607</a>    <span class="kw">pub </span>path: String,
+<a href=#1608 id=1608 data-nosnippet>1608</a>    <span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1609 id=1609 data-nosnippet>1609</a>    </span><span class="kw">pub </span>original_path: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1610 id=1610 data-nosnippet>1610</a>}
+<a href=#1611 id=1611 data-nosnippet>1611</a>
+<a href=#1612 id=1612 data-nosnippet>1612</a><span class="doccomment">/// Revision metadata without the heavy data blob.
+<a href=#1613 id=1613 data-nosnippet>1613</a>/// Used inside `DucExternalFile.revisions` so the file record stays lightweight.
+<a href=#1614 id=1614 data-nosnippet>1614</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1615 id=1615 data-nosnippet>1615</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1616 id=1616 data-nosnippet>1616</a></span><span class="kw">pub struct </span>ExternalFileRevisionMeta {
+<a href=#1617 id=1617 data-nosnippet>1617</a>    <span class="kw">pub </span>id: String,
+<a href=#1618 id=1618 data-nosnippet>1618</a>    <span class="kw">pub </span>size_bytes: i64,
+<a href=#1619 id=1619 data-nosnippet>1619</a>    <span class="doccomment">/// Content hash for integrity checks and optional deduplication.
+<a href=#1620 id=1620 data-nosnippet>1620</a>    </span><span class="kw">pub </span>checksum: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1621 id=1621 data-nosnippet>1621</a>    <span class="doccomment">/// Original upload filename shown to the user.
+<a href=#1622 id=1622 data-nosnippet>1622</a>    </span><span class="kw">pub </span>source_name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1623 id=1623 data-nosnippet>1623</a>    <span class="kw">pub </span>mime_type: String,
+<a href=#1624 id=1624 data-nosnippet>1624</a>    <span class="doccomment">/// Optional note describing what changed in this revision.
+<a href=#1625 id=1625 data-nosnippet>1625</a>    </span><span class="kw">pub </span>message: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1626 id=1626 data-nosnippet>1626</a>    <span class="doccomment">/// Epoch ms when this revision was created.
+<a href=#1627 id=1627 data-nosnippet>1627</a>    </span><span class="kw">pub </span>created: i64,
+<a href=#1628 id=1628 data-nosnippet>1628</a>    <span class="doccomment">/// Epoch ms when this revision was last loaded onto the scene.
+<a href=#1629 id=1629 data-nosnippet>1629</a>    </span><span class="kw">pub </span>last_retrieved: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#1630 id=1630 data-nosnippet>1630</a>    <span class="attr">#[serde(default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1631 id=1631 data-nosnippet>1631</a>    </span><span class="kw">pub </span>locator: <span class="prelude-ty">Option</span>&lt;ExternalFileLocator&gt;,
+<a href=#1632 id=1632 data-nosnippet>1632</a>}
+<a href=#1633 id=1633 data-nosnippet>1633</a>
+<a href=#1634 id=1634 data-nosnippet>1634</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1635 id=1635 data-nosnippet>1635</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1636 id=1636 data-nosnippet>1636</a></span><span class="kw">pub struct </span>DucExternalFile {
+<a href=#1637 id=1637 data-nosnippet>1637</a>    <span class="kw">pub </span>id: String,
+<a href=#1638 id=1638 data-nosnippet>1638</a>    <span class="kw">pub </span>active_revision_id: String,
+<a href=#1639 id=1639 data-nosnippet>1639</a>    <span class="doccomment">/// Epoch ms when the logical file was last mutated (revision added or active changed).
+<a href=#1640 id=1640 data-nosnippet>1640</a>    </span><span class="kw">pub </span>updated: i64,
+<a href=#1641 id=1641 data-nosnippet>1641</a>    <span class="doccomment">/// All revisions of this file (metadata only, no data blobs).
+<a href=#1642 id=1642 data-nosnippet>1642</a>    </span><span class="kw">pub </span>revisions: HashMap&lt;String, ExternalFileRevisionMeta&gt;,
+<a href=#1643 id=1643 data-nosnippet>1643</a>    <span class="kw">pub </span>version: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+<a href=#1644 id=1644 data-nosnippet>1644</a>}
+<a href=#1645 id=1645 data-nosnippet>1645</a>
+<a href=#1646 id=1646 data-nosnippet>1646</a><span class="doccomment">/// Result of on-demand file loading — includes both metadata and data blobs.
+<a href=#1647 id=1647 data-nosnippet>1647</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1648 id=1648 data-nosnippet>1648</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1649 id=1649 data-nosnippet>1649</a></span><span class="kw">pub struct </span>ExternalFileLoaded {
+<a href=#1650 id=1650 data-nosnippet>1650</a>    <span class="attr">#[serde(flatten)]
+<a href=#1651 id=1651 data-nosnippet>1651</a>    </span><span class="kw">pub </span>file: DucExternalFile,
+<a href=#1652 id=1652 data-nosnippet>1652</a>    <span class="doccomment">/// Revision data blobs keyed by revision id.
+<a href=#1653 id=1653 data-nosnippet>1653</a>    </span><span class="kw">pub </span>data: HashMap&lt;String, serde_bytes::ByteBuf&gt;,
+<a href=#1654 id=1654 data-nosnippet>1654</a>}
+<a href=#1655 id=1655 data-nosnippet>1655</a>
+<a href=#1656 id=1656 data-nosnippet>1656</a><span class="doccomment">/// Lightweight summary of an external file used for lazy/metadata-only access
+<a href=#1657 id=1657 data-nosnippet>1657</a>/// (active revision's metadata + file-level version, no data blob).
+<a href=#1658 id=1658 data-nosnippet>1658</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1659 id=1659 data-nosnippet>1659</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1660 id=1660 data-nosnippet>1660</a></span><span class="kw">pub struct </span>ExternalFileMeta {
+<a href=#1661 id=1661 data-nosnippet>1661</a>    <span class="kw">pub </span>id: String,
+<a href=#1662 id=1662 data-nosnippet>1662</a>    <span class="kw">pub </span>active_revision_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1663 id=1663 data-nosnippet>1663</a>    <span class="kw">pub </span>mime_type: String,
+<a href=#1664 id=1664 data-nosnippet>1664</a>    <span class="kw">pub </span>created: i64,
+<a href=#1665 id=1665 data-nosnippet>1665</a>    <span class="kw">pub </span>last_retrieved: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#1666 id=1666 data-nosnippet>1666</a>    <span class="kw">pub </span>version: <span class="prelude-ty">Option</span>&lt;i32&gt;,
+<a href=#1667 id=1667 data-nosnippet>1667</a>}
+<a href=#1668 id=1668 data-nosnippet>1668</a>
+<a href=#1669 id=1669 data-nosnippet>1669</a><span class="comment">// =============== PROJECT CHARTER &amp; ISSUES ===============
+<a href=#1670 id=1670 data-nosnippet>1670</a>
+<a href=#1671 id=1671 data-nosnippet>1671</a></span><span class="doccomment">/** A person, organization, team, system, or agent relevant to the project. */
+<a href=#1672 id=1672 data-nosnippet>1672</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1673 id=1673 data-nosnippet>1673</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1674 id=1674 data-nosnippet>1674</a></span><span class="kw">pub struct </span>Actor {
+<a href=#1675 id=1675 data-nosnippet>1675</a>    <span class="doccomment">/** Stable identifier within the project context. */
+<a href=#1676 id=1676 data-nosnippet>1676</a>    </span><span class="kw">pub </span>identifier: String,
+<a href=#1677 id=1677 data-nosnippet>1677</a>    <span class="kw">pub </span>name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1678 id=1678 data-nosnippet>1678</a>}
+<a href=#1679 id=1679 data-nosnippet>1679</a>
+<a href=#1680 id=1680 data-nosnippet>1680</a><span class="doccomment">/** Current phase of the pre-execution cycle. */
+<a href=#1681 id=1681 data-nosnippet>1681</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1682 id=1682 data-nosnippet>1682</a>#[serde(rename_all = <span class="string">"lowercase"</span>)]
+<a href=#1683 id=1683 data-nosnippet>1683</a></span><span class="kw">pub enum </span>DucCharterPhase {
+<a href=#1684 id=1684 data-nosnippet>1684</a>    Intent,
+<a href=#1685 id=1685 data-nosnippet>1685</a>    Review,
+<a href=#1686 id=1686 data-nosnippet>1686</a>    Delivery,
+<a href=#1687 id=1687 data-nosnippet>1687</a>    Closed,
+<a href=#1688 id=1688 data-nosnippet>1688</a>}
+<a href=#1689 id=1689 data-nosnippet>1689</a>
+<a href=#1690 id=1690 data-nosnippet>1690</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1691 id=1691 data-nosnippet>1691</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1692 id=1692 data-nosnippet>1692</a></span><span class="kw">pub struct </span>DucCharterRequirement {
+<a href=#1693 id=1693 data-nosnippet>1693</a>    <span class="kw">pub </span>id: String,
+<a href=#1694 id=1694 data-nosnippet>1694</a>    <span class="kw">pub </span>statement: String,
+<a href=#1695 id=1695 data-nosnippet>1695</a>    <span class="kw">pub </span>must: bool,
+<a href=#1696 id=1696 data-nosnippet>1696</a>    <span class="kw">pub </span>acceptance_criteria: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
+<a href=#1697 id=1697 data-nosnippet>1697</a>}
+<a href=#1698 id=1698 data-nosnippet>1698</a>
+<a href=#1699 id=1699 data-nosnippet>1699</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1700 id=1700 data-nosnippet>1700</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1701 id=1701 data-nosnippet>1701</a></span><span class="kw">pub struct </span>DucCharterConstraint {
+<a href=#1702 id=1702 data-nosnippet>1702</a>    <span class="kw">pub </span>id: String,
+<a href=#1703 id=1703 data-nosnippet>1703</a>    <span class="kw">pub </span>statement: String,
+<a href=#1704 id=1704 data-nosnippet>1704</a>    <span class="kw">pub </span>hard: bool,
+<a href=#1705 id=1705 data-nosnippet>1705</a>}
+<a href=#1706 id=1706 data-nosnippet>1706</a>
+<a href=#1707 id=1707 data-nosnippet>1707</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1708 id=1708 data-nosnippet>1708</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1709 id=1709 data-nosnippet>1709</a></span><span class="kw">pub struct </span>DucCharterDecision {
+<a href=#1710 id=1710 data-nosnippet>1710</a>    <span class="kw">pub </span>id: String,
+<a href=#1711 id=1711 data-nosnippet>1711</a>    <span class="kw">pub </span>accepted: bool,
+<a href=#1712 id=1712 data-nosnippet>1712</a>    <span class="kw">pub </span>decision: String,
+<a href=#1713 id=1713 data-nosnippet>1713</a>    <span class="kw">pub </span>rationale: String,
+<a href=#1714 id=1714 data-nosnippet>1714</a>    <span class="kw">pub </span>issue_ids: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
+<a href=#1715 id=1715 data-nosnippet>1715</a>    <span class="kw">pub </span>decided_at: i64,
+<a href=#1716 id=1716 data-nosnippet>1716</a>}
+<a href=#1717 id=1717 data-nosnippet>1717</a>
+<a href=#1718 id=1718 data-nosnippet>1718</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1719 id=1719 data-nosnippet>1719</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1720 id=1720 data-nosnippet>1720</a></span><span class="kw">pub struct </span>DucCharterStakeholder {
+<a href=#1721 id=1721 data-nosnippet>1721</a>    <span class="kw">pub </span>actor: Actor,
+<a href=#1722 id=1722 data-nosnippet>1722</a>    <span class="kw">pub </span>role: String,
+<a href=#1723 id=1723 data-nosnippet>1723</a>}
+<a href=#1724 id=1724 data-nosnippet>1724</a>
+<a href=#1725 id=1725 data-nosnippet>1725</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1726 id=1726 data-nosnippet>1726</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1727 id=1727 data-nosnippet>1727</a></span><span class="kw">pub struct </span>DucCharter {
+<a href=#1728 id=1728 data-nosnippet>1728</a>    <span class="kw">pub </span>title: String,
+<a href=#1729 id=1729 data-nosnippet>1729</a>    <span class="kw">pub </span>description: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1730 id=1730 data-nosnippet>1730</a>    <span class="kw">pub </span>objective: String,
+<a href=#1731 id=1731 data-nosnippet>1731</a>    <span class="kw">pub </span>phase: DucCharterPhase,
+<a href=#1732 id=1732 data-nosnippet>1732</a>    <span class="kw">pub </span>closed_reason: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1733 id=1733 data-nosnippet>1733</a>    <span class="kw">pub </span>requirements: Vec&lt;DucCharterRequirement&gt;,
+<a href=#1734 id=1734 data-nosnippet>1734</a>    <span class="kw">pub </span>constraints: Vec&lt;DucCharterConstraint&gt;,
+<a href=#1735 id=1735 data-nosnippet>1735</a>    <span class="kw">pub </span>decisions: Vec&lt;DucCharterDecision&gt;,
+<a href=#1736 id=1736 data-nosnippet>1736</a>    <span class="kw">pub </span>stakeholders: <span class="prelude-ty">Option</span>&lt;Vec&lt;DucCharterStakeholder&gt;&gt;,
+<a href=#1737 id=1737 data-nosnippet>1737</a>    <span class="kw">pub </span>updated_at: i64,
+<a href=#1738 id=1738 data-nosnippet>1738</a>}
+<a href=#1739 id=1739 data-nosnippet>1739</a>
+<a href=#1740 id=1740 data-nosnippet>1740</a><span class="doccomment">/** State of an issue thread. */
+<a href=#1741 id=1741 data-nosnippet>1741</a></span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1742 id=1742 data-nosnippet>1742</a>#[serde(rename_all = <span class="string">"lowercase"</span>)]
+<a href=#1743 id=1743 data-nosnippet>1743</a></span><span class="kw">pub enum </span>DucIssueStatus {
+<a href=#1744 id=1744 data-nosnippet>1744</a>    Open,
+<a href=#1745 id=1745 data-nosnippet>1745</a>    Closed,
+<a href=#1746 id=1746 data-nosnippet>1746</a>    Dismissed,
+<a href=#1747 id=1747 data-nosnippet>1747</a>}
+<a href=#1748 id=1748 data-nosnippet>1748</a>
+<a href=#1749 id=1749 data-nosnippet>1749</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1750 id=1750 data-nosnippet>1750</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1751 id=1751 data-nosnippet>1751</a></span><span class="kw">pub struct </span>DucIssueMessage {
+<a href=#1752 id=1752 data-nosnippet>1752</a>    <span class="kw">pub </span>id: String,
+<a href=#1753 id=1753 data-nosnippet>1753</a>    <span class="kw">pub </span>author: Actor,
+<a href=#1754 id=1754 data-nosnippet>1754</a>    <span class="kw">pub </span>content: String,
+<a href=#1755 id=1755 data-nosnippet>1755</a>    <span class="kw">pub </span>reply_to_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1756 id=1756 data-nosnippet>1756</a>    <span class="kw">pub </span>reactions: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, Vec&lt;String&gt;&gt;&gt;,
+<a href=#1757 id=1757 data-nosnippet>1757</a>    <span class="kw">pub </span>created_at: i64,
+<a href=#1758 id=1758 data-nosnippet>1758</a>    <span class="kw">pub </span>edited_at: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#1759 id=1759 data-nosnippet>1759</a>    <span class="kw">pub </span>deleted_at: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#1760 id=1760 data-nosnippet>1760</a>}
+<a href=#1761 id=1761 data-nosnippet>1761</a>
+<a href=#1762 id=1762 data-nosnippet>1762</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1763 id=1763 data-nosnippet>1763</a>#[serde(
+<a href=#1764 id=1764 data-nosnippet>1764</a>    tag = <span class="string">"type"</span>,
+<a href=#1765 id=1765 data-nosnippet>1765</a>    rename_all = <span class="string">"camelCase"</span>,
+<a href=#1766 id=1766 data-nosnippet>1766</a>    rename_all_fields = <span class="string">"camelCase"
+<a href=#1767 id=1767 data-nosnippet>1767</a></span>)]
+<a href=#1768 id=1768 data-nosnippet>1768</a></span><span class="kw">pub enum </span>DucIssueAnchor {
+<a href=#1769 id=1769 data-nosnippet>1769</a>    Canvas {
+<a href=#1770 id=1770 data-nosnippet>1770</a>        x: f64,
+<a href=#1771 id=1771 data-nosnippet>1771</a>        y: f64,
+<a href=#1772 id=1772 data-nosnippet>1772</a>    },
+<a href=#1773 id=1773 data-nosnippet>1773</a>    Element {
+<a href=#1774 id=1774 data-nosnippet>1774</a>        element_id: String,
+<a href=#1775 id=1775 data-nosnippet>1775</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1776 id=1776 data-nosnippet>1776</a>        </span>anchor_x: <span class="prelude-ty">Option</span>&lt;f64&gt;,
+<a href=#1777 id=1777 data-nosnippet>1777</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1778 id=1778 data-nosnippet>1778</a>        </span>anchor_y: <span class="prelude-ty">Option</span>&lt;f64&gt;,
+<a href=#1779 id=1779 data-nosnippet>1779</a>    },
+<a href=#1780 id=1780 data-nosnippet>1780</a>    Model {
+<a href=#1781 id=1781 data-nosnippet>1781</a>        element_id: String,
+<a href=#1782 id=1782 data-nosnippet>1782</a>        point: [f64; <span class="number">3</span>],
+<a href=#1783 id=1783 data-nosnippet>1783</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1784 id=1784 data-nosnippet>1784</a>        </span>normal: <span class="prelude-ty">Option</span>&lt;[f64; <span class="number">3</span>]&gt;,
+<a href=#1785 id=1785 data-nosnippet>1785</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1786 id=1786 data-nosnippet>1786</a>        </span>viewer_state: <span class="prelude-ty">Option</span>&lt;Viewer3DState&gt;,
+<a href=#1787 id=1787 data-nosnippet>1787</a>        <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1788 id=1788 data-nosnippet>1788</a>        </span>topology_id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1789 id=1789 data-nosnippet>1789</a>    },
+<a href=#1790 id=1790 data-nosnippet>1790</a>}
+<a href=#1791 id=1791 data-nosnippet>1791</a>
+<a href=#1792 id=1792 data-nosnippet>1792</a><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1793 id=1793 data-nosnippet>1793</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1794 id=1794 data-nosnippet>1794</a></span><span class="kw">pub struct </span>DucIssue {
+<a href=#1795 id=1795 data-nosnippet>1795</a>    <span class="kw">pub </span>id: String,
+<a href=#1796 id=1796 data-nosnippet>1796</a>    <span class="kw">pub </span>local_id: i64,
+<a href=#1797 id=1797 data-nosnippet>1797</a>    <span class="kw">pub </span>title: String,
+<a href=#1798 id=1798 data-nosnippet>1798</a>    <span class="kw">pub </span>status: DucIssueStatus,
+<a href=#1799 id=1799 data-nosnippet>1799</a>    <span class="kw">pub </span>dismissed_reason: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1800 id=1800 data-nosnippet>1800</a>    <span class="kw">pub </span>messages: Vec&lt;DucIssueMessage&gt;,
+<a href=#1801 id=1801 data-nosnippet>1801</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1802 id=1802 data-nosnippet>1802</a>    </span><span class="kw">pub </span>due_date: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#1803 id=1803 data-nosnippet>1803</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1804 id=1804 data-nosnippet>1804</a>    </span><span class="kw">pub </span>anchor: <span class="prelude-ty">Option</span>&lt;DucIssueAnchor&gt;,
+<a href=#1805 id=1805 data-nosnippet>1805</a>    <span class="kw">pub </span>author_id: String,
+<a href=#1806 id=1806 data-nosnippet>1806</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1807 id=1807 data-nosnippet>1807</a>    </span><span class="kw">pub </span>assignee_ids: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
+<a href=#1808 id=1808 data-nosnippet>1808</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1809 id=1809 data-nosnippet>1809</a>    </span><span class="kw">pub </span>follower_ids: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
+<a href=#1810 id=1810 data-nosnippet>1810</a>    <span class="kw">pub </span>created_at: i64,
+<a href=#1811 id=1811 data-nosnippet>1811</a>    <span class="kw">pub </span>updated_at: i64,
+<a href=#1812 id=1812 data-nosnippet>1812</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1813 id=1813 data-nosnippet>1813</a>    </span><span class="kw">pub </span>deleted_at: <span class="prelude-ty">Option</span>&lt;i64&gt;,
+<a href=#1814 id=1814 data-nosnippet>1814</a>}
+<a href=#1815 id=1815 data-nosnippet>1815</a>
+<a href=#1816 id=1816 data-nosnippet>1816</a><span class="comment">// =============== ROOT TYPE ===============
+<a href=#1817 id=1817 data-nosnippet>1817</a>
+<a href=#1818 id=1818 data-nosnippet>1818</a></span><span class="doccomment">/** Root data structure for the stored data state */
+<a href=#1819 id=1819 data-nosnippet>1819</a></span><span class="attr">#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+<a href=#1820 id=1820 data-nosnippet>1820</a>#[serde(rename_all = <span class="string">"camelCase"</span>)]
+<a href=#1821 id=1821 data-nosnippet>1821</a></span><span class="kw">pub struct </span>ExportedDataState {
+<a href=#1822 id=1822 data-nosnippet>1822</a>    <span class="doccomment">/** Actual file id */
+<a href=#1823 id=1823 data-nosnippet>1823</a>    </span><span class="kw">pub </span>id: <span class="prelude-ty">Option</span>&lt;String&gt;,
+<a href=#1824 id=1824 data-nosnippet>1824</a>    <span class="kw">pub </span>version: String,
+<a href=#1825 id=1825 data-nosnippet>1825</a>    <span class="kw">pub </span>source: String,
+<a href=#1826 id=1826 data-nosnippet>1826</a>    <span class="attr">#[serde(rename = <span class="string">"type"</span>)]
+<a href=#1827 id=1827 data-nosnippet>1827</a>    </span><span class="kw">pub </span>data_type: String,
+<a href=#1828 id=1828 data-nosnippet>1828</a>    <span class="kw">pub </span>dictionary: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, String&gt;&gt;,
+<a href=#1829 id=1829 data-nosnippet>1829</a>    <span class="attr">#[serde(with = <span class="string">"serde_bytes"</span>, default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1830 id=1830 data-nosnippet>1830</a>    </span><span class="kw">pub </span>thumbnail: <span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;,
+<a href=#1831 id=1831 data-nosnippet>1831</a>    <span class="attr">#[serde(skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1832 id=1832 data-nosnippet>1832</a>    </span><span class="kw">pub </span>charter: <span class="prelude-ty">Option</span>&lt;DucCharter&gt;,
+<a href=#1833 id=1833 data-nosnippet>1833</a>    <span class="attr">#[serde(default)]
+<a href=#1834 id=1834 data-nosnippet>1834</a>    </span><span class="kw">pub </span>issues: Vec&lt;DucIssue&gt;,
+<a href=#1835 id=1835 data-nosnippet>1835</a>    <span class="kw">pub </span>elements: Vec&lt;ElementWrapper&gt;,
+<a href=#1836 id=1836 data-nosnippet>1836</a>    <span class="kw">pub </span>blocks: Vec&lt;DucBlock&gt;,
+<a href=#1837 id=1837 data-nosnippet>1837</a>    <span class="kw">pub </span>block_instances: Vec&lt;DucBlockInstance&gt;,
+<a href=#1838 id=1838 data-nosnippet>1838</a>    <span class="kw">pub </span>block_collections: Vec&lt;DucBlockCollection&gt;,
+<a href=#1839 id=1839 data-nosnippet>1839</a>    <span class="kw">pub </span>groups: Vec&lt;DucGroup&gt;,
+<a href=#1840 id=1840 data-nosnippet>1840</a>    <span class="kw">pub </span>regions: Vec&lt;DucRegion&gt;,
+<a href=#1841 id=1841 data-nosnippet>1841</a>    <span class="kw">pub </span>layers: Vec&lt;DucLayer&gt;,
+<a href=#1842 id=1842 data-nosnippet>1842</a>    <span class="doccomment">/** The user's current session state for a specific project */
+<a href=#1843 id=1843 data-nosnippet>1843</a>    </span><span class="attr">#[serde(rename = <span class="string">"localState"</span>)]
+<a href=#1844 id=1844 data-nosnippet>1844</a>    </span><span class="kw">pub </span>duc_local_state: <span class="prelude-ty">Option</span>&lt;DucLocalState&gt;,
+<a href=#1845 id=1845 data-nosnippet>1845</a>    <span class="doccomment">/** Project-wide settings that are saved with the document and shared by all users */
+<a href=#1846 id=1846 data-nosnippet>1846</a>    </span><span class="attr">#[serde(rename = <span class="string">"globalState"</span>)]
+<a href=#1847 id=1847 data-nosnippet>1847</a>    </span><span class="kw">pub </span>duc_global_state: <span class="prelude-ty">Option</span>&lt;DucGlobalState&gt;,
+<a href=#1848 id=1848 data-nosnippet>1848</a>    <span class="doccomment">/** In case it is needed to embed the version control into the file format */
+<a href=#1849 id=1849 data-nosnippet>1849</a>    </span><span class="kw">pub </span>version_graph: <span class="prelude-ty">Option</span>&lt;VersionGraph&gt;,
+<a href=#1850 id=1850 data-nosnippet>1850</a>    <span class="attr">#[serde(rename = <span class="string">"files"</span>)]
+<a href=#1851 id=1851 data-nosnippet>1851</a>    </span><span class="kw">pub </span>external_files: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, DucExternalFile&gt;&gt;,
+<a href=#1852 id=1852 data-nosnippet>1852</a>    <span class="doccomment">/// Binary data blobs for external file revisions, keyed by revision id.
+<a href=#1853 id=1853 data-nosnippet>1853</a>    /// Separated from `external_files` so metadata can travel without heavy blobs.
+<a href=#1854 id=1854 data-nosnippet>1854</a>    </span><span class="attr">#[serde(rename = <span class="string">"filesData"</span>, default, skip_serializing_if = <span class="string">"Option::is_none"</span>)]
+<a href=#1855 id=1855 data-nosnippet>1855</a>    </span><span class="kw">pub </span>external_files_data: <span class="prelude-ty">Option</span>&lt;HashMap&lt;String, serde_bytes::ByteBuf&gt;&gt;,
+<a href=#1856 id=1856 data-nosnippet>1856</a>}
 </code></pre></div></section></main></body></html>

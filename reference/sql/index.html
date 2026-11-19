@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DUC SQL Schema Reference (v4.0.1)</title>
+<title>DUC SQL Schema Reference (v4.0.2)</title>
 <style>
 :root { color-scheme: light dark; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -111,9 +111,9 @@ mermaid.initialize({ startOnLoad: true });
 </script>
 </head>
 <body>
-<div style="background:#1e1e2e;color:#cdd6f4;padding:8px 16px;font-family:sans-serif;font-size:14px;border-bottom:1px solid #313244;">DUC SQL Schema Reference &mdash; <strong>Version 4.0.1</strong></div>
+<div style="background:#1e1e2e;color:#cdd6f4;padding:8px 16px;font-family:sans-serif;font-size:14px;border-bottom:1px solid #313244;">DUC SQL Schema Reference &mdash; <strong>Version 4.0.2</strong></div>
 <h1>@duc_schema</h1>
-<p class="sq-gen"><code><a href="https://sq.io/docs/inspect">sq inspect</a></code> @ <code>2026-11-15T03:47:45Z</code></p>
+<p class="sq-gen"><code><a href="https://sq.io/docs/inspect">sq inspect</a></code> @ <code>2026-11-19T01:19:31Z</code></p>
 <table>
 <thead>
 <tr><th>Property</th><th>Value</th></tr>
@@ -319,6 +319,7 @@ erDiagram
     duc_global_state {
         int id PK
         text view_background_color
+        int lock_background_color
     }
     duc_issue_anchors {
         text issue_id PK,FK
@@ -2199,16 +2200,18 @@ erDiagram
     duc_global_state {
         int id PK
         text view_background_color
+        int lock_background_color
     }
 </pre>
 <table>
 <caption id="duc_global_state-columns"><a class="sq-anchor" href="#duc_global_state-columns">Columns</a></caption>
 <thead>
-<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th></tr>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th><th>Default</th></tr>
 </thead>
 <tbody>
-<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td></tr>
-<tr><td><code>view_background_color</code></td><td><code>TEXT</code></td><td></td><td></td><td></td></tr>
+<tr><td><code>id</code></td><td><code>INTEGER</code></td><td>✓</td><td>✓</td><td></td><td></td></tr>
+<tr><td><code>view_background_color</code></td><td><code>TEXT</code></td><td></td><td></td><td></td><td></td></tr>
+<tr><td><code>lock_background_color</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td><td><code>0</code></td></tr>
 </tbody>
 </table>
 <table>
@@ -2218,6 +2221,7 @@ erDiagram
 </thead>
 <tbody>
 <tr><td></td><td>id = 1</td></tr>
+<tr><td></td><td>lock_background_color IN (0, 1)</td></tr>
 </tbody>
 </table>
 <h3 id="duc_issue_anchors" class="sq-table"><a class="sq-anchor" href="#duc_issue_anchors"><code>duc_issue_anchors</code></a></h3>

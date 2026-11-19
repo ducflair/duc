@@ -951,5 +951,16 @@
 <a href=#951 id=951 data-nosnippet>951</a>PRAGMA user_version = 4000001;
 <a href=#952 id=952 data-nosnippet>952</a>COMMIT;
 <a href=#953 id=953 data-nosnippet>953</a>"</span>),
-<a href=#954 id=954 data-nosnippet>954</a>];
+<a href=#954 id=954 data-nosnippet>954</a>    (<span class="number">4000001i64</span>, <span class="number">4000002i64</span>, <span class="string">"-- Migration: 4000001 -&gt; 4000002
+<a href=#955 id=955 data-nosnippet>955</a>-- Allow a drawing to keep its background color across themes.
+<a href=#956 id=956 data-nosnippet>956</a>
+<a href=#957 id=957 data-nosnippet>957</a>BEGIN IMMEDIATE;
+<a href=#958 id=958 data-nosnippet>958</a>
+<a href=#959 id=959 data-nosnippet>959</a>ALTER TABLE duc_global_state ADD COLUMN lock_background_color
+<a href=#960 id=960 data-nosnippet>960</a>    INTEGER NOT NULL DEFAULT 0 CHECK (lock_background_color IN (0, 1));
+<a href=#961 id=961 data-nosnippet>961</a>
+<a href=#962 id=962 data-nosnippet>962</a>PRAGMA user_version = 4000002;
+<a href=#963 id=963 data-nosnippet>963</a>COMMIT;
+<a href=#964 id=964 data-nosnippet>964</a>"</span>),
+<a href=#965 id=965 data-nosnippet>965</a>];
 </code></pre></div></section></main></body></html>

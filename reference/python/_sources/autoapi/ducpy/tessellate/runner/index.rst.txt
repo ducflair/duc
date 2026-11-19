@@ -45,8 +45,8 @@ Module Contents
 
    Args:
        file_path: Path to the CAD or IFC file.
-       model_type: Optional explicit type ('step', 'stl', 'ifc', 'dxf').
-           If not specified, inferred from file extension.
+       model_type: Optional explicit type ('step', 'stl', 'ifc', 'dxf'), inferred from
+       the file extension when omitted.
 
    Returns:
        Dict with "success", "kind", "payload" (JSON string or dict).

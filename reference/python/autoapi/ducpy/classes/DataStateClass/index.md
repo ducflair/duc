@@ -196,6 +196,8 @@
 
 #### view_background_color *: str*
 
+#### lock_background_color *: bool* *= False*
+
 ### *class* ducpy.classes.DataStateClass.DucLocalState
 
 #### scroll_x *: float*

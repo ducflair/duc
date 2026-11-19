@@ -385,6 +385,12 @@ Module Contents
       :type:  str
 
 
+   .. py:attribute:: lock_background_color
+      :type:  bool
+      :value: False
+
+
+
 .. py:class:: DucLocalState
 
    .. py:attribute:: scroll_x

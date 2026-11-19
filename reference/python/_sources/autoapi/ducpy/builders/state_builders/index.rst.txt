@@ -177,6 +177,9 @@ Module Contents
    .. py:method:: with_view_background_color(color: str)
 
 
+   .. py:method:: with_lock_background_color(locked: bool)
+
+
    .. py:method:: build() -> ducpy.classes.DataStateClass.DucGlobalState
 
 

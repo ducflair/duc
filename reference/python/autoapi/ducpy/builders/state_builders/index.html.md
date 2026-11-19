@@ -117,6 +117,8 @@ Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuil
 
 #### with_view_background_color(color: str)
 
+#### with_lock_background_color(locked: bool)
+
 #### build() → [ducpy.classes.DataStateClass.DucGlobalState](../../classes/DataStateClass/index.html.md#ducpy.classes.DataStateClass.DucGlobalState)
 
 ### *class* ducpy.builders.state_builders.LocalStateBuilder(base: [BaseStateParams](#ducpy.builders.state_builders.BaseStateParams), extra: dict)

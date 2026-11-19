@@ -33,9 +33,8 @@ Directly tessellates a local CAD/BIM file (STEP, STL, IFC, DXF).
 
 Args:
 : file_path: Path to the CAD or IFC file.
-  model_type: Optional explicit type (‘step’, ‘stl’, ‘ifc’, ‘dxf’).
-  <br/>
-  > If not specified, inferred from file extension.
+  model_type: Optional explicit type (‘step’, ‘stl’, ‘ifc’, ‘dxf’), inferred from
+  the file extension when omitted.
 
 Returns:
 : Dict with “success”, “kind”, “payload” (JSON string or dict).
