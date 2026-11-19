@@ -705,7 +705,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     }
   }, 120000);
 
-  // The IFC tessellation and headless render each have 120s limits and run sequentially.
+  // CI uses SwiftShader for this heavy IFC model, so allow extra time for the first render.
   it("renders real Duplex IFC architectural model from universal.duc freshly in WebGL (GPU vs CPU)", async () => {
     const fixture = await loadDucFixture("universal.duc");
     try {
@@ -725,7 +725,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         runner: gpuRunner,
         ducPath: fixture.filePath,
         viewConfig: viewCfg,
-        timeoutMs: 120000,
+        timeoutMs: hasGpu ? 120000 : 240000,
       });
       const cpuRes = hasGpu
         ? await renderModelElementThumbnailWithResult(ifcEl!, {
