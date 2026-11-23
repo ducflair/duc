@@ -23,7 +23,7 @@ use crate::{
     external_file_chunks,
     parse::{self, ParseResult},
     serialize::{self, SerializeResult},
-    types::{ExportedDataState, ExternalFileMeta},
+    types::{DucCharterPhase, ExportedDataState, ExternalFileMeta},
 };
 
 /// A live handle to an open `.duc` SQLite database.
@@ -182,6 +182,20 @@ impl DucDocument {
                 )?);
             }
             Ok(None)
+        })
+    }
+
+    /// Update a charter in place. Its transition and closing reason are recorded atomically.
+    pub fn set_charter_phase(&mut self, phase: DucCharterPhase, reason: Option<&str>, changed_at: i64) -> SerializeResult<()> {
+        self.conn.with_mut(|conn| {
+            let tx = conn.transaction()?;
+            tx.execute("INSERT OR IGNORE INTO duc_charter (id) VALUES (1)", [])?;
+            let phase = crate::serialize::charter_phase_to_str(phase);
+            let reason = reason.map(str::trim).filter(|r| !r.is_empty());
+            tx.execute("UPDATE duc_charter SET phase=?1, closed_reason=CASE WHEN ?1='closed' THEN ?2 END, updated_at=?3 WHERE id=1 AND phase<>?1",
+                rusqlite::params![phase,reason,changed_at])?;
+            tx.commit()?;
+            Ok(())
         })
     }
 

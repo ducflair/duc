@@ -12,3 +12,7 @@ export * from "./thumbnails/lib";
 export * as vc from "./version-control";
 export { DucOpfsDocument, ensureWasm, getWasmBinary } from "./wasm";
 
+
+export { readModelMotion, configureModelMotion, applyModelExplode } from "./utils/modelMotion";
+export { withBatchedViewerUpdates } from "./utils/viewerUpdateBatch";
+export { CompactComponentRegistry, installCompactComponentRegistry } from "./utils/compactComponentRegistry";

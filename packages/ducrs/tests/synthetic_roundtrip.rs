@@ -249,3 +249,20 @@ fn external_locators_survive_native_document_roundtrip_without_embedded_data() {
     assert!(parsed.external_files_data.is_none());
     let _ = fs::remove_file(path);
 }
+
+#[test]
+fn in_place_phase_changes_keep_history_and_reject_blank_closing_reasons() {
+    use duc::api::DucDocument;
+    use duc::types::DucCharterPhase::{Closed, Intent, Review};
+    let mut doc = DucDocument::open_memory().unwrap();
+    doc.set_charter_phase(Review, None, 100).unwrap();
+    assert!(doc.set_charter_phase(Closed, Some("  "), 200).is_err());
+    doc.set_charter_phase(Closed, Some("  Approved  "), 201).unwrap();
+    doc.set_charter_phase(Closed, None, 202).unwrap();
+    doc.set_charter_phase(Intent, None, 300).unwrap();
+    let charter = doc.read_document_state().unwrap().charter.unwrap();
+    assert_eq!(charter.phase, Intent);
+    assert_eq!(charter.phase_history.len(), 3);
+    assert_eq!(charter.phase_history[1].changed_at, 201);
+    assert_eq!(charter.phase_history[1].closed_reason.as_deref(), Some("Approved"));
+}

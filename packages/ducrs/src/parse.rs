@@ -55,9 +55,32 @@ pub type ParseResult<T> = Result<T, ParseError>;
 pub(crate) fn read_document_state_from_connection(
     conn: &Connection,
 ) -> ParseResult<ExportedDataState> {
-    let mut state = read_state_from_connection(conn, false)?;
-    state.external_files = read_external_file_metadata(conn)?;
-    crate::external_file_locators::read(conn, &mut state.external_files)?;
+    with_read_transaction(conn, |conn| {
+        let mut state = read_state_from_connection(conn, false)?;
+        state.external_files = read_external_file_metadata(conn)?;
+        crate::external_file_locators::read(conn, &mut state.external_files)?;
+        Ok(state)
+    })
+}
+
+/// Runs a multi-statement read inside one read transaction.
+///
+/// In autocommit mode every statement is its own transaction, so SQLite
+/// re-acquires its lock and revalidates the page cache per element query. On the
+/// browser OPFS VFS that overhead made a 3k-element read ~50x slower than the
+/// same read inside a single transaction.
+fn with_read_transaction<T>(
+    conn: &Connection,
+    read: impl FnOnce(&Connection) -> ParseResult<T>,
+) -> ParseResult<T> {
+    if !conn.is_autocommit() {
+        return read(conn);
+    }
+    conn.execute_batch("BEGIN DEFERRED")?;
+    let result = read(conn);
+    let end = conn.execute_batch(if result.is_ok() { "COMMIT" } else { "ROLLBACK" });
+    let state = result?;
+    end?;
     Ok(state)
 }
 
@@ -374,6 +397,7 @@ fn read_charter(conn: &Connection) -> ParseResult<Option<DucCharter>> {
                 description: row.get(1)?,
                 objective: row.get(2)?,
                 phase: str_to_charter_phase(&phase),
+                phase_history: Vec::new(),
                 closed_reason: row.get(4)?,
                 requirements: Vec::new(),
                 constraints: Vec::new(),
@@ -390,6 +414,16 @@ fn read_charter(conn: &Connection) -> ParseResult<Option<DucCharter>> {
         Err(e) => return Err(e.into()),
     };
 
+    if table_exists(conn, "duc_charter_phase_history")? {
+        let mut stmt = conn.prepare("SELECT id, previous_phase, phase, changed_at, closed_reason FROM duc_charter_phase_history ORDER BY sort_order")?;
+        charter.phase_history = stmt.query_map([], |row| Ok(DucCharterPhaseChange {
+            id: row.get(0)?,
+            previous_phase: str_to_charter_phase(&row.get::<_, String>(1)?),
+            phase: str_to_charter_phase(&row.get::<_, String>(2)?),
+            changed_at: row.get(3)?,
+            closed_reason: row.get(4)?,
+        }))?.collect::<Result<_, _>>()?;
+    }
     charter.requirements = read_charter_requirements(conn)?;
     charter.constraints = read_charter_constraints(conn)?;
     charter.decisions = read_charter_decisions(conn)?;

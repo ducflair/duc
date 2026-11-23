@@ -58,6 +58,15 @@ class DucCharterStakeholder:
 
 
 @dataclass
+class DucCharterPhaseChange:
+    id: str
+    previous_phase: str
+    phase: str
+    changed_at: int
+    closed_reason: Optional[str] = None
+
+
+@dataclass
 class DucCharter:
     title: str
     objective: str
@@ -69,6 +78,7 @@ class DucCharter:
     description: Optional[str] = None
     closed_reason: Optional[str] = None
     stakeholders: Optional[List[DucCharterStakeholder]] = None
+    phase_history: List[DucCharterPhaseChange] = field(default_factory=list)
 
 
 @dataclass

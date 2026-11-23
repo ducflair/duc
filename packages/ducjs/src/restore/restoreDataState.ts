@@ -510,8 +510,8 @@ export const restoreCharter = (importedCharter: unknown): DucCharter => {
     return getDefaultCharter();
   }
   const obj = importedCharter as Record<string, unknown>;
-  const title = isValidString(obj.title);
-  if (!title) {
+  const title = obj.title;
+  if (typeof title !== "string") {
     return getDefaultCharter();
   }
 
@@ -546,6 +546,13 @@ export const restoreCharter = (importedCharter: unknown): DucCharter => {
     description: typeof obj.description === "string" ? obj.description : undefined,
     objective,
     phase: rawPhase as DucCharterPhase,
+    phaseHistory: (Array.isArray(obj.phaseHistory) ? obj.phaseHistory : []).flatMap(entry => {
+      if (!entry || !isValidString(entry.id) || !VALID_CHARTER_PHASES.includes(entry.previousPhase)
+        || !VALID_CHARTER_PHASES.includes(entry.phase) || entry.previousPhase === entry.phase
+        || !isFiniteNumber(entry.changedAt) || (entry.phase === "closed" && !isValidString(entry.closedReason))) return [];
+      return [{ id: entry.id, previousPhase: entry.previousPhase, phase: entry.phase, changedAt: entry.changedAt,
+        ...(entry.phase === "closed" ? { closedReason: entry.closedReason } : {}) }];
+    }),
     closedReason: typeof obj.closedReason === "string" ? obj.closedReason : undefined,
     requirements,
     constraints,

@@ -1,4 +1,5 @@
 use crate::{ConversionError, ConversionResult};
+use crate::source_document::artwork::svg_options;
 use duc::types::DucExternalFile;
 use hipdf::lopdf::{Dictionary, Document, Object, Stream};
 use svg2pdf::usvg;
@@ -14,7 +15,7 @@ impl SvgToPdfConverter {
         _file: &DucExternalFile,
     ) -> ConversionResult<u32> {
         // Parse SVG using usvg
-        let svg_tree = usvg::Tree::from_data(svg_data, &usvg::Options::default()).map_err(|e| {
+        let svg_tree = usvg::Tree::from_data(svg_data, &svg_options()).map_err(|e| {
             ConversionError::ResourceLoadError(format!("Failed to parse SVG: {}", e))
         })?;
 
@@ -57,7 +58,7 @@ impl SvgToPdfConverter {
         document: &mut Document,
         svg_data: &[u8],
     ) -> ConversionResult<(u32, f64, f64)> {
-        let svg_tree = usvg::Tree::from_data(svg_data, &usvg::Options::default()).map_err(|e| {
+        let svg_tree = usvg::Tree::from_data(svg_data, &svg_options()).map_err(|e| {
             ConversionError::ResourceLoadError(format!("Failed to parse SVG: {}", e))
         })?;
 
@@ -104,7 +105,7 @@ impl SvgToPdfConverter {
 
     /// Validate SVG data
     pub fn validate_svg_data(svg_data: &[u8]) -> ConversionResult<()> {
-        usvg::Tree::from_data(svg_data, &usvg::Options::default())
+        usvg::Tree::from_data(svg_data, &svg_options())
             .map_err(|e| ConversionError::ResourceLoadError(format!("Invalid SVG data: {}", e)))?;
         Ok(())
     }
@@ -113,7 +114,7 @@ impl SvgToPdfConverter {
 /// Convert SVG data to PDF bytes and return dimensions
 pub fn svg_to_pdf_with_dimensions(svg_data: &[u8]) -> ConversionResult<(Vec<u8>, f64, f64)> {
     // Parse SVG using usvg
-    let svg_tree = usvg::Tree::from_data(svg_data, &usvg::Options::default())
+    let svg_tree = usvg::Tree::from_data(svg_data, &svg_options())
         .map_err(|e| ConversionError::ResourceLoadError(format!("Failed to parse SVG: {}", e)))?;
 
     // Get SVG dimensions

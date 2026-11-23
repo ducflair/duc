@@ -102,6 +102,14 @@ impl CanvasPdfSession {
                         resources.insert(id.clone());
                     }
                 }
+                DucElementEnum::DucTableElement(e) => {
+                    resources.extend(e.file_id.iter().cloned());
+                }
+                DucElementEnum::DucModelElement(e) => {
+                    if let Some((_, id)) = crate::utils::source_elements::model_document_source(e, self.state.external_files.as_ref()) {
+                        resources.insert(id);
+                    }
+                }
                 DucElementEnum::DucPdfElement(e) => {
                     if let Some(id) = &e.file_id {
                         resources.insert(id.clone());

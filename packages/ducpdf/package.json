@@ -14,14 +14,17 @@
       "default": "./dist/index.js"
     },
     "./pkg": {
-      "types": "./pkg/duc2pdf.d.ts",
-      "import": "./pkg/duc2pdf.js",
-      "default": "./pkg/duc2pdf.js"
+      "types": "./dist/duc2pdf.d.ts",
+      "import": "./dist/duc2pdf.js",
+      "default": "./dist/duc2pdf.js"
     }
   },
   "files": [
     "dist",
-    "src/duc2pdf/fonts/LiberationSans-LICENSE.txt"
+    "native/Cargo.toml",
+    "src/duc2pdf/src/source_document",
+    "src/duc2pdf/fonts/LiberationSans-LICENSE.txt",
+    "src/duc2pdf/fonts/LiberationSans-Regular.ttf"
   ],
   "publishConfig": {
     "access": "public"
@@ -42,7 +45,7 @@
     "build:ts": "tsc -p tsconfig.json",
     "build:rs": "cd src/duc2pdf && cargo build",
     "build:wasm": "node scripts/build-wasm.mjs",
-    "copy:wasm-to-dist": "mkdir -p dist && cp pkg/duc2pdf_bg.wasm dist/ && cp pkg/duc2pdf.js dist/ && cp pkg/duc2pdf.d.ts dist/ && cp pkg/duc2pdf_bg.wasm.d.ts dist/",
+    "copy:wasm-to-dist": "mkdir -p dist && cp pkg/duc2pdf_bg.wasm dist/ && cp pkg/duc2pdf.js dist/ && cp pkg/duc2pdf.d.ts dist/ && cp pkg/duc2pdf_bg.wasm.d.ts dist/ && cp -R pkg/snippets dist/",
     "clean": "rm -rf dist pkg",
     "gen:docs": "bunx typedoc",
     "dev:docs": "bun run gen:docs && python3 -m http.server 8243 --directory docs",

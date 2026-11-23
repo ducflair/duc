@@ -21,7 +21,6 @@ export class CanvasPdfSession {
   private native: any = null;
   private sequence = 0;
   private warnings: string[] = [];
-  private unsupported = new Set<string>();
   private fontFamilies = new Set<string>();
 
   constructor(private readonly suppliedFonts: ReadonlyMap<string, Uint8Array> = new Map()) {}
@@ -44,7 +43,6 @@ export class CanvasPdfSession {
     this.native = new wasm.CanvasPdfSession(prepared.state, fonts.fontMap);
     this.warnings = fonts.warnings;
     this.fontFamilies = new Set(prepared.fontFamilies);
-    this.unsupported = new Set((state.elements ?? []).filter(element => element.type === 'table').map(element => element.id));
     this.sequence = 0;
   }
 
@@ -56,11 +54,6 @@ export class CanvasPdfSession {
     const missingFonts = prepared.fontFamilies.filter(family => !this.fontFamilies.has(family));
     const fonts = await this.resolveFonts(missingFonts);
     this.native.apply_patch(expected, sequence, prepared.state, removed, fonts.fontMap, retainedRevisions ?? null);
-    for (const id of removed) this.unsupported.delete(id);
-    for (const element of state.elements ?? []) {
-      if (element.type === 'table') this.unsupported.add(element.id);
-      else this.unsupported.delete(element.id);
-    }
     this.sequence = sequence;
     for (const family of missingFonts) this.fontFamilies.add(family);
     this.warnings = [...new Set([...this.warnings, ...fonts.warnings])];
@@ -115,6 +108,5 @@ export class CanvasPdfSession {
     this.sequence = 0;
     this.fontFamilies.clear();
     this.warnings = [];
-    this.unsupported.clear();
   }
 }
