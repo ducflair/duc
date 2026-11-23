@@ -343,6 +343,8 @@ Bases: [`StateSpecificBuilder`](#ducpy.builders.state_builders.StateSpecificBuil
 
 #### with_objective(objective: str)
 
+#### with_phase_history(entries: List[[ducpy.classes.DataStateClass.DucCharterPhaseChange](../../classes/DataStateClass/index.html.md#ducpy.classes.DataStateClass.DucCharterPhaseChange)])
+
 #### with_phase(phase: str)
 
 #### with_closed_reason(reason: str)

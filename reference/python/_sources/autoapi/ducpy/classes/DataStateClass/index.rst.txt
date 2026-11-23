@@ -23,6 +23,7 @@ Classes
    ducpy.classes.DataStateClass.DucCharterConstraint
    ducpy.classes.DataStateClass.DucCharterDecision
    ducpy.classes.DataStateClass.DucCharterStakeholder
+   ducpy.classes.DataStateClass.DucCharterPhaseChange
    ducpy.classes.DataStateClass.DucCharter
    ducpy.classes.DataStateClass.DucIssueMessage
    ducpy.classes.DataStateClass.DucIssueCanvasAnchor
@@ -143,6 +144,30 @@ Module Contents
       :type:  str
 
 
+.. py:class:: DucCharterPhaseChange
+
+   .. py:attribute:: id
+      :type:  str
+
+
+   .. py:attribute:: previous_phase
+      :type:  str
+
+
+   .. py:attribute:: phase
+      :type:  str
+
+
+   .. py:attribute:: changed_at
+      :type:  int
+
+
+   .. py:attribute:: closed_reason
+      :type:  Optional[str]
+      :value: None
+
+
+
 .. py:class:: DucCharter
 
    .. py:attribute:: title
@@ -188,6 +213,12 @@ Module Contents
    .. py:attribute:: stakeholders
       :type:  Optional[List[DucCharterStakeholder]]
       :value: None
+
+
+
+   .. py:attribute:: phase_history
+      :type:  List[DucCharterPhaseChange]
+      :value: []
 
 
 

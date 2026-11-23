@@ -29,6 +29,7 @@ Functions
    ducpy.tessellate.shims.scopture_install_model_modules
    ducpy.tessellate.shims.scopture_install_fonts
    ducpy.tessellate.shims.scopture_flatten_candidates
+   ducpy.tessellate.shims.scopture_install_animation
    ducpy.tessellate.shims.scopture_tessellate_to_buffer_json
    ducpy.tessellate.shims.scopture_install_ipython_stub
    ducpy.tessellate.shims.scopture_install_ifc_output_capture
@@ -88,6 +89,11 @@ Module Contents
 .. py:function:: scopture_flatten_candidates(*objs: Any) -> list[Any]
 
    Recursively flatten nested lists/tuples/sets of objects into a flat list.
+
+
+.. py:function:: scopture_install_animation(module, globals_dict)
+
+   Collect ocp_vscode animation tracks for the most recently shown assembly.
 
 
 .. py:function:: scopture_tessellate_to_buffer_json(*objs: Any, **kwargs: Any) -> str

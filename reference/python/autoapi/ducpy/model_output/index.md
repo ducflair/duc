@@ -37,6 +37,6 @@ Typed model artifacts shared by desktop and cloud Python workers.
 
 #### declaration *: dict | None* *= None*
 
-#### emit_output(value: Any = None, , kind: str, data: Any = None, path: str | None = None, mime_type: str | None = None, filename: str | None = None) → None
+#### emit_output(value: Any = None, , kind: str, data: Any = None, path: str | None = None, mime_type: str | None = None, filename: str | None = None, animation: Any = None, explode: Any = None) → None
 
 #### collect(events: list[dict], globals_dict: dict, output_path: pathlib.Path, legacy_kind: str, now: str) → dict | None

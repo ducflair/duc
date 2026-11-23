@@ -508,6 +508,9 @@ Module Contents
    .. py:method:: with_objective(objective: str)
 
 
+   .. py:method:: with_phase_history(entries: List[ducpy.classes.DataStateClass.DucCharterPhaseChange])
+
+
    .. py:method:: with_phase(phase: str)
 
 

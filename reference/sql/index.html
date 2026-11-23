@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DUC SQL Schema Reference (v4.0.2)</title>
+<title>DUC SQL Schema Reference (v4.0.3)</title>
 <style>
 :root { color-scheme: light dark; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -111,9 +111,9 @@ mermaid.initialize({ startOnLoad: true });
 </script>
 </head>
 <body>
-<div style="background:#1e1e2e;color:#cdd6f4;padding:8px 16px;font-family:sans-serif;font-size:14px;border-bottom:1px solid #313244;">DUC SQL Schema Reference &mdash; <strong>Version 4.0.2</strong></div>
+<div style="background:#1e1e2e;color:#cdd6f4;padding:8px 16px;font-family:sans-serif;font-size:14px;border-bottom:1px solid #313244;">DUC SQL Schema Reference &mdash; <strong>Version 4.0.3</strong></div>
 <h1>@duc_schema</h1>
-<p class="sq-gen"><code><a href="https://sq.io/docs/inspect">sq inspect</a></code> @ <code>2026-11-19T01:47:31Z</code></p>
+<p class="sq-gen"><code><a href="https://sq.io/docs/inspect">sq inspect</a></code> @ <code>2026-11-23T21:19:30Z</code></p>
 <table>
 <thead>
 <tr><th>Property</th><th>Value</th></tr>
@@ -127,8 +127,8 @@ mermaid.initialize({ startOnLoad: true });
 <tr><td>DB semver</td><td><code>v3.53.4</code></td></tr>
 <tr><td>Schema</td><td><code>main</code></td></tr>
 <tr><td>Catalog</td><td><code>default</code></td></tr>
-<tr><td>Size</td><td><code>712.0KB</code></td></tr>
-<tr><td>Tables</td><td><code>94</code></td></tr>
+<tr><td>Size</td><td><code>724.0KB</code></td></tr>
+<tr><td>Tables</td><td><code>95</code></td></tr>
 <tr><td>Views</td><td><code>0</code></td></tr>
 <tr><td>Location</td><td><code>sqlite3:///home/runner/work/duc/duc/target/duc_schema.sqlite</code></td></tr>
 </tbody>
@@ -290,6 +290,14 @@ erDiagram
         text decision
         text rationale
         int decided_at
+        int sort_order
+    }
+    duc_charter_phase_history {
+        text id PK
+        text previous_phase
+        text phase
+        int changed_at
+        text closed_reason
         int sort_order
     }
     duc_charter_requirement_acceptance_criteria {
@@ -1024,6 +1032,7 @@ erDiagram
 <a href="#duc_charter_constraints"><code>duc_charter_constraints</code></a>
 <a href="#duc_charter_decision_issue_ids"><code>duc_charter_decision_issue_ids</code></a>
 <a href="#duc_charter_decisions"><code>duc_charter_decisions</code></a>
+<a href="#duc_charter_phase_history"><code>duc_charter_phase_history</code></a>
 <a href="#duc_charter_requirement_acceptance_criteria"><code>duc_charter_requirement_acceptance_criteria</code></a>
 <a href="#duc_charter_requirements"><code>duc_charter_requirements</code></a>
 <a href="#duc_charter_stakeholders"><code>duc_charter_stakeholders</code></a>
@@ -1928,6 +1937,22 @@ erDiagram
 <tr><td></td><td>phase IN (&#39;intent&#39;, &#39;review&#39;, &#39;delivery&#39;, &#39;closed&#39;)</td></tr>
 </tbody>
 </table>
+<table>
+<caption id="duc_charter-triggers"><a class="sq-anchor" href="#duc_charter-triggers">Triggers</a></caption>
+<thead>
+<tr><th>Trigger</th><th>Timing</th><th>Events</th><th>Definition</th></tr>
+</thead>
+<tbody>
+<tr><td><code>duc_charter_record_phase</code></td><td>AFTER</td><td>UPDATE</td><td><code>CREATE TRIGGER duc_charter_record_phase AFTER UPDATE OF phase ON duc_charter
+WHEN OLD.phase &lt;&gt; NEW.phase
+BEGIN
+    INSERT INTO duc_charter_phase_history (id, previous_phase, phase, changed_at, closed_reason, sort_order)
+    SELECT lower(hex(randomblob(16))), OLD.phase, NEW.phase, CASE WHEN NEW.updated_at &lt;&gt; OLD.updated_at AND NEW.updated_at &gt; 0 THEN NEW.updated_at ELSE CAST(unixepoch(&#39;subsec&#39;) * 1000 AS INTEGER) END,
+           CASE WHEN NEW.phase = &#39;closed&#39; THEN NEW.closed_reason END, coalesce(max(sort_order), -1) + 1
+    FROM duc_charter_phase_history;
+END</code></td></tr>
+</tbody>
+</table>
 <h3 id="duc_charter_constraints" class="sq-table"><a class="sq-anchor" href="#duc_charter_constraints"><code>duc_charter_constraints</code></a></h3>
 <p class="summary">table · 0 rows</p>
 <h4 id="duc_charter_constraints-erd"><a class="sq-anchor" href="#duc_charter_constraints-erd">Entity Relationship Diagram</a></h4>
@@ -2047,6 +2072,64 @@ erDiagram
 </thead>
 <tbody>
 <tr><td><code>sqlite_autoindex_duc_charter_decisions_1</code></td><td><code>id</code></td><td>✓</td><td>✓</td><td></td></tr>
+</tbody>
+</table>
+<h3 id="duc_charter_phase_history" class="sq-table"><a class="sq-anchor" href="#duc_charter_phase_history"><code>duc_charter_phase_history</code></a></h3>
+<p class="summary">table · 0 rows</p>
+<h4 id="duc_charter_phase_history-erd"><a class="sq-anchor" href="#duc_charter_phase_history-erd">Entity Relationship Diagram</a></h4>
+<pre class="mermaid">
+erDiagram
+    duc_charter_phase_history {
+        text id PK
+        text previous_phase
+        text phase
+        int changed_at
+        text closed_reason
+        int sort_order
+    }
+</pre>
+<table>
+<caption id="duc_charter_phase_history-columns"><a class="sq-anchor" href="#duc_charter_phase_history-columns">Columns</a></caption>
+<thead>
+<tr><th>Column</th><th>Type</th><th>Nullable</th><th>PK</th><th>FK</th></tr>
+</thead>
+<tbody>
+<tr><td><code>id</code></td><td><code>TEXT</code></td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td><code>previous_phase</code></td><td><code>TEXT</code></td><td></td><td></td><td></td></tr>
+<tr><td><code>phase</code></td><td><code>TEXT</code></td><td></td><td></td><td></td></tr>
+<tr><td><code>changed_at</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td></tr>
+<tr><td><code>closed_reason</code></td><td><code>TEXT</code></td><td>✓</td><td></td><td></td></tr>
+<tr><td><code>sort_order</code></td><td><code>INTEGER</code></td><td></td><td></td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="duc_charter_phase_history-unique-constraints"><a class="sq-anchor" href="#duc_charter_phase_history-unique-constraints">Unique constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Columns</th></tr>
+</thead>
+<tbody>
+<tr><td><code>sqlite_autoindex_duc_charter_phase_history_2</code></td><td><code>sort_order</code></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="duc_charter_phase_history-indexes"><a class="sq-anchor" href="#duc_charter_phase_history-indexes">Indexes</a></caption>
+<thead>
+<tr><th>Index</th><th>Columns</th><th>Unique</th><th>Primary</th><th>Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>sqlite_autoindex_duc_charter_phase_history_1</code></td><td><code>id</code></td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td><code>sqlite_autoindex_duc_charter_phase_history_2</code></td><td><code>sort_order</code></td><td>✓</td><td></td><td></td></tr>
+</tbody>
+</table>
+<table>
+<caption id="duc_charter_phase_history-check-constraints"><a class="sq-anchor" href="#duc_charter_phase_history-check-constraints">Check constraints</a></caption>
+<thead>
+<tr><th>Constraint</th><th>Clause</th></tr>
+</thead>
+<tbody>
+<tr><td></td><td>previous_phase IN (&#39;intent&#39;, &#39;review&#39;, &#39;delivery&#39;, &#39;closed&#39;)</td></tr>
+<tr><td></td><td>phase IN (&#39;intent&#39;, &#39;review&#39;, &#39;delivery&#39;, &#39;closed&#39;) AND phase &lt;&gt; previous_phase</td></tr>
+<tr><td></td><td>phase &lt;&gt; &#39;closed&#39; OR length(trim(coalesce(closed_reason, &#39;&#39;))) &gt; 0</td></tr>
 </tbody>
 </table>
 <h3 id="duc_charter_requirement_acceptance_criteria" class="sq-table"><a class="sq-anchor" href="#duc_charter_requirement_acceptance_criteria"><code>duc_charter_requirement_acceptance_criteria</code></a></h3>

@@ -14,6 +14,7 @@
 | [`DucCharterConstraint`](#ducpy.classes.DataStateClass.DucCharterConstraint)    |                       |
 | [`DucCharterDecision`](#ducpy.classes.DataStateClass.DucCharterDecision)      |                       |
 | [`DucCharterStakeholder`](#ducpy.classes.DataStateClass.DucCharterStakeholder)   |                       |
+| [`DucCharterPhaseChange`](#ducpy.classes.DataStateClass.DucCharterPhaseChange)   |                       |
 | [`DucCharter`](#ducpy.classes.DataStateClass.DucCharter)              |                       |
 | [`DucIssueMessage`](#ducpy.classes.DataStateClass.DucIssueMessage)         |                       |
 | [`DucIssueCanvasAnchor`](#ducpy.classes.DataStateClass.DucIssueCanvasAnchor)    |                       |
@@ -88,6 +89,18 @@
 
 #### role *: str*
 
+### *class* ducpy.classes.DataStateClass.DucCharterPhaseChange
+
+#### id *: str*
+
+#### previous_phase *: str*
+
+#### phase *: str*
+
+#### changed_at *: int*
+
+#### closed_reason *: str | None* *= None*
+
 ### *class* ducpy.classes.DataStateClass.DucCharter
 
 #### title *: str*
@@ -109,6 +122,8 @@
 #### closed_reason *: str | None* *= None*
 
 #### stakeholders *: List[[DucCharterStakeholder](#ducpy.classes.DataStateClass.DucCharterStakeholder)] | None* *= None*
+
+#### phase_history *: List[[DucCharterPhaseChange](#ducpy.classes.DataStateClass.DucCharterPhaseChange)]* *= []*
 
 ### *class* ducpy.classes.DataStateClass.DucIssueMessage
 
