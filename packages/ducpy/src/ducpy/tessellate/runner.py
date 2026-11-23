@@ -29,6 +29,7 @@ from ducpy.tessellate.shims import (
     scopture_install_dxf_output_capture,
     scopture_install_fonts,
     scopture_install_ifc_output_capture,
+    scopture_install_animation,
     scopture_install_ipython_stub,
     scopture_install_model_modules,
     scopture_is_model_dependency_call,
@@ -233,6 +234,7 @@ def tessellate_model_code(
                 return None
 
             if resolved_kind == "ifc":
+                globals_dict["__scopture_model_motion__"] = {k: kwargs[k] for k in ("animation", "explode", "tracks") if k in kwargs}
                 globals_dict["__scopture_ifc_show_candidates__"] = scopture_flatten_candidates(*objs)
                 return None
 
@@ -246,6 +248,7 @@ def tessellate_model_code(
         ocp_vscode = types.ModuleType("ocp_vscode")
         ocp_vscode.__version__ = "duc-tessellate-runner"
         ocp_vscode.show = show
+        scopture_install_animation(ocp_vscode, globals_dict)
         ocp_vscode.show_object = show
 
         class Camera:
@@ -324,9 +327,13 @@ def tessellate_model_code(
         with contextlib.redirect_stdout(stdout_buf), contextlib.redirect_stderr(stderr_buf):
             exec(compile(code, "<duc-model-code>", "exec"), globals_dict)
 
+        empty_result = {"success": True, "kind": "empty", "modelType": clean_type, "payload": "",
+                        "stdout": stdout_buf.getvalue(), "stderr": stderr_buf.getvalue()}
         if output_collector.declaration is not None:
             events = []
             artifact = output_collector.collect(events, globals_dict, output_path, resolved_kind, "")
+            if artifact is None:
+                return empty_result
             renderer = artifact["envelope"]["renderer"]
             kind = {"parametric": "parametric-json", "ifc": "ifc-json", "dxf": "python-dxf"}.get(renderer, "model-artifact")
             if renderer == "parametric":
@@ -342,7 +349,7 @@ def tessellate_model_code(
         if resolved_kind == "ifc":
             preview_payload = scopture_collect_ifc_preview(globals_dict, output_path=output_path)
             if not preview_payload:
-                raise RuntimeError("IFC script completed but failed to produce preview geometry.")
+                return empty_result
             return {
                 "success": True,
                 "kind": "ifc-json",
@@ -406,10 +413,10 @@ def tessellate_model_code(
                 pass
 
         if preview_payload is None:
-            raise RuntimeError(
-                f"Model code executed successfully but did not call show() to yield a preview. "
-                f"stdout: {stdout_buf.getvalue()!r}, stderr: {stderr_buf.getvalue()!r}"
-            )
+            return empty_result
+        motion = globals_dict.get("__scopture_model_motion__")
+        if motion:
+            preview_payload = json.dumps({**json.loads(preview_payload), **motion}, separators=(",", ":"))
 
         return {
             "success": True,

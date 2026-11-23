@@ -162,6 +162,7 @@ fn reset_connection_data(tx: &Transaction) -> SerializeResult<()> {
         DELETE FROM duc_charter_constraints;
         DELETE FROM duc_charter_requirement_acceptance_criteria;
         DELETE FROM duc_charter_requirements;
+        DELETE FROM duc_charter_phase_history;
         DELETE FROM duc_charter;
         DELETE FROM document_dictionary;
         DELETE FROM duc_document;
@@ -189,7 +190,7 @@ fn write_document(tx: &Transaction, state: &ExportedDataState) -> SerializeResul
     Ok(())
 }
 
-fn charter_phase_to_str(phase: DucCharterPhase) -> &'static str {
+pub(crate) fn charter_phase_to_str(phase: DucCharterPhase) -> &'static str {
     match phase {
         DucCharterPhase::Intent => "intent",
         DucCharterPhase::Review => "review",
@@ -224,6 +225,12 @@ fn write_charter(tx: &Transaction, charter: &Option<DucCharter>) -> SerializeRes
             charter.updated_at,
         ],
     )?;
+
+    let mut phase_stmt = tx.prepare_cached("INSERT INTO duc_charter_phase_history (id, previous_phase, phase, changed_at, closed_reason, sort_order) VALUES (?1, ?2, ?3, ?4, ?5, ?6)")?;
+    for (order, entry) in charter.phase_history.iter().enumerate() {
+        phase_stmt.execute(params![entry.id, charter_phase_to_str(entry.previous_phase),
+            charter_phase_to_str(entry.phase), entry.changed_at, entry.closed_reason, order as i64])?;
+    }
 
     let mut req_stmt = tx.prepare_cached(
         "INSERT INTO duc_charter_requirements (id, statement, must, sort_order)

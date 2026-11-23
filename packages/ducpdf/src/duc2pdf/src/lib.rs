@@ -3,6 +3,8 @@ use wasm_bindgen::prelude::*;
 
 pub mod builder;
 pub mod canvas_session;
+pub mod source_document;
+mod source_bindings;
 
 // Initialize logger for WASM
 #[cfg(target_arch = "wasm32")]

@@ -1,0 +1,22 @@
+[package]
+name = "duc-source-document"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[lib]
+path = "../src/duc2pdf/src/source_document/mod.rs"
+
+[dependencies]
+hipdf = "1.3.8"
+svg2pdf = "0.13.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+acadrust = "0.5.5"
+dwgpdf = { version = "1.0.1", default-features = false }
+zip = { version = "2.2", default-features = false, features = ["deflate"] }
+roxmltree = "0.20"
+ironcalc = { version = "0.9", default-features = false }
+xlsx-to-pdf = "0.1.0"

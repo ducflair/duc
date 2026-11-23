@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { isFiniteNumber } from "..";
 import { TEXT_ALIGN } from "../../enums";
 import {
@@ -48,6 +49,16 @@ export const getDefaultCharter = (): DucCharter => ({
   decisions: [],
   updatedAt: Date.now(),
 });
+
+/** Record a phase transition once and preserve the reason after a charter reopens. */
+export function setCharterPhase(charter: DucCharter, phase: DucCharter["phase"], reason?: string, changedAt = Date.now()): DucCharter {
+  if (phase === charter.phase) return charter;
+  const closedReason = phase === "closed" ? reason?.trim() : undefined;
+  if (phase === "closed" && !closedReason) throw new Error("A closing reason is required.");
+  return { ...charter, phase, closedReason, updatedAt: changedAt, phaseHistory: [...charter.phaseHistory ?? [], {
+    id: nanoid(), previousPhase: charter.phase, phase, changedAt, ...(closedReason ? { closedReason } : {}),
+  }] };
+}
 
 export const getDefaultIssues = (): DucIssue[] => [];
 

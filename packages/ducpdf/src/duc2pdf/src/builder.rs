@@ -280,6 +280,7 @@ impl DucToPdfBuilder {
         let mut document = Document::with_version("1.7");
 
         Self::filter_out_unusable_elements(&mut exported_data);
+        crate::utils::source_elements::prepare(&mut exported_data)?;
 
         let crop_offset = match &options.mode {
             ConversionMode::Crop {
@@ -639,7 +640,7 @@ impl DucToPdfBuilder {
     fn process_external_files(&mut self) -> ConversionResult<()> {
         if let Some(external_files) = &self.context.exported_data.external_files {
             let external_files_clone = external_files.clone();
-            let files_data = self.context.exported_data.external_files_data.clone();
+            let files_data = self.context.exported_data.external_files_data.take();
             for (file_key, mut file) in external_files_clone {
                 if file.id != file_key {
                     file.id = file_key.clone();
@@ -681,6 +682,7 @@ impl DucToPdfBuilder {
                     }
                 }
             }
+            self.context.exported_data.external_files_data = files_data;
         }
         Ok(())
     }
@@ -848,15 +850,6 @@ impl DucToPdfBuilder {
         file: &DucExternalFile,
         rev_data: Option<&[u8]>,
     ) -> ConversionResult<u32> {
-        let revision = file
-            .revisions
-            .get(&file.active_revision_id)
-            .ok_or_else(|| {
-                ConversionError::ResourceLoadError(format!(
-                    "No active revision for file {}",
-                    file.id
-                ))
-            })?;
         let pdf_data = match rev_data {
             Some(data) => data,
             None => {
@@ -867,46 +860,10 @@ impl DucToPdfBuilder {
                 return Ok(0);
             }
         };
-        let mime_type = &revision.mime_type;
-        let embed_id = format!("pdf_{}", file.id);
-
-        // Just load the PDF, don't embed it yet
-        self.pdf_embedder
-            .load_pdf_from_bytes(pdf_data, &embed_id)
-            .map_err(|e| {
-                ConversionError::ResourceLoadError(format!("Failed to load PDF: {}", e))
-            })?;
-
-        // WORKAROUND: Also load with test name embed_id for PDF files
-        // This allows PDF elements to find the PDF using test names
-        if mime_type == "application/pdf" {
-            let test_embed_id = "pdf_test_pdf";
-            self.pdf_embedder
-                .load_pdf_from_bytes(pdf_data, test_embed_id)
-                .map_err(|e| {
-                    ConversionError::ResourceLoadError(format!(
-                        "Failed to load PDF with test embed_id: {}",
-                        e
-                    ))
-                })?;
-        }
-
-        // Store a marker that this PDF is loaded (will be embedded when used)
-        self.context
-            .resource_cache
-            .embedded_pdfs
-            .insert(file.id.clone(), 0);
-
-        // WORKAROUND: Also store by test name for PDF files
-        // This handles the case where PDF elements reference by expected test names
-        // but the files are stored with ID keys in the DUC data
-        if mime_type == "application/pdf" {
-            self.context
-                .resource_cache
-                .embedded_pdfs
-                .insert("test_pdf".to_string(), 0);
-        }
-
+        let prepared = crate::source_document::with_layers(pdf_data, &Default::default(), true)
+            .map_err(ConversionError::ResourceLoadError)?;
+        self.pdf_embedder.load_pdf_from_bytes(prepared.as_deref().unwrap_or(pdf_data), &format!("pdf_{}", file.id))
+            .map_err(|e| ConversionError::ResourceLoadError(e.to_string()))?;
         Ok(0)
     }
 
@@ -1207,7 +1164,7 @@ impl DucToPdfBuilder {
 
     /// Generate pages for plot mode (one page per plot element)
     fn generate_plot_pages(&mut self) -> ConversionResult<()> {
-        let plot_entries: Vec<(String, (f64, f64, f64, f64), Option<(String, f64)>)> = self
+        let plot_entries: Vec<(String, (f64, f64, f64, f64))> = self
             .context
             .exported_data
             .elements
@@ -1221,25 +1178,9 @@ impl DucToPdfBuilder {
                         return None;
                     }
 
-                    // Extract background color and opacity from plot element
-                    // Only use background if it's visible and has a valid color
-                    let background_data = if !base.styles.background.is_empty() {
-                        base.styles.background.first().and_then(|bg| {
-                            // Check if background is visible
-                            if bg.content.visible && !bg.content.src.is_empty() {
-                                Some((bg.content.src.clone(), bg.content.opacity))
-                            } else {
-                                None
-                            }
-                        })
-                    } else {
-                        None
-                    };
-
                     Some((
                         base.id.clone(),
                         (base.x, base.y, base.width, base.height),
-                        background_data,
                     ))
                 } else {
                     None
@@ -1250,15 +1191,8 @@ impl DucToPdfBuilder {
         if plot_entries.is_empty() {
             self.create_single_page_with_all_elements()?;
         } else {
-            for (plot_id, bounds, background_data) in plot_entries {
-                let background_with_opacity = background_data
-                    .as_ref()
-                    .map(|(color, opacity)| (color.as_str(), *opacity));
-                self.create_page_with_bounds(
-                    bounds,
-                    Some(plot_id.as_str()),
-                    background_with_opacity,
-                )?;
+            for (plot_id, bounds) in plot_entries {
+                self.create_page_with_bounds(bounds, Some(&plot_id))?;
             }
         }
 
@@ -1291,7 +1225,7 @@ impl DucToPdfBuilder {
             self.calculate_overall_bounds()
         };
 
-        self.create_page_with_bounds(crop_bounds, None, None)?;
+        self.create_page_with_bounds(crop_bounds, None)?;
         Ok(())
     }
 
@@ -1337,7 +1271,7 @@ impl DucToPdfBuilder {
     fn create_single_page_with_all_elements(&mut self) -> ConversionResult<()> {
         // Calculate bounding box of all elements
         let bounds = self.calculate_overall_bounds();
-        self.create_page_with_bounds(bounds, None, None)?;
+        self.create_page_with_bounds(bounds, None)?;
         Ok(())
     }
 
@@ -1346,7 +1280,6 @@ impl DucToPdfBuilder {
         &mut self,
         bounds: (f64, f64, f64, f64),
         active_plot_id: Option<&str>,
-        page_background_color: Option<(&str, f64)>,
     ) -> ConversionResult<()> {
         let (x, y, width, height) = bounds;
         let (page_width, page_height) = self.sanitize_page_size(width, height);
@@ -1366,7 +1299,6 @@ impl DucToPdfBuilder {
         let content_stream = self.create_content_stream(
             (x, y, page_width, page_height),
             active_plot_id,
-            page_background_color,
             points_per_unit,
         )?;
         let content_id = self.document.add_object(Object::Stream(content_stream));
@@ -1399,6 +1331,7 @@ impl DucToPdfBuilder {
             ]),
         );
 
+        page.set("DucMillimetresPerPoint", Object::Real((1.0 / (PDF_USER_UNIT as f64 * scale)) as f32));
         page.set("Contents", Object::Reference(content_id));
         page.set("Resources", Object::Dictionary(resources));
 
@@ -1470,7 +1403,6 @@ impl DucToPdfBuilder {
         &mut self,
         bounds: (f64, f64, f64, f64),
         active_plot_id: Option<&str>,
-        page_background_color: Option<(&str, f64)>,
         points_per_unit: f32,
     ) -> ConversionResult<Stream> {
         let (x, y, width, height) = bounds; // Use bounds directly - data is already scaled by DucDataScaler
@@ -1497,54 +1429,23 @@ impl DucToPdfBuilder {
             ],
         ));
 
-        let background_to_apply = if active_plot_id.is_some() {
-            page_background_color
-        } else {
-            self.context
-                .options
-                .background_color
-                .as_deref()
-                .map(|color| (color, 1.0))
-        };
-
-        // Add background color if specified
-        if let Some((bg_color, bg_opacity)) = background_to_apply {
-            // Parse the background color using bigcolor
+        self.element_streamer.begin_page();
+        if let Some(plot_id) = active_plot_id {
+            if let Some(plot) = self.context.exported_data.elements.iter().find(|wrapper| {
+                Self::get_element_base(&wrapper.element).id == plot_id
+            }) {
+                operations.extend(self.element_streamer.stream_plot_page_style(&plot.element, width, height)?);
+            }
+        } else if let Some(bg_color) = self.context.options.background_color.as_deref() {
             if let Some((r, g, b)) = self.parse_color(bg_color) {
-                // Convert RGB to 0-1 range
-                let r_norm = r as f32 / 255.0;
-                let g_norm = g as f32 / 255.0;
-                let b_norm = b as f32 / 255.0;
-
-                // If opacity is less than 1.0, we need to apply transparency
-                // In PDF, we use the extended graphics state for this
-                if (bg_opacity - 1.0).abs() > f64::EPSILON {
-                    // Apply color with opacity by using RGBA-like approach
-                    // We'll blend with white background assuming transparent backdrop
-                    let alpha = bg_opacity as f32;
-                    let r_blended = r_norm * alpha + (1.0 - alpha);
-                    let g_blended = g_norm * alpha + (1.0 - alpha);
-                    let b_blended = b_norm * alpha + (1.0 - alpha);
-
-                    operations.push(Operation::new(
-                        "rg",
-                        vec![
-                            Object::Real(r_blended),
-                            Object::Real(g_blended),
-                            Object::Real(b_blended),
-                        ],
-                    ));
-                } else {
-                    // Full opacity - use color directly
-                    operations.push(Operation::new(
-                        "rg",
-                        vec![
-                            Object::Real(r_norm),
-                            Object::Real(g_norm),
-                            Object::Real(b_norm),
-                        ],
-                    ));
-                }
+                operations.push(Operation::new(
+                    "rg",
+                    vec![
+                        Object::Real(r as f32 / 255.0),
+                        Object::Real(g as f32 / 255.0),
+                        Object::Real(b as f32 / 255.0),
+                    ],
+                ));
 
                 // Create a filled rectangle covering the entire page
                 // Slightly overscan (1 unit on each side) to prevent aliasing artifacts at edges
@@ -1627,9 +1528,6 @@ impl DucToPdfBuilder {
             .set_freedraw_bboxes(self.context.resource_cache.freedraw_bboxes.clone());
         self.element_streamer
             .set_svg_dimensions(self.context.resource_cache.svg_dimensions.clone());
-
-        // Reset per-page ExtGState tracking before streaming
-        self.element_streamer.begin_page();
 
         let is_plot_mode = matches!(self.context.options.mode, ConversionMode::Plot);
         let allowed_ids = if is_plot_mode {
@@ -1854,7 +1752,13 @@ impl DucToPdfBuilder {
         catalog.set("Pages", pages_ref);
 
         // Attach OCProperties (layers) if we have them
-        if !self.layer_refs.is_empty() {
+        let embedded: Vec<_> = self.document.objects.iter_mut().filter_map(|(id, obj)| {
+            let dict = obj.as_dict_mut().ok()?;
+            if dict.get(b"Type").and_then(Object::as_name).ok() != Some(b"OCG") { return None }
+            let visible = dict.remove(crate::source_document::EMBEDDED_VISIBILITY)?.as_bool().ok()?;
+            Some((Object::Reference(*id), visible))
+        }).collect();
+        if !self.layer_refs.is_empty() || !embedded.is_empty() {
             // Build OCGs array
             let mut ocgs_array: Vec<Object> = Vec::new();
             let mut on_array: Vec<Object> = Vec::new();
@@ -1880,6 +1784,11 @@ impl DucToPdfBuilder {
                 if let Some(ocg_ref) = self.layer_refs.get(&layer.id) {
                     order_array.push(ocg_ref.clone());
                 }
+            }
+            for (group, visible) in embedded {
+                ocgs_array.push(group.clone());
+                order_array.push(group.clone());
+                if visible { &mut on_array } else { &mut off_array }.push(group);
             }
             d_dict.set("Order", Object::Array(order_array));
 

@@ -33,11 +33,12 @@ use crate::{ConversionError, ConversionResult};
 use bigcolor::BigColor;
 use duc::types::{
     DucArrowElement, DucBlockDuplicationArray, DucBlockInstance, DucDocElement, DucElementEnum,
-    DucEllipseElement, DucFrameElement, DucFreeDrawElement, DucImageElement, DucLine,
+    DucEllipseElement, DucFreeDrawElement, DucImageElement, DucLine,
     DucLineReference, DucLinearElement, DucLinearElementBase, DucModelElement, DucPath,
-    DucPdfElement, DucPlotElement, DucPoint, DucPolygonElement, DucRectangleElement,
-    DucTableElement, DucTextElement, ElementBackground, ElementContentBase, ElementWrapper,
+    DucPdfElement, DucPoint, DucPolygonElement, DucRectangleElement,
+    DucTextElement, ElementBackground, ElementContentBase, ElementWrapper,
     GeometricPoint, BEZIER_MIRRORING, ELEMENT_CONTENT_PREFERENCE, STROKE_CAP, STROKE_JOIN,
+    STROKE_PLACEMENT,
 };
 
 use hipdf::embed_pdf::PdfEmbedder;
@@ -160,40 +161,12 @@ impl ElementStreamer {
         }
     }
 
-    /// Calculate duplication offsets for block instance grid rendering.
-    /// `cell_width` and `cell_height` are the per-cell dimensions (NOT total grid).
-    /// Returns a vector of (x_offset, y_offset) tuples for each grid position.
-    /// The first offset is always (0.0, 0.0) representing the original position.
-    pub fn get_duplication_offsets(
-        duplication_array: &DucBlockDuplicationArray,
-        cell_width: f64,
-        cell_height: f64,
-    ) -> Vec<(f64, f64)> {
-        if duplication_array.row_spacing.is_nan() || duplication_array.col_spacing.is_nan() {
-            log::warn!(
-                "Duplication array has NaN spacing! row_spacing: {}, col_spacing: {}",
-                duplication_array.row_spacing,
-                duplication_array.col_spacing
-            );
-        }
-
-        let rows = duplication_array.rows.max(1) as usize;
-        let cols = duplication_array.cols.max(1) as usize;
-        let row_spacing = duplication_array.row_spacing;
-        let col_spacing = duplication_array.col_spacing;
-
-        let stride_x = cell_width + col_spacing;
-        let stride_y = cell_height + row_spacing;
-
-        let mut offsets = Vec::with_capacity(rows * cols);
-        for row in 0..rows {
-            for col in 0..cols {
-                let x_offset = col as f64 * stride_x;
-                let y_offset = row as f64 * stride_y;
-                offsets.push((x_offset, y_offset));
-            }
-        }
-        offsets
+    /// Materialize a complete unrotated grid for callers requesting every offset.
+    pub fn get_duplication_offsets(array: &DucBlockDuplicationArray, cell_width: f64, cell_height: f64) -> Vec<(f64,f64)> {
+        super::duplication_grid::DuplicationGrid {
+            cols: array.cols.max(1) as usize, rows: array.rows.max(1) as usize,
+            pitch: (cell_width + array.col_spacing, cell_height + array.row_spacing), ..Default::default()
+        }.offsets(None).collect()
     }
 
     /// Compute per-cell dimensions from total grid dimensions and a duplication array.
@@ -372,10 +345,14 @@ impl ElementStreamer {
     /// Returns None if element has no instance_id or no duplication array.
     /// Offsets are computed using per-cell dimensions derived from the element's
     /// total grid width/height.
-    pub fn get_element_duplication_offsets(
+    pub fn get_element_duplication_offsets(&self, element: &DucElementEnum) -> Option<Vec<(f64, f64)>> {
+        self.duplication_grid(element).map(|grid| grid.offsets(None).collect())
+    }
+
+    fn duplication_grid(
         &self,
         element: &DucElementEnum,
-    ) -> Option<Vec<(f64, f64)>> {
+    ) -> Option<super::duplication_grid::DuplicationGrid> {
         let base = Self::get_element_base(element);
         let instance_id = base.instance_id.as_ref()?;
 
@@ -410,23 +387,9 @@ impl ElementStreamer {
                     let footprint_center = (fcx, fcy);
                     let c0 = (bx1 + pitch_w / 2.0, by1 + pitch_h / 2.0);
 
-                    let mut offsets = Vec::with_capacity(rows * cols);
-                    for row in 0..rows {
-                        for col in 0..cols {
-                            let c_copy = (
-                                c0.0 + col as f64 * (pitch_w + col_spacing),
-                                c0.1 + row as f64 * (pitch_h + row_spacing),
-                            );
-                            let c_rotated = Self::rotate_point_around_center(
-                                c_copy,
-                                footprint_center,
-                                base.angle,
-                            );
-                            offsets.push((c_rotated.0 - c0.0, c_rotated.1 - c0.1));
-                        }
-                    }
-
-                    return Some(offsets);
+                    let first = Self::rotate_point_around_center(c0, footprint_center, base.angle);
+                    return Some(super::duplication_grid::DuplicationGrid { cols, rows, pitch: (pitch_w + col_spacing, pitch_h + row_spacing),
+                        first: (first.0 - c0.0, first.1 - c0.1), angle: base.angle });
                 }
             }
         } else {
@@ -752,6 +715,11 @@ impl ElementStreamer {
                     return true;
                 }
 
+                // The active plot decorations were painted once underneath the page contents.
+                if self.current_plot_id.as_deref() == Some(base.id.as_str()) {
+                    return false;
+                }
+
                 if let Some(allowed_ids) = &self.allowed_element_ids {
                     allowed_ids.contains(base.id.as_str())
                 } else {
@@ -816,13 +784,15 @@ impl ElementStreamer {
             let renderable_element =
                 self.get_renderable_duplication_element(&element_wrapper.element);
 
-            let offsets = self
-                .get_element_duplication_offsets(&element_wrapper.element)
-                .unwrap_or_else(|| vec![(0.0, 0.0)]);
-
+            let grid = self.duplication_grid(&element_wrapper.element);
             let renderable_base = Self::get_element_base(&renderable_element);
-
-            for (x_off, y_off) in offsets {
+            let (vx, vy, vw, vh) = self.visible_scene_rect;
+            let clip = grid.filter(|_| vw > 0. && vh > 0.).map(|_| {
+                let (x1,y1,x2,y2) = Self::compute_element_visual_bounds(&renderable_element);
+                let margin = (x2-x1).hypot(y2-y1) + renderable_base.styles.stroke.iter().map(|s| s.width.abs()).fold(0.0,f64::max);
+                [vx-x2-margin, vy-y2-margin, vx+vw-x1+margin, vy+vh-y1+margin]
+            });
+            for (x_off,y_off) in grid.unwrap_or_default().offsets(clip) {
                 let positioned_renderable_element = Self::with_element_position(
                     renderable_element.clone(),
                     renderable_base.x + x_off,
@@ -963,7 +933,7 @@ impl ElementStreamer {
             DucElementEnum::DucTextElement(text) => self.stream_text(text)?,
             DucElementEnum::DucLinearElement(linear) => self.stream_linear(linear)?,
             DucElementEnum::DucArrowElement(arrow) => self.stream_arrow(arrow)?,
-            DucElementEnum::DucTableElement(table) => self.stream_table(table)?,
+            DucElementEnum::DucTableElement(_) => vec![], // Workbook bytes have not been hydrated.
             DucElementEnum::DucFreeDrawElement(freedraw) => {
                 self.stream_freedraw(freedraw, &styles, document, pdf_embedder, resource_streamer)?
             }
@@ -977,8 +947,9 @@ impl ElementStreamer {
                 image_manager,
                 resource_streamer,
             )?,
-            DucElementEnum::DucFrameElement(frame) => self.stream_frame(frame)?,
-            DucElementEnum::DucPlotElement(plot) => self.stream_plot(plot)?,
+            DucElementEnum::DucFrameElement(_) | DucElementEnum::DucPlotElement(_) => {
+                Self::stack_style_operations(element, &styles, 0.0, base.width, base.height)
+            }
 
             // Ignored elements (as per specifications)
             DucElementEnum::DucEmbeddableElement(_) => vec![], // Ignore
@@ -2012,18 +1983,10 @@ impl ElementStreamer {
             | DucElementEnum::DucEllipseElement(_)
             | DucElementEnum::DucLinearElement(_)
             | DucElementEnum::DucArrowElement(_)
-            | DucElementEnum::DucTableElement(_) => StyleProfile {
+            | DucElementEnum::DucTableElement(_)
+            | DucElementEnum::DucFrameElement(_)
+            | DucElementEnum::DucPlotElement(_) => StyleProfile {
                 use_background_fill: true,
-                fill_from_stroke: false,
-                apply_stroke_properties: true,
-            },
-            DucElementEnum::DucFrameElement(_) => StyleProfile {
-                use_background_fill: true,
-                fill_from_stroke: false,
-                apply_stroke_properties: true,
-            },
-            DucElementEnum::DucPlotElement(_) => StyleProfile {
-                use_background_fill: false,
                 fill_from_stroke: false,
                 apply_stroke_properties: true,
             },
@@ -2145,30 +2108,6 @@ impl ElementStreamer {
         );
 
         Ok(super::text_positions::absolute_line_positions(operations))
-    }
-
-    /// Stream table element
-    fn stream_table(&self, table: &DucTableElement) -> ConversionResult<Vec<Operation>> {
-        let mut ops = Vec::new();
-
-        // Placeholder rectangle for the table bounds
-        ops.push(Operation::new("% Table placeholder", vec![]));
-        ops.push(Operation::new(
-            "re",
-            vec![
-                Object::Real(0.0),                         // x (relative to current transformation)
-                Object::Real(-(table.base.height as f32)), // y (flip to keep origin at top-left)
-                Object::Real(table.base.width as f32),
-                Object::Real(table.base.height as f32),
-            ],
-        ));
-        ops.push(Operation::new("S", vec![]));
-        ops.push(Operation::new(
-            "% TODO: Implement full table rendering",
-            vec![],
-        ));
-
-        Ok(ops)
     }
 
     /// Stream polygon element
@@ -2790,7 +2729,9 @@ impl ElementStreamer {
             pdf.base.height,
             pdf.base.x,
             pdf.base.y,
+            pdf.base.angle == 0.0 && pdf.base.instance_id.is_none(),
             &pdf.grid_config,
+            &crate::utils::source_elements::view(&pdf.base).hidden_pages,
             document,
             pdf_embedder,
         )
@@ -2808,7 +2749,9 @@ impl ElementStreamer {
         el_height: f64,
         el_scene_x: f64,
         el_scene_y: f64,
+        axis_aligned: bool,
         grid_config: &duc::types::DocumentGridConfig,
+        hidden_pages: &[usize],
         document: &mut Document,
         pdf_embedder: &mut PdfEmbedder,
     ) -> ConversionResult<Vec<Operation>> {
@@ -2836,107 +2779,7 @@ impl ElementStreamer {
             return Ok(vec![]);
         }
 
-        let columns = grid_config.columns.max(1) as usize;
-        let grid_scale = if grid_config.scale == 0.0 {
-            1.0
-        } else {
-            grid_config.scale as f32
-        };
-        let gap_x = grid_config.gap_x as f32 * grid_scale;
-        let gap_y = grid_config.gap_y as f32 * grid_scale;
-        let first_page_alone = grid_config.first_page_alone;
-
-        let mut total_rows: usize = 0;
-        {
-            let mut col: usize = 0;
-            for i in 0..info.page_count {
-                if first_page_alone && i == 0 {
-                    total_rows += 1;
-                    col = 0;
-                    continue;
-                }
-                if col == 0 {
-                    total_rows += 1;
-                }
-                col += 1;
-                if col >= columns {
-                    col = 0;
-                }
-            }
-        }
-
-        let total_gap_x = if columns > 1 {
-            gap_x * (columns as f32 - 1.0)
-        } else {
-            0.0
-        };
-        let total_gap_y = if total_rows > 1 {
-            gap_y * (total_rows as f32 - 1.0)
-        } else {
-            0.0
-        };
-        let content_w = (el_w - total_gap_x).max(0.0);
-        let content_h = (el_h - total_gap_y).max(0.0);
-        let cell_w = content_w / columns as f32;
-        let cell_h = content_h / total_rows as f32;
-
-        struct PageLayout {
-            page_index: usize,
-            local_x: f32,
-            local_y: f32,
-            scaled_w: f32,
-            scaled_h: f32,
-            page_scale: f32,
-        }
-
-        let mut layouts: Vec<PageLayout> = Vec::with_capacity(info.page_count);
-        let mut row: usize = 0;
-        let mut col: usize = 0;
-
-        for page_idx in 0..info.page_count {
-            let (page_w, page_h) = if page_idx < info.page_dimensions.len() {
-                info.page_dimensions[page_idx]
-            } else {
-                (595.0, 842.0)
-            };
-
-            let (cell_x, cell_y, used_w, used_h);
-
-            if first_page_alone && page_idx == 0 {
-                cell_x = 0.0;
-                cell_y = 0.0;
-                used_w = el_w;
-                used_h = cell_h;
-                row += 1;
-                col = 0;
-            } else {
-                cell_x = col as f32 * (cell_w + gap_x);
-                cell_y = row as f32 * (cell_h + gap_y);
-                used_w = cell_w;
-                used_h = cell_h;
-                col += 1;
-                if col >= columns {
-                    col = 0;
-                    row += 1;
-                }
-            }
-
-            let scale_x = used_w / page_w;
-            let scale_y = used_h / page_h;
-            let page_scale = scale_x.min(scale_y);
-            let scaled_w = page_w * page_scale;
-            let scaled_h = page_h * page_scale;
-            let offset_x = (used_w - scaled_w) / 2.0;
-
-            layouts.push(PageLayout {
-                page_index: page_idx,
-                local_x: cell_x + offset_x,
-                local_y: cell_y,
-                scaled_w,
-                scaled_h,
-                page_scale,
-            });
-        }
+        let layouts = crate::utils::document_layout::layout(&info.page_dimensions, grid_config, hidden_pages, el_w, el_h);
 
         let mut ops = Vec::new();
 
@@ -2945,11 +2788,8 @@ impl ElementStreamer {
         let (export_x, export_y, export_w, export_h) = self.visible_scene_rect;
 
         for layout in &layouts {
-            // Visibility check: skip pages whose scene-space rect doesn't
-            // intersect the export area. Uses axis-aligned check (ignoring
-            // element rotation for speed — most PDF/Doc elements aren't rotated).
-            // A 10% margin is added to avoid edge-case false negatives.
-            if export_w > 0.0 && export_h > 0.0 {
+            // Local page bounds are world-aligned only outside rotated elements and instances.
+            if axis_aligned && export_w > 0.0 && export_h > 0.0 {
                 let margin_x = export_w * 0.1;
                 let margin_y = export_h * 0.1;
                 let page_scene_x = el_scene_x + layout.local_x as f64;
@@ -3042,7 +2882,9 @@ impl ElementStreamer {
             doc.base.height,
             doc.base.x,
             doc.base.y,
+            doc.base.angle == 0.0 && doc.base.instance_id.is_none(),
             &doc.grid_config,
+            &crate::utils::source_elements::view(&doc.base).hidden_pages,
             document,
             pdf_embedder,
         )
@@ -3063,6 +2905,23 @@ impl ElementStreamer {
     ) -> ConversionResult<Vec<Operation>> {
         let mut ops = Vec::new();
 
+        if model.base.custom_data.as_deref().and_then(|data| serde_json::from_str::<serde_json::Value>(data).ok())
+            .is_some_and(|data| data["modelOutputState"]["status"] == "empty") {
+            use hipdf::fonts::utils::{create_text_block, TextAlign, WrapStrategy};
+            let width = model.base.width as f32;
+            let height = model.base.height as f32;
+            if width <= 0.0 || height <= 0.0 { return Ok(ops); }
+            let size = (width / 19.0).min(height / 4.0);
+            ops.push(Operation::new("rg", vec![1.0.into(), 0.97.into(), 0.88.into()]));
+            ops.push(Operation::new("RG", vec![0.74.into(), 0.47.into(), 0.10.into()]));
+            ops.push(Operation::new("w", vec![(size / 12.0).into()]));
+            ops.push(Operation::new("re", vec![0.into(), (-height).into(), width.into(), height.into()]));
+            ops.push(Operation::new("B", vec![]));
+            ops.push(Operation::new("rg", vec![0.34.into(), 0.22.into(), 0.04.into()]));
+            ops.extend(create_text_block(&self.font_resource_name, &self.text_font, "No visual output", size, -(height + size) / 2.0,
+                size, Some(width - size * 2.0), Some(height), size, TextAlign::Center, WrapStrategy::Word));
+            return Ok(ops);
+        }
         let thumbnail = match &model.thumbnail {
             Some(bytes) if !bytes.is_empty() => bytes,
             _ => {
@@ -3385,82 +3244,63 @@ impl ElementStreamer {
         self.embedded_pdfs.contains_key(file_id)
     }
 
-    /// Stream frame element (StackLike - needs clipping consideration)
-    fn stream_frame(&self, frame: &DucFrameElement) -> ConversionResult<Vec<Operation>> {
-        let mut ops = Vec::new();
-
-        let styles = &frame.stack_element_base.base.styles;
-        let has_background = styles
-            .background
-            .iter()
-            .any(|background| background.content.visible);
-        let has_stroke = styles.stroke.iter().any(|stroke| stroke.content.visible);
-
-        if has_background || has_stroke {
-            Self::append_rounded_rect_path(
-                &mut ops,
-                0.0,
-                0.0,
-                frame.stack_element_base.base.width,
-                frame.stack_element_base.base.height,
-                styles.roundness,
-            );
-
-            if has_background && has_stroke {
-                ops.push(Operation::new("B", vec![]));
-            } else if has_background {
-                ops.push(Operation::new("f", vec![]));
-            } else {
-                ops.push(Operation::new("S", vec![]));
-            }
-        }
-
-        // Stream child elements within the frame's coordinate system
-        // Note: The actual child elements will be streamed by the main streaming loop
-        // with proper coordinate transformation based on their frame_id
-        ops.push(Operation::new(
-            "% Frame element - child elements will be streamed with frame-relative positioning",
-            vec![],
-        ));
-
+    pub(crate) fn stream_plot_page_style(
+        &mut self,
+        element: &DucElementEnum,
+        width: f64,
+        height: f64,
+    ) -> ConversionResult<Vec<Operation>> {
+        let styles = self.style_resolver.resolve_styles(element);
+        let mut ops = vec![Operation::new("q", vec![])];
+        ops.extend(self.apply_styles(element, &styles)?);
+        ops.extend(Self::stack_style_operations(element, &styles, height, width, height));
+        ops.push(Operation::new("Q", vec![]));
         Ok(ops)
     }
 
-    /// Stream plot element (StackLike - handle crop vs plots mode)
-    fn stream_plot(&self, plot: &DucPlotElement) -> ConversionResult<Vec<Operation>> {
+    fn stack_style_operations(
+        element: &DucElementEnum,
+        styles: &ResolvedStyles,
+        top_y: f64,
+        width: f64,
+        height: f64,
+    ) -> Vec<Operation> {
+        let has_background = styles.background.iter().any(|background| background.visible);
+        let has_stroke = styles.stroke.iter().any(|stroke| stroke.visible);
         let mut ops = Vec::new();
-
-        // Check if this is a plot stack element (based on stack_base.is_plot)
-        if plot.stack_element_base.stack_base.is_plot {
-            // Handle as actual plot page - this would be handled differently
-            // at the page level, not at the element level
-            ops.push(Operation::new(
-                "% Plot page - handled at page level",
-                vec![],
-            ));
-        } else {
-            // Handle as cropped rectangle with clipping
-            ops.push(Operation::new("q", vec![])); // Save state
-
-            // Set clipping rectangle
-            ops.push(Operation::new(
-                "re",
-                vec![
-                    Object::Real(0.0),
-                    Object::Real(0.0),
-                    Object::Real(plot.stack_element_base.base.width as f32),
-                    Object::Real(plot.stack_element_base.base.height as f32),
-                ],
-            ));
-            ops.push(Operation::new("W", vec![])); // Set clipping path
-            ops.push(Operation::new("n", vec![])); // End path
-
-            // TODO: Stream child elements within the clipping bounds
-            ops.push(Operation::new("% TODO: Stream plot child elements", vec![]));
-
-            ops.push(Operation::new("Q", vec![])); // Restore state
+        let inset = Self::plot_stroke_inset(element, width.min(height));
+        if inset != 0.0 {
+            if has_background {
+                Self::append_rounded_rect_path(&mut ops, 0.0, top_y, width, height, styles.roundness);
+                ops.push(Operation::new("f", vec![]));
+            }
+            Self::append_rounded_rect_path(
+                &mut ops, inset, top_y - inset, width - 2.0 * inset, height - 2.0 * inset,
+                if styles.roundness > 0.0 { styles.roundness - inset } else { 0.0 },
+            );
+            ops.push(Operation::new("S", vec![]));
+            return ops;
         }
+        let paint = match (has_background, has_stroke) {
+            (true, true) => "B",
+            (true, false) => "f",
+            (false, true) => "S",
+            (false, false) => return vec![],
+        };
 
-        Ok(ops)
+        Self::append_rounded_rect_path(&mut ops, 0.0, top_y, width, height, styles.roundness);
+        ops.push(Operation::new(paint, vec![]));
+        ops
+    }
+
+    fn plot_stroke_inset(element: &DucElementEnum, shortest_side: f64) -> f64 {
+        let DucElementEnum::DucPlotElement(plot) = element else { return 0.0 };
+        let Some(stroke) = plot.stack_element_base.base.styles.stroke.iter()
+            .find(|stroke| stroke.content.visible) else { return 0.0 };
+        match stroke.placement {
+            Some(STROKE_PLACEMENT::INSIDE) => (stroke.width / 2.0).min(shortest_side * 0.49),
+            Some(STROKE_PLACEMENT::OUTSIDE) => -stroke.width / 2.0,
+            _ => 0.0,
+        }
     }
 }

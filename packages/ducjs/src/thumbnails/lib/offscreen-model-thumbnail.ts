@@ -1,3 +1,5 @@
+import { configureModelMotion } from "../../utils/modelMotion";
+import { installCompactComponentRegistry } from "../../utils/compactComponentRegistry";
 import { mapViewerStateToOptions } from "./mapViewerStateToOptions";
 import { applyParametricViewerState } from "./parametricViewerState";
 import { sanitizeParametricShapes } from "./parametricShapes";
@@ -144,6 +146,7 @@ export const renderOffscreenModelThumbnail = async ({
     };
 
     viewer = new Viewer(display, viewerOptions, () => undefined, null, false);
+    installCompactComponentRegistry(viewer);
     // Thumbnail dimensions are output pixels, independent of the screen's DPI.
     viewer.renderer.setPixelRatio(1);
     viewer.render(
@@ -152,6 +155,7 @@ export const renderOffscreenModelThumbnail = async ({
       viewerOptions as ViewerOptions,
     );
 
+    configureModelMotion(viewer, shapes);
     viewer.update(true);
     if (signal?.aborted) return null;
 

@@ -1,6 +1,7 @@
 """Typed model artifacts shared by desktop and cloud Python workers."""
 import base64
 import hashlib
+import io
 import json
 import platform
 import importlib
@@ -11,6 +12,8 @@ KINDS = {
     "parametric": ("application/json", "json"),
     "ifc": ("application/x-ifc", "ifc"),
     "dxf": ("application/dxf", "dxf"),
+    "dwg": ("application/acad", "dwg"),
+    "xlsx": ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
     "image": ("image/png", "png"),
     "svg": ("image/svg+xml", "svg"),
     "pdf": ("application/pdf", "pdf"),
@@ -36,7 +39,7 @@ class ModelOutputCollector:
 
     def emit_output(self, value: Any = None, *, kind: str, data: Any = None,
                     path: str | None = None, mime_type: str | None = None,
-                    filename: str | None = None) -> None:
+                    filename: str | None = None, animation: Any = None, explode: Any = None) -> None:
         if _shims().scopture_is_model_dependency_call():
             return
         if kind not in KINDS:
@@ -44,7 +47,8 @@ class ModelOutputCollector:
         if self.declaration is not None:
             raise ValueError("Declare exactly one model output artifact per execution")
         self.declaration = dict(value=value, kind=kind, data=data, path=path,
-                                mime_type=mime_type, filename=filename)
+                                mime_type=mime_type, filename=filename,
+                                motion={k: v for k, v in (("animation", animation), ("explode", explode)) if v is not None})
 
     def collect(self, events: list[dict], globals_dict: dict, output_path: Path,
                 legacy_kind: str, now: str) -> dict | None:
@@ -55,10 +59,18 @@ class ModelOutputCollector:
             data = declaration["data"]
             path = declaration["path"]
             if kind == "parametric" and data is None and path is None:
-                data = _shims().scopture_tessellate_to_buffer_json(value)
+                data = _shims().scopture_tessellate_to_buffer_json(value, **declaration["motion"])
             elif kind == "table" and data is None and path is None:
                 data = value.to_dict(orient="records") if hasattr(value, "to_dict") else value
                 data = json.dumps(data, allow_nan=False)
+            elif kind == "dxf" and data is None and path is None and hasattr(value, "write") and hasattr(value, "modelspace"):
+                stream = io.StringIO()
+                value.write(stream)
+                data = stream.getvalue().encode(value.output_encoding, errors="dxfreplace")
+            elif kind == "xlsx" and data is None and path is None and hasattr(value, "save"):
+                stream = io.BytesIO()
+                value.save(stream)
+                data = stream.getvalue()
             elif path is None and data is None and isinstance(value, (str, bytes, bytearray)):
                 data = value
             elif kind in ("ifc", "dxf") and data is None and path is None:
@@ -85,7 +97,12 @@ class ModelOutputCollector:
             if kind == "ifc":
                 target = self.workspace / "declared-preview.ifc"
                 target.write_bytes(data)
-                preview = _shims().scopture_collect_ifc_preview(globals_dict, output_path=target, max_preview_bytes=self.preview_limit)
+                preview_globals = {**globals_dict, "__scopture_model_motion__": {
+                    **globals_dict.get("__scopture_model_motion__", {}), **declaration["motion"]
+                }}
+                preview = _shims().scopture_collect_ifc_preview(
+                    preview_globals, output_path=target, max_preview_bytes=self.preview_limit
+                )
                 if preview:
                     events.append({"type": "preview", "content": preview, "timestamp": now})
             elif kind == "parametric":
@@ -103,8 +120,30 @@ class ModelOutputCollector:
                 return None
             declaration = {}
 
-        if not data or len(data) > (self.preview_limit if kind == "parametric" else self.limit):
-            raise ValueError("Model output is empty or exceeds the artifact size limit")
+        motion = {**globals_dict.get("__scopture_model_motion__", {}), **declaration.get("motion", {})}
+        if kind == "parametric" and motion and data:
+            geometry = json.loads(data)
+            if isinstance(geometry, dict):
+                data = json.dumps({**geometry, **motion}, separators=(",", ":")).encode("utf-8")
+        if not data:
+            events[:] = [event for event in events if event.get("type") not in ("preview", "modelFile")]
+            return None
+        if kind == "parametric" and len(data) < 65536:
+            # Empty tessellations have no buffers, including nested empty assemblies.
+            def is_empty_assembly(node):
+                if isinstance(node, list):
+                    return all(is_empty_assembly(child) for child in node)
+                if isinstance(node, dict):
+                    if "shapes" in node:
+                        return is_empty_assembly(node["shapes"])
+                    if "parts" in node:
+                        return is_empty_assembly(node["parts"])
+                return False
+            if is_empty_assembly(json.loads(data)):
+                events[:] = [event for event in events if event.get("type") != "preview"]
+                return None
+        if len(data) > (self.preview_limit if kind == "parametric" else self.limit):
+            raise ValueError("Model output exceeds the artifact size limit")
         mime, extension = KINDS[kind]
         fingerprints = {}
         for file_id, file in self.files.items():

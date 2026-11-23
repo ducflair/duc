@@ -261,6 +261,35 @@ def scopture_flatten_candidates(*objs: Any) -> list[Any]:
     return flattened
 
 
+def scopture_install_animation(module, globals_dict):
+    """Collect ocp_vscode animation tracks for the most recently shown assembly."""
+    import sys
+    import types
+
+    class Animation:
+        def __init__(self, assembly=None):
+            self.tracks = []
+
+        def add_track(self, path, action, times, values, animate_joints=False):
+            times = list(map(float, times))
+            values = [list(map(float, value)) if action in ("t", "q") else float(value) for value in values]
+            self.tracks.append([path, action, times, values])
+            if animate_joints:
+                self.tracks.append([f"{path}.joints", action, times, values])
+
+        def animate(self, speed=1):
+            if speed <= 0:
+                raise ValueError("Animation speed must be positive")
+            globals_dict.setdefault("__scopture_model_motion__", {})["animation"] = {
+                "tracks": self.tracks, "speed": speed
+            }
+
+    module.Animation = Animation
+    animation_module = types.ModuleType("ocp_vscode.animation")
+    animation_module.Animation = Animation
+    sys.modules[animation_module.__name__] = animation_module
+
+
 def scopture_tessellate_to_buffer_json(*objs: Any, **kwargs: Any) -> str:
     """Tessellate CAD objects and return a compact JSON payload using base64 buffers.
 
@@ -273,6 +302,7 @@ def scopture_tessellate_to_buffer_json(*objs: Any, **kwargs: Any) -> str:
         to_ocpgroup,
     )
 
+    motion = {key: kwargs.pop(key) for key in ("animation", "explode", "tracks") if key in kwargs}
     if "names" not in kwargs and "name" in kwargs:
         kwargs["names"] = [kwargs["name"]]
 
@@ -282,7 +312,7 @@ def scopture_tessellate_to_buffer_json(*objs: Any, **kwargs: Any) -> str:
     meshed_instances, shapes, _map = tessellate_group(part_group, instances)
 
     return json.dumps(
-        numpy_to_buffer_json({"instances": meshed_instances, "shapes": shapes})
+        numpy_to_buffer_json({"instances": meshed_instances, "shapes": shapes, **motion})
     )
 
 
@@ -982,10 +1012,29 @@ def scopture_collect_ifc_preview(
     if projects:
         project_name = safe_string(getattr(projects[0], "Name", None), "IFC Model")
 
+    motion = {}
+    projects = model.by_type("IfcProject")
+    if projects:
+        from ifcopenshell.util.element import get_psets
+        settings = get_psets(projects[0], psets_only=True).get("ScoptureMotion", {})
+        for name, key in (("AnimationTracks", "animation"), ("ExplodeTracks", "explode"), ("ExplodeDirections", "directions")):
+            encoded = settings.get(name)
+            if isinstance(encoded, str):
+                try:
+                    value = json.loads(encoded)
+                    if key == "directions":
+                        motion["explode"] = {"tracks": motion.get("explode", []), "directions": value}
+                    else:
+                        motion[key] = value
+                except ValueError:
+                    pass
+    motion.update(globals_dict.get("__scopture_model_motion__", {}))
+
     payload = json.dumps(
         {
             "version": 2,
             "name": project_name,
+            **motion,
             "id": "ifc-model",
             "loc": identity_loc(),
             "parts": parts,

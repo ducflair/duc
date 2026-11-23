@@ -17,6 +17,7 @@ def now_ms() -> int:
 
 from ..classes.DataStateClass import (Actor, Checkpoint, Delta, DucCharter,
                                       DucCharterConstraint, DucCharterDecision,
+                                      DucCharterPhaseChange,
                                       DucCharterRequirement,
                                       DucCharterStakeholder, DucExternalFile,
                                       DucIssue, DucIssueCanvasAnchor,
@@ -665,6 +666,10 @@ class CharterBuilder(StateSpecificBuilder):
         self.extra["objective"] = objective
         return self
 
+    def with_phase_history(self, entries: List[DucCharterPhaseChange]):
+        self.extra["phase_history"] = list(entries)
+        return self
+
     def with_phase(self, phase: str):
         self.extra["phase"] = phase
         return self
@@ -721,6 +726,7 @@ class CharterBuilder(StateSpecificBuilder):
             description=self.base.description or None,
             objective=self.extra.get("objective", ""),
             phase=self.extra.get("phase", "intent"),
+            phase_history=self.extra.get("phase_history", []),
             closed_reason=self.extra.get("closed_reason"),
             requirements=self.requirements,
             constraints=self.constraints,

@@ -1,6 +1,7 @@
 import type { Viewer3DClipping } from "../../types";
 import * as THREE from "three";
 import { Viewer } from "three-cad-viewer";
+import { withBatchedViewerUpdates } from "../../utils/viewerUpdateBatch";
 import {
   CLIPPING_AXES,
   shouldMirrorSingleAxisIntersection,
@@ -132,9 +133,9 @@ const applyParametricClipPlaneSubset = (
   hasAnyClip: boolean,
 ): void => {
   const activeIndices = getActiveParametricClipIndices(clipping);
-  const activeIndexSet = new Set(activeIndices);
+  const activeIndexSet = new Set<number>(activeIndices);
   const shouldMirrorSingleAxisClip = shouldMirrorSingleAxisIntersection(clipping);
-  const suppressCapMeshes = isIfcRenderedModel(rendered) && !clipping.objectColorCaps;
+  const suppressCapMeshes = !clipping.showPlanes || (isIfcRenderedModel(rendered) && !clipping.objectColorCaps);
 
   const activeClipPlanes = hasAnyClip
     ? activeIndices
@@ -160,7 +161,19 @@ const applyParametricClipPlaneSubset = (
   const capAndHelperPlanes = Array.from(capAndHelperPlaneByIndex.values());
 
   rendered?.nestedGroup?.setClipPlanes?.(activeClipPlanes);
-  rendered?.clipping?.setVisible?.(hasAnyClip);
+  rendered?.clipping?.setVisible?.(hasAnyClip && !suppressCapMeshes);
+
+  // Keep stencil writes paired with their cap even when the viewer reculls meshes.
+  for (const group of Object.values(rendered?.nestedGroup?.groups ?? {})) {
+    if (!group || typeof group !== "object" || !("clipping" in group) || !(group.clipping instanceof Map)) continue;
+    for (const [index, stencils] of group.clipping) {
+      const enabled = hasAnyClip && !suppressCapMeshes && activeIndexSet.has(index);
+      for (const child of stencils.children) {
+        const material = (child as THREE.Mesh<THREE.BufferGeometry, THREE.Material>).material;
+        if (material) material.stencilWrite = enabled;
+      }
+    }
+  }
 
   const planeHelpers = rendered?.clipping?.planeHelpers;
   if (planeHelpers) {
@@ -229,19 +242,21 @@ export const applyParametricClipping = (
     (axis) => clipping[axis].enabled,
   );
 
-  for (const axis of CLIPPING_AXES) {
-    const index = CLIP_AXIS_INDEX[axis];
-    const plane = clipping[axis];
-    const actualValue = getParametricClipActualValue(viewer, axis, plane);
-    (viewer as any)?.setClipSlider?.(index, actualValue, false);
-  }
+  withBatchedViewerUpdates(viewer, () => {
+    for (const axis of CLIPPING_AXES) {
+      const index = CLIP_AXIS_INDEX[axis];
+      const plane = clipping[axis];
+      const actualValue = getParametricClipActualValue(viewer, axis, plane);
+      (viewer as any)?.setClipSlider?.(index, actualValue, false);
+    }
 
-  (viewer as any)?.setClipIntersection?.(clipping.intersection, false);
-  (viewer as any)?.setClipPlaneHelpers?.(clipping.showPlanes, false);
-  (viewer as any)?.setLocalClipping?.(hasAnyClip);
+    (viewer as any)?.setClipIntersection?.(clipping.intersection, false);
+    (viewer as any)?.setClipPlaneHelpers?.(clipping.showPlanes, false);
+    (viewer as any)?.setLocalClipping?.(hasAnyClip);
 
-  rendered.nestedGroup?.setBackVisible?.(hasAnyClip);
-  applyParametricClipPlaneSubset(rendered, clipping, hasAnyClip);
+    rendered.nestedGroup?.setBackVisible?.(hasAnyClip);
+    applyParametricClipPlaneSubset(rendered, clipping, hasAnyClip);
 
-  (viewer as any)?.update?.(true);
+    (viewer as any)?.update?.(true);
+  });
 };

@@ -1,4 +1,7 @@
+from dataclasses import asdict
+
 import ducpy as duc
+from ducpy.classes.DataStateClass import DucCharterPhaseChange
 
 
 def test_charter_roundtrip(test_output_dir):
@@ -8,6 +11,7 @@ def test_charter_roundtrip(test_output_dir):
         .with_description("Coordinate the pre-delivery scope.")
         .with_objective("Produce an approved issue-for-construction package.")
         .with_phase("review")
+        .with_phase_history([DucCharterPhaseChange("transition", "intent", "review", 123)])
         .with_updated_at(1_715_000_000_100)
         .add_requirement(
             "All drawings must include dimensions.",
@@ -37,6 +41,7 @@ def test_charter_roundtrip(test_output_dir):
 
     assert parsed.charter.title == "Permit set"
     assert parsed.charter.phase == "review"
+    assert parsed.charter.phase_history == [asdict(change) for change in charter.phase_history]
     assert parsed.charter.requirements[0].acceptance_criteria == ["Every sheet has a dimension layer"]
     assert parsed.charter.constraints[0].statement == "Keep the existing structural grid."
     assert parsed.charter.decisions[0].issue_ids == ["issue-1"]
