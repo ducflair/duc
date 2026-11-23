@@ -95,7 +95,16 @@ export interface DucCharterDecision {
  * A Charter holds what an engineer or agent needs to understand what the project
  * is trying to achieve and why the current artifact state exists.
  */
+export interface DucCharterPhaseChange {
+  id: string;
+  previousPhase: DucCharterPhase;
+  phase: DucCharterPhase;
+  changedAt: number;
+  closedReason?: string;
+}
+
 export interface DucCharter {
+  phaseHistory?: DucCharterPhaseChange[];
   title: string;
   /** Orientation: what kind of project this is and the context needed to read the charter */
   description?: string;

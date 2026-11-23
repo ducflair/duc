@@ -1,3 +1,5 @@
+import { applyModelExplode } from "../../utils/modelMotion";
+import { withBatchedViewerUpdates } from "../../utils/viewerUpdateBatch";
 import type { Viewer3DClipping, Viewer3DState } from "../../types";
 import type { OrthographicCamera } from "three";
 import { Viewer } from "three-cad-viewer";
@@ -182,6 +184,15 @@ export const applyParametricViewerState = (
   const rendered = getRenderedViewer(viewer);
   if (!viewer || !rendered) return false;
 
+  return withBatchedViewerUpdates(viewer, () => applyUnbatchedViewerState(viewer, rendered, state, options));
+};
+
+const applyUnbatchedViewerState = (
+  viewer: ViewerInstance,
+  rendered: NonNullable<ReturnType<typeof getRenderedViewer>>,
+  state: Viewer3DState,
+  options: ApplyParametricViewerStateOptions,
+): boolean => {
   try {
     const applyCamera = options.applyCamera ?? true;
     const { display, material, clipping, explode, zebra } = state;
@@ -235,8 +246,7 @@ export const applyParametricViewerState = (
 
     if (applyPlan.explode) {
       setParametricExplodeState(viewer, explode.active, explode.value);
-      (viewer as any).setExplode?.(explode.active);
-      (viewer as any).setRelativeTime?.(explode.active ? explode.value : 0);
+      applyModelExplode(viewer, explode.active, explode.value);
     }
 
     if (applyPlan.zebra) {

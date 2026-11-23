@@ -45,12 +45,15 @@ pub fn stream_tile_commands(
             continue;
         }
 
-        let offsets = get_element_duplication_offsets(element, block_instances)
-            .unwrap_or_else(|| vec![(0.0, 0.0)]);
+        let grid = duplication_grid(element, block_instances);
 
         let center_override = compute_element_center(element);
 
-        for (x_off, y_off) in offsets {
+        let radius = base.width.hypot(base.height) + pad;
+        let (cx,cy) = center_override.unwrap_or((base.width/2.0,base.height/2.0));
+        let clip = [min_x-base.x-cx-radius, min_y-base.y-cy-radius, max_x-base.x-cx+radius, max_y-base.y-cy+radius];
+        let clip = grid.filter(|_| !matches!(element, DucElementEnum::DucLinearElement(_))).map(|_| clip);
+        for (x_off, y_off) in grid.unwrap_or_default().offsets(clip) {
             let elem_x = base.x + x_off;
             let elem_y = base.y + y_off;
 
@@ -328,10 +331,10 @@ fn compute_linear_center(linear_base: &DucLinearElementBase) -> Option<(f64, f64
     Some(((min_x + max_x) / 2.0, (min_y + max_y) / 2.0))
 }
 
-fn get_element_duplication_offsets(
+fn duplication_grid(
     element: &DucElementEnum,
     block_instances: &[DucBlockInstance],
-) -> Option<Vec<(f64, f64)>> {
+) -> Option<super::duplication_grid::DuplicationGrid> {
     let base = get_element_base(element);
     let instance_id = base.instance_id.as_ref()?;
     let block_instance = block_instances.iter().find(|inst| &inst.id == instance_id)?;
@@ -352,14 +355,7 @@ fn get_element_duplication_offsets(
     let stride_x = elem_cell_width + col_spacing;
     let stride_y = elem_cell_height + row_spacing;
 
-    let mut offsets = Vec::with_capacity(rows * cols);
-    for r in 0..rows {
-        for c in 0..cols {
-            offsets.push((c as f64 * stride_x, r as f64 * stride_y));
-        }
-    }
-
-    Some(offsets)
+    Some(super::duplication_grid::DuplicationGrid { rows, cols, pitch:(stride_x,stride_y), ..Default::default() })
 }
 
 fn compute_cell_dimensions(

@@ -82,11 +82,13 @@ def test_my_feature(load_test_asset):
 
 ### TypeScript (`ducjs` / `ducpdf` / `ducsvg`)
 
-For local monorepo integration tests:
+For TypeScript package tests in this monorepo, use the shared `getFixtureBytes(category, filename)` helper from `packages/ducjs/tests/fixtures.ts`. It fetches from jsDelivr with a GitHub Raw fallback and caches downloads under `.cache/fixtures/`:
 ```ts
-import { join } from "path";
-const fixturePath = join(__dirname, "../../../assets/testing/duc-files/universal.duc");
+import { getFixtureBytes } from "../../ducjs/tests/fixtures";
+
+const workbook = await getFixtureBytes("xlsx-files", "weekly_timesheet.xlsx");
 ```
+For fast tests, prefer the smallest fixture that covers the behavior; reserve large CAD files for tests with an explicit longer timeout.
 
 For dynamic fetch in runtime environments:
 ```ts

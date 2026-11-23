@@ -14,6 +14,30 @@ import { serializeDuc } from "../src/serialize";
 import { getDucFixturePath, ensureAllDucFixtures } from "./fixtures";
 
 describe("DUC streaming API", () => {
+  test("PDF page and layer visibility survives reopening each document element type", async () => {
+    const bounds = { x: 0, y: 0, width: 180, height: 90 };
+    const pdfView = { hiddenPages: [0, 2], layers: { "cad:Duct": false } };
+    const elements = [
+      ducjs.newPdfElement(bounds),
+      ducjs.newDocElement(bounds),
+      ducjs.newTableElement(bounds),
+      { ...ducjs.newModelElement(bounds), modelType: "dxf" },
+    ].map(element => ({ ...element, customData: { pdfView } }));
+    const reopened = await parseDuc(new Blob([Uint8Array.from(await serializeDuc({ elements }))]));
+    expect(reopened.elements.map(element => element.customData?.pdfView)).toEqual(elements.map(() => pdfView));
+  });
+
+  test("charter transitions survive serialization, restore and reopening", async () => {
+    let charter = ducjs.setCharterPhase(ducjs.getDefaultCharter(), "review", undefined, 100);
+    expect(() => ducjs.setCharterPhase(charter, "closed", " ")).toThrow();
+    charter = ducjs.setCharterPhase(charter, "closed", "  Signed off  ", 200);
+    expect(ducjs.setCharterPhase(charter, "closed")).toBe(charter);
+    charter = ducjs.setCharterPhase(charter, "intent", undefined, 300);
+    const bytes = await serializeDuc({charter});
+    const parsed = await parseDuc(new Blob([Uint8Array.from(bytes)]));
+    expect(ducjs.restoreCharter(parsed.charter).phaseHistory).toEqual(charter.phaseHistory);
+    expect(charter.phaseHistory?.[1].closedReason).toBe("Signed off");
+  });
   test("round-trips a locked drawing background", async () => {
     const globalState = { viewBackgroundColor: "#f8e9b9", lockBackgroundColor: true };
     const bytes = await serializeDuc({ globalState });

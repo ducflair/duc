@@ -1,3 +1,4 @@
+mod duplication_grid;
 pub mod emitter;
 pub mod pdf_background;
 pub mod pdf_line_head;

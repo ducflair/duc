@@ -1724,11 +1724,23 @@ pub struct DucCharterStakeholder {
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DucCharterPhaseChange {
+    pub id: String,
+    pub previous_phase: DucCharterPhase,
+    pub phase: DucCharterPhase,
+    pub changed_at: i64,
+    pub closed_reason: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DucCharter {
     pub title: String,
     pub description: Option<String>,
     pub objective: String,
     pub phase: DucCharterPhase,
+    #[serde(default)]
+    pub phase_history: Vec<DucCharterPhaseChange>,
     pub closed_reason: Option<String>,
     pub requirements: Vec<DucCharterRequirement>,
     pub constraints: Vec<DucCharterConstraint>,

@@ -782,6 +782,10 @@ pub fn synthetic_roundtrip_state() -> ExportedDataState {
         description: Some("Charter for the synthetic roundtrip test.".to_string()),
         objective: "Verify serialize/parse roundtrip integrity.".to_string(),
         phase: DucCharterPhase::Review,
+        phase_history: vec![DucCharterPhaseChange {
+            id: "review-1".into(), previous_phase: DucCharterPhase::Intent, phase: DucCharterPhase::Review,
+            changed_at: 1_700_000_000, closed_reason: None,
+        }],
         closed_reason: None,
         requirements: vec![sample_requirement],
         constraints: vec![sample_constraint],
