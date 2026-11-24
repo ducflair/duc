@@ -599,7 +599,8 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         runner: gpuRunner,
         ducPath: fixture.filePath,
         viewConfig: clippedCfg,
-        timeoutMs: 60000,
+        // Cold STEP tessellation can exceed two minutes on hosted CPU runners.
+        timeoutMs: 240000,
       });
       const cpuClipped = hasGpu
         ? await renderModelElementThumbnailWithResult(boeingEl!, {
@@ -627,7 +628,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     } finally {
       fixture.cleanup();
     }
-  }, 120000);
+  }, 300000);
 
   it("benchmarks 4 distinct PBR materials on Boeing STEP model from universal.duc (GPU vs CPU)", async () => {
     const fixture = await loadDucFixture("universal.duc");
@@ -1260,7 +1261,8 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
         runner: gpuRunner,
         ducPath: fixture.filePath,
         viewConfig: viewConfig2k,
-        timeoutMs: 45000,
+        // The second software-rendered capture can exceed 45 seconds on hosted CI.
+        timeoutMs: 90000,
       });
       expect(res2k.data.length).toBeGreaterThan(15000);
       fs.writeFileSync(path.join(GPU_OUTPUT_DIR, "bridge-antonia-ferreira-2k.png"), res2k.data);
@@ -1268,7 +1270,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     } finally {
       fixture.cleanup();
     }
-  }, 120000);
+  }, 180000);
 
   it("renders Empire State Building itself (2,091-part tower model) at 8K and 2K", async () => {
     const fixture = await loadDucFixture("empire-state-building.duc");

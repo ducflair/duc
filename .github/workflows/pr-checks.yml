@@ -241,6 +241,10 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Prepare Python test environment
+        if: needs.release-check.outputs.needs_python == 'true'
+        run: uv sync --project packages/ducpy --python 3.12 --locked
+
       - name: Install dependencies
         run: bun install
 
