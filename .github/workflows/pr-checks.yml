@@ -138,6 +138,7 @@ jobs:
             FILTERS="${FILTERS:+$FILTERS }--filter=ducjs"
             ANY="true"
             NEEDS_WASM="true"
+            NEEDS_PYTHON="true"
           fi
 
           if check_release "ducpy" "./packages/ducpy"; then
@@ -239,6 +240,10 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+
+      - name: Prepare Python test environment
+        if: needs.release-check.outputs.needs_python == 'true'
+        run: uv sync --project packages/ducpy --python 3.12 --locked
 
       - name: Install dependencies
         run: bun install

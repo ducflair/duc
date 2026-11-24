@@ -11,7 +11,7 @@ import {
   HeadlessBrowserRunner,
 } from "./browserRunner";
 import { getModelThumbnailBoundsUpdate } from "./bounds";
-import { buildCadViewerHtml, buildDxfViewerHtml } from "./templates";
+import { buildCadViewerHtml, buildRasterizedPdfThumbnailHtml } from "./templates";
 import { tessellateModelElement } from "./tessellator";
 import { readPersistedModelArtifact, parseModelArtifactPayload, renderModelArtifact } from "./modelOutputArtifact";
 import type {
@@ -34,6 +34,8 @@ export interface RenderThumbnailOptions {
   dxf?: Uint8Array | string;
   format?: "png" | "webp" | "jpeg";
   viewConfig?: ModelViewConfig;
+  /** Converts DXF bytes to PDF with the host's DWGPDF-backed converter. */
+  convertDxfToPdf?: (data: Uint8Array) => Uint8Array | Promise<Uint8Array>;
   rasterizePdf?: (data: Uint8Array, maxDimension: number) => Promise<Uint8Array>;
 }
 
@@ -72,8 +74,8 @@ function resolveElementFileData(
 
 /**
  * Renders a thumbnail or frame from a specified model and view configuration.
- * Uses three-cad-viewer for 3D CAD/Python models and dxf-renderer for DXF drawings,
- * trimming transparent borders and scaling to 1200px long edge.
+ * Uses three-cad-viewer for 3D CAD/Python models and DWGPDF plus the host PDF
+ * rasterizer for DXF drawings, scaling the output to the requested size.
  */
 export async function renderModelViewThumbnail(
   input: ModelThumbnailInput,
@@ -90,10 +92,22 @@ export async function renderModelViewThumbnail(
     (input.modelType && input.modelType.toUpperCase() === "DXF") ||
     input.dxf !== undefined;
 
+  const requestedLongEdge = Math.max(
+    config.targetLongEdge || 0,
+    config.width || 0,
+    config.height || 0,
+    1200,
+  );
+
   let html: string;
   if (isDxf && input.dxf) {
-    const base64Dxf = toBase64String(input.dxf);
-    html = buildDxfViewerHtml(base64Dxf, config);
+    if (!options.convertDxfToPdf || !options.rasterizePdf) {
+      throw new Error("DXF thumbnails require the host DWGPDF converter and PDF rasterizer.");
+    }
+    const dxf = typeof input.dxf === "string" ? new TextEncoder().encode(input.dxf) : input.dxf;
+    const pdf = await options.convertDxfToPdf(dxf);
+    const image = await options.rasterizePdf(pdf, requestedLongEdge);
+    html = buildRasterizedPdfThumbnailHtml(toBase64String(image), config);
   } else {
     html = buildCadViewerHtml(input.shapes, config);
   }
@@ -106,12 +120,6 @@ export async function renderModelViewThumbnail(
       mode: options.mode,
     });
 
-  const requestedLongEdge = Math.max(
-    config.targetLongEdge || 0,
-    config.width || 0,
-    config.height || 0,
-    1200,
-  );
   const aspect = config.width && config.height ? config.width / config.height : 4 / 3;
   let captureWidth = requestedLongEdge;
   let captureHeight = Math.round(requestedLongEdge / aspect);
@@ -178,6 +186,7 @@ export async function renderModelElementThumbnailWithResult(
     (artifact?.envelope.renderer === "dxf" ? artifact.data : undefined) ??
     (isDxf ? fileData ?? (element as unknown as { dxf?: Uint8Array }).dxf : undefined);
 
+  let tessellationError: string | undefined;
   if (!isDxf && !shapes) {
     try {
       const tessRes = await tessellateModelElement(element, {
@@ -192,14 +201,22 @@ export async function renderModelElementThumbnailWithResult(
       if (tessRes?.shapes) {
         shapes = tessRes.shapes;
       }
-    } catch {
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error && typeof error.code === "string"
+          ? error.code
+          : undefined;
+      tessellationError = code && /^[A-Z0-9_]{1,32}$/.test(code)
+        ? `process error ${code}`
+        : "tessellation process failed";
       // Fallback to geometric models if Python tessellator is not run
     }
   }
 
   if (!isDxf && !shapes) {
+    const failureDetails = tessellationError ? ` (tessellation failed: ${tessellationError})` : "";
     throw new Error(
-      `Unable to render thumbnail for model element '${element.id}': no 3D geometry shapes or DXF drawing available.`,
+      `Unable to render thumbnail for model element '${element.id}': no 3D geometry shapes or DXF drawing available${failureDetails}.`,
     );
   }
 

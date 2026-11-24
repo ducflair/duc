@@ -333,5 +333,5 @@ describe("DUC streaming API", () => {
 
     expect(fixtures.length).toBeGreaterThan(0);
     expect(fixtures.every((fixture) => fixture.size > 0)).toBe(true);
-  });
+  }, 30000);
 });

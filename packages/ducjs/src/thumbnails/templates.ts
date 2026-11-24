@@ -45,7 +45,7 @@ function findModulePath(subPath: string): string | null {
 }
 
 /**
- * Generates the import map JSON for Three.js, three-cad-viewer, and dxf-renderer.
+ * Generates the import map JSON for Three.js and three-cad-viewer.
  */
 function getImportMapJson(): string {
   const threePath =
@@ -56,21 +56,59 @@ function getImportMapJson(): string {
     findModulePath("three-cad-viewer/dist/three-cad-viewer.esm.js") ??
     "https://esm.sh/three-cad-viewer@5.0.0";
 
-  const dxfPath =
-    findModulePath("dxf-renderer/dist/index.js") ??
-    "https://esm.sh/dxf-renderer";
-
   return JSON.stringify(
     {
       imports: {
         three: threePath,
         "three-cad-viewer": tcvPath,
-        "dxf-renderer": dxfPath,
       },
     },
     null,
     2,
   );
+}
+
+export function buildRasterizedPdfThumbnailHtml(
+  imageBase64: string,
+  config: ResolvedModelViewConfig,
+): string {
+  const configJson = safeJsonStringify({
+    background: config.background,
+  });
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body { display: flex; align-items: center; justify-content: center; }
+    img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+  </style>
+  <script>
+    window.__thumbnailReady = false;
+    window.__thumbnailError = null;
+  </script>
+</head>
+<body>
+  <img id="thumbnail" alt="">
+  <script>
+    const cfg = ${configJson};
+    const image = document.getElementById("thumbnail");
+    document.body.style.background = cfg.background || "transparent";
+    image.addEventListener("error", () => {
+      window.__thumbnailError = "Failed to decode the rasterized CAD preview.";
+      window.__thumbnailReady = true;
+    }, { once: true });
+    image.src = "data:image/png;base64,${imageBase64}";
+    image.decode().then(() => { window.__thumbnailReady = true; }).catch((error) => {
+      window.__thumbnailError = error instanceof Error ? error.message : String(error);
+      window.__thumbnailReady = true;
+    });
+  </script>
+</body>
+</html>`;
 }
 
 /**
@@ -512,310 +550,6 @@ ${configJson}
       window.__thumbnailHeight = result.height;
       window.__thumbnailRenderer = result.glRenderer || "Unknown";
       window.__thumbnailIsGpu = Boolean(result.isGpu);
-      window.__thumbnailReady = true;
-    } catch (err) {
-      window.__thumbnailError = err instanceof Error ? err.stack || err.message : String(err);
-      window.__thumbnailReady = true;
-    }
-  </script>
-</body>
-</html>`;
-}
-
-let cachedDxfFontDataUrl: string | null = null;
-
-/**
- * Returns a base64 data URL for the default CAD font (Roboto-Regular.ttf),
- * ensuring vector text and dimension annotations render in offline and headless environments.
- */
-export function getDxfDefaultFontDataUrl(): string | null {
-  if (cachedDxfFontDataUrl !== null) return cachedDxfFontDataUrl;
-
-  const fontCandidates = [
-    process.env.DUC_DXF_FONT_PATH,
-    path.resolve(CURRENT_DIR, "../../../../assets/fonts/RobotoMono-Variable.ttf"),
-    path.resolve(CURRENT_DIR, "../../../assets/fonts/RobotoMono-Variable.ttf"),
-    path.resolve(CURRENT_DIR, "../../assets/fonts/RobotoMono-Variable.ttf"),
-    path.resolve(CURRENT_DIR, "../assets/fonts/RobotoMono-Variable.ttf"),
-    path.resolve(process.cwd(), "assets/fonts/RobotoMono-Variable.ttf"),
-    path.resolve(process.cwd(), "../assets/fonts/RobotoMono-Variable.ttf"),
-    path.resolve(process.cwd(), "../../assets/fonts/RobotoMono-Variable.ttf"),
-    path.resolve(process.cwd(), "../../../assets/fonts/RobotoMono-Variable.ttf"),
-    path.resolve(process.cwd(), "../dxf-renderer/demo/fonts/Roboto-Regular.ttf"),
-    path.resolve(process.cwd(), "../../dxf-renderer/demo/fonts/Roboto-Regular.ttf"),
-    "/System/Library/Fonts/Supplemental/Arial.ttf",
-    "/System/Library/Fonts/Helvetica.ttc",
-    "/Library/Fonts/Arial.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-    "C:\\Windows\\Fonts\\arial.ttf",
-  ].filter(Boolean) as string[];
-
-  for (const candidate of fontCandidates) {
-    try {
-      if (fs.existsSync(candidate) && fs.statSync(candidate).size > 0) {
-        const buf = fs.readFileSync(candidate);
-        cachedDxfFontDataUrl = `data:font/ttf;base64,${buf.toString("base64")}`;
-        return cachedDxfFontDataUrl;
-      }
-    } catch {
-      // Continue to next candidate
-    }
-  }
-
-  return null;
-}
-
-/**
- * Generates an HTML document that renders 2D/3D DXF content using dxf-renderer,
- * strictly matching the app's offscreen-dxf-thumbnail.ts and thumbnail-capture.ts.
- */
-export function buildDxfViewerHtml(
-  dxfContentBase64: string,
-  config: ResolvedModelViewConfig,
-): string {
-  const configJson = safeJsonStringify(config);
-  const importMapJson = getImportMapJson();
-
-  const defaultFontDataUrl = getDxfDefaultFontDataUrl();
-  const fontSources: Array<string | { url: string; names?: string[] }> = [];
-  if (defaultFontDataUrl) {
-    fontSources.push({
-      url: defaultFontDataUrl,
-      names: [
-        "Standard",
-        "Arial",
-        "Helvetica",
-        "Roboto",
-        "txt",
-        "simplex",
-        "romans",
-        "isocp",
-        "iso",
-        "simplex.shx",
-        "txt.shx",
-        "romans.shx",
-        "monotxt",
-        "italic",
-        "complex",
-      ],
-    });
-  } else {
-    // Online/CDN fallback fonts for symbols, Greek math, and extended unicode if no local font
-    fontSources.push(
-      "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSans/NotoSans-Regular.ttf",
-      "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSansSymbols/NotoSansSymbols-Regular.ttf",
-      "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
-      "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/hinted/ttf/NotoSansMath/NotoSansMath-Regular.ttf",
-    );
-  }
-  const fontsJson = safeJsonStringify(fontSources);
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: ${config.background === "transparent" ? "transparent" : config.background};
-    }
-    #viewer-container {
-      width: ${config.width || 1200}px;
-      height: ${config.height || 900}px;
-      position: relative;
-    }
-    canvas {
-      display: block;
-    }
-  </style>
-  <script type="importmap">
-${importMapJson}
-  </script>
-  <script>
-    window.__thumbnailReady = false;
-    window.__thumbnailError = null;
-    window.onerror = function(msg, url, line) {
-      window.__thumbnailError = "Global page error: " + msg + " at " + line;
-      window.__thumbnailReady = true;
-    };
-    window.onunhandledrejection = function(e) {
-      window.__thumbnailError = "Unhandled rejection: " + (e.reason ? (e.reason.stack || e.reason) : e);
-      window.__thumbnailReady = true;
-    };
-  </script>
-</head>
-<body>
-  <div id="viewer-container"></div>
-  <script type="module">
-
-    ${IN_BROWSER_CROP_AND_SCALE_FN}
-
-    try {
-      const THREE = await import("three");
-      const { DxfViewer } = await import("dxf-renderer");
-
-      const cfg = ${configJson};
-      const dxfBase64 = "${dxfContentBase64}";
-      const binary = atob(dxfBase64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-
-      const dxfBlob = new Blob([bytes], { type: "application/dxf" });
-      const dxfBlobUrl = URL.createObjectURL(dxfBlob);
-
-      const container = document.getElementById("viewer-container");
-
-      // Compute native renderer resolution directly from requested config
-      const requestedLongEdge = Math.max(cfg.targetLongEdge || 0, cfg.width || 0, cfg.height || 0, 1200);
-      const aspect = (cfg.width && cfg.height) ? (cfg.width / cfg.height) : (4 / 3);
-      let renderWidth = requestedLongEdge;
-      let renderHeight = Math.round(requestedLongEdge / aspect);
-      if (aspect < 1) {
-        renderHeight = requestedLongEdge;
-        renderWidth = Math.round(requestedLongEdge * aspect);
-      }
-
-      container.style.width = renderWidth + "px";
-      container.style.height = renderHeight + "px";
-
-      const viewer = new DxfViewer(container, {
-        autoResize: false,
-        antialias: true,
-        canvasAlpha: true,
-        canvasPremultipliedAlpha: false,
-        clearAlpha: 0,
-        clearColor: new THREE.Color("#ffffff"),
-        colorCorrection: true,
-        blackWhiteInversion: true,
-        preserveDrawingBuffer: true,
-        sceneOptions: {
-          layout: "Model",
-          suppressPaperSpace: true,
-          wireframeMesh: true,
-        },
-      });
-
-      viewer.GetRenderer()?.setPixelRatio(cfg.pixelRatio || 1);
-      viewer.SetSize(renderWidth, renderHeight);
-      const fonts = ${fontsJson};
-      await viewer.Load({ url: dxfBlobUrl, fonts });
-      URL.revokeObjectURL(dxfBlobUrl);
-
-      const renderer = viewer.GetRenderer();
-      if (renderer) {
-        renderer.setClearColor(new THREE.Color("#ffffff"), 0);
-        renderer.domElement.style.background = "transparent";
-      }
-
-      // Optional layer visibility filtering
-      if (Array.isArray(cfg.hiddenLayers)) {
-        for (const layer of cfg.hiddenLayers) {
-          viewer.ShowLayer(layer, false);
-        }
-      }
-      if (Array.isArray(cfg.visibleLayers)) {
-        const allLayers = viewer.GetLayers();
-        if (allLayers) {
-          for (const layerName of allLayers.keys()) {
-            viewer.ShowLayer(layerName, cfg.visibleLayers.includes(layerName));
-          }
-        }
-      }
-
-      // Fit viewer to CAD drawing extents, custom view area bounding box, or zoomed section
-      const bounds = viewer.GetBounds();
-      const origin = viewer.GetOrigin() ?? { x: 0, y: 0 };
-
-      if (cfg.dxfViewArea) {
-        viewer.FitView(
-          cfg.dxfViewArea.minX - origin.x,
-          cfg.dxfViewArea.maxX - origin.x,
-          cfg.dxfViewArea.minY - origin.y,
-          cfg.dxfViewArea.maxY - origin.y,
-          cfg.dxfViewArea.margin ?? 0.04
-        );
-      } else if (cfg.camera?.zoom && cfg.camera.zoom > 1 && bounds) {
-        const totalW = bounds.maxX - bounds.minX;
-        const totalH = bounds.maxY - bounds.minY;
-        const cx = cfg.camera.target ? cfg.camera.target[0] : (bounds.minX + bounds.maxX) / 2;
-        const cy = cfg.camera.target ? cfg.camera.target[1] : (bounds.minY + bounds.maxY) / 2;
-        const halfW = totalW / (cfg.camera.zoom * 2);
-        const halfH = totalH / (cfg.camera.zoom * 2);
-        viewer.FitView(
-          cx - halfW - origin.x,
-          cx + halfW - origin.x,
-          cy - halfH - origin.y,
-          cy + halfH - origin.y,
-          0.02
-        );
-      } else if (bounds) {
-        viewer.FitView(
-          bounds.minX - origin.x,
-          bounds.maxX - origin.x,
-          bounds.minY - origin.y,
-          bounds.maxY - origin.y,
-          0.04
-        );
-      }
-
-      viewer.Render();
-
-      // Trim transparent padding natively without upscaling, or preserve custom framed viewport
-      const rawCanvas = viewer.GetCanvas();
-      const shouldTrim = cfg.trimTransparentBounds !== false && !cfg.dxfViewArea && !(cfg.camera?.zoom && cfg.camera.zoom > 1);
-      const cropped = shouldTrim
-        ? cropAndScaleCanvasToOpaqueContent(rawCanvas, requestedLongEdge, {
-            scanLongEdge: 900,
-            paddingPx: cfg.trimPaddingPx !== undefined ? cfg.trimPaddingPx : 2,
-            background: cfg.background,
-          })
-        : rawCanvas;
-
-      const mime = (cfg.format === "webp") ? "image/webp" : "image/png";
-      const blob = await new Promise(r => cropped.toBlob(r, mime));
-      if (blob) {
-        const ab = await blob.arrayBuffer();
-        const u8 = new Uint8Array(ab);
-        let b = "";
-        for (let i = 0; i < u8.length; i++) b += String.fromCharCode(u8[i]);
-        window.__thumbnailBase64 = btoa(b);
-      }
-
-      // Replace container with cropped canvas for CDP snapshot
-      document.body.innerHTML = "";
-      document.body.style.width = cropped.width + "px";
-      document.body.style.height = cropped.height + "px";
-      if (cfg.background && cfg.background !== "transparent") {
-        document.body.style.background = cfg.background;
-      } else {
-        document.body.style.background = "transparent";
-      }
-      document.body.appendChild(cropped);
-
-      let glRenderer = "Unknown";
-      let isGpu = false;
-      try {
-        const gl = rawCanvas.getContext("webgl2") || rawCanvas.getContext("webgl");
-        if (gl) {
-          const dbg = gl.getExtension("WEBGL_debug_renderer_info");
-          glRenderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
-          if (typeof glRenderer === "string") {
-            const lower = glRenderer.toLowerCase();
-            isGpu = !lower.includes("swiftshader") && !lower.includes("llvmpipe");
-          }
-        }
-      } catch {}
-
-      window.__thumbnailWidth = cropped.width;
-      window.__thumbnailHeight = cropped.height;
-      window.__thumbnailRenderer = glRenderer;
-      window.__thumbnailIsGpu = isGpu;
       window.__thumbnailReady = true;
     } catch (err) {
       window.__thumbnailError = err instanceof Error ? err.stack || err.message : String(err);
