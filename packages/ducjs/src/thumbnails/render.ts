@@ -186,6 +186,7 @@ export async function renderModelElementThumbnailWithResult(
     (artifact?.envelope.renderer === "dxf" ? artifact.data : undefined) ??
     (isDxf ? fileData ?? (element as unknown as { dxf?: Uint8Array }).dxf : undefined);
 
+  let tessellationError: string | undefined;
   if (!isDxf && !shapes) {
     try {
       const tessRes = await tessellateModelElement(element, {
@@ -200,14 +201,22 @@ export async function renderModelElementThumbnailWithResult(
       if (tessRes?.shapes) {
         shapes = tessRes.shapes;
       }
-    } catch {
+    } catch (error) {
+      const code =
+        error && typeof error === "object" && "code" in error && typeof error.code === "string"
+          ? error.code
+          : undefined;
+      tessellationError = code && /^[A-Z0-9_]{1,32}$/.test(code)
+        ? `process error ${code}`
+        : "tessellation process failed";
       // Fallback to geometric models if Python tessellator is not run
     }
   }
 
   if (!isDxf && !shapes) {
+    const failureDetails = tessellationError ? ` (tessellation failed: ${tessellationError})` : "";
     throw new Error(
-      `Unable to render thumbnail for model element '${element.id}': no 3D geometry shapes or DXF drawing available.`,
+      `Unable to render thumbnail for model element '${element.id}': no 3D geometry shapes or DXF drawing available${failureDetails}.`,
     );
   }
 

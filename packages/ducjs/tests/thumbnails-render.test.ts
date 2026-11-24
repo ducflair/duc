@@ -7,16 +7,30 @@ import {
   getModelThumbnailBoundsUpdate,
   HeadlessBrowserRunner,
   isGrayscaleColor,
-  renderModelElementThumbnail,
-  renderModelElementThumbnailWithResult,
-  renderModelViewThumbnail,
+  renderModelElementThumbnail as renderModelElementThumbnailImpl,
+  renderModelElementThumbnailWithResult as renderModelElementThumbnailWithResultImpl,
+  renderModelViewThumbnail as renderModelViewThumbnailImpl,
   resolveBrowserExecutable,
   resolveThumbnailBackground,
 } from "../src/thumbnails";
 import { parseDuc } from "../src/parse";
 import type { ModelViewConfig } from "../src/thumbnails/types";
 import type { DucModelElement } from "../src/types/elements";
+import { createDxfThumbnailTestHost } from "./helpers/dxf-thumbnail-host";
 import { getDucFixturePath, getFixturePath } from "./fixtures";
+
+const dxfThumbnailTestHost = createDxfThumbnailTestHost();
+
+const renderModelElementThumbnail: typeof renderModelElementThumbnailImpl = (element, options) =>
+  renderModelElementThumbnailImpl(element, { ...dxfThumbnailTestHost, ...options });
+
+const renderModelElementThumbnailWithResult: typeof renderModelElementThumbnailWithResultImpl = (
+  element,
+  options,
+) => renderModelElementThumbnailWithResultImpl(element, { ...dxfThumbnailTestHost, ...options });
+
+const renderModelViewThumbnail: typeof renderModelViewThumbnailImpl = (input, options) =>
+  renderModelViewThumbnailImpl(input, { ...dxfThumbnailTestHost, ...options });
 
 const OUTPUT_DIR = path.resolve(import.meta.dir, "output");
 const PYTHON_MODEL_FILE_OUTPUT_DIR = path.resolve(

@@ -138,6 +138,7 @@ jobs:
             FILTERS="${FILTERS:+$FILTERS }--filter=ducjs"
             ANY="true"
             NEEDS_WASM="true"
+            NEEDS_PYTHON="true"
           fi
 
           if check_release "ducpy" "./packages/ducpy"; then
