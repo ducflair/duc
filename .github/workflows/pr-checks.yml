@@ -268,9 +268,9 @@ jobs:
         if: needs.release-check.outputs.ducpy == 'true'
         uses: ./.github/actions/setup-pyodide-build
         with:
-          pyodide-version: '0.28.0'
-          pyodide-build-version: '0.35.0'
-          python-version: '3.13'
+          pyodide-version: '314.0.8'
+          pyodide-build-version: '0.39.4'
+          python-version: '3.14'
 
       - name: Test Pyodide wheel build
         if: needs.release-check.outputs.ducpy == 'true'
