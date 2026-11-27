@@ -13,7 +13,7 @@
 <h1>Interface VersionControlDocument</h1></div>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">VersionControlDocument</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-call-signature" href="#listversions-1">listVersions</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="vc.VersionEntry.html" class="tsd-signature-type tsd-kind-interface">VersionEntry</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#readcheckpointdatachunk-1">readCheckpointDataChunk</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">checkpointId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">chunkIndex</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ArrayBufferLike</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#readdeltachangesetchunk-1">readDeltaChangesetChunk</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">deltaId</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">chunkIndex</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ArrayBufferLike</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#readversiongraph-1">readVersionGraph</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="VersionGraph.html" class="tsd-signature-type tsd-kind-interface">VersionGraph</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/version-control.ts#L21">packages/ducjs/src/version-control.ts:21</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/version-control.ts#L21">packages/ducjs/src/version-control.ts:21</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -37,7 +37,7 @@
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <a href="vc.VersionEntry.html" class="tsd-signature-type tsd-kind-interface">VersionEntry</a><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/version-control.ts#L22">packages/ducjs/src/version-control.ts:22</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/version-control.ts#L22">packages/ducjs/src/version-control.ts:22</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="readcheckpointdatachunk"><span>read<wbr/>Checkpoint<wbr/>Data<wbr/>Chunk</span><a href="#readcheckpointdatachunk" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -51,7 +51,7 @@
 <li><span><span class="tsd-kind-parameter">chunkIndex</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ArrayBufferLike</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/version-control.ts#L24">packages/ducjs/src/version-control.ts:24</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/version-control.ts#L24">packages/ducjs/src/version-control.ts:24</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="readdeltachangesetchunk"><span>read<wbr/>Delta<wbr/>Changeset<wbr/>Chunk</span><a href="#readdeltachangesetchunk" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -65,7 +65,7 @@
 <li><span><span class="tsd-kind-parameter">chunkIndex</span>: <span class="tsd-signature-type">number</span></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ArrayBufferLike</span><span class="tsd-signature-symbol">&gt;</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/version-control.ts#L25">packages/ducjs/src/version-control.ts:25</a></li></ul></aside></div></li></ul></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/version-control.ts#L25">packages/ducjs/src/version-control.ts:25</a></li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="readversiongraph"><span>read<wbr/>Version<wbr/>Graph</span><a href="#readversiongraph" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -74,7 +74,7 @@
 <div class="tsd-description">
 <h4 class="tsd-returns-title">Returns <a href="VersionGraph.html" class="tsd-signature-type tsd-kind-interface">VersionGraph</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/version-control.ts#L23">packages/ducjs/src/version-control.ts:23</a></li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/version-control.ts#L23">packages/ducjs/src/version-control.ts:23</a></li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

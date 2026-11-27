@@ -12,7 +12,7 @@
 <h1>Interface DucCharter</h1></div>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">DucCharter</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#closedreason">closedReason</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#constraints">constraints</a><span class="tsd-signature-symbol">:</span> <a href="DucCharterConstraint.html" class="tsd-signature-type tsd-kind-interface">DucCharterConstraint</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#decisions">decisions</a><span class="tsd-signature-symbol">:</span> <a href="DucCharterDecision.html" class="tsd-signature-type tsd-kind-interface">DucCharterDecision</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#description">description</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#objective">objective</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#phase">phase</a><span class="tsd-signature-symbol">:</span> <a href="../types/DucCharterPhase.html" class="tsd-signature-type tsd-kind-type-alias">DucCharterPhase</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#phasehistory">phaseHistory</a><span class="tsd-signature-symbol">?:</span> <a href="DucCharterPhaseChange.html" class="tsd-signature-type tsd-kind-interface">DucCharterPhaseChange</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#requirements">requirements</a><span class="tsd-signature-symbol">:</span> <a href="DucCharterRequirement.html" class="tsd-signature-type tsd-kind-interface">DucCharterRequirement</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#stakeholders">stakeholders</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">actor</span><span class="tsd-signature-symbol">:</span> <a href="Actor.html" class="tsd-signature-type tsd-kind-interface">Actor</a><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">role</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#title">title</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#updatedat">updatedAt</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L106">packages/ducjs/src/types/charter.types.ts:106</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L106">packages/ducjs/src/types/charter.types.ts:106</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -41,7 +41,7 @@
 <div class="tsd-comment tsd-typography"><p>Required when phase is &quot;closed&quot;. Records the reason for the Charter to be closed.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L120">packages/ducjs/src/types/charter.types.ts:120</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L120">packages/ducjs/src/types/charter.types.ts:120</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="constraints"><span>constraints</span><a href="#constraints" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">constraints</span><span class="tsd-signature-symbol">:</span> <a href="DucCharterConstraint.html" class="tsd-signature-type tsd-kind-interface">DucCharterConstraint</a><span class="tsd-signature-symbol">[]</span></div>
@@ -49,7 +49,7 @@
 Hard constraints are non-negotiable; soft constraints are strong preferences.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L131">packages/ducjs/src/types/charter.types.ts:131</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L131">packages/ducjs/src/types/charter.types.ts:131</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="decisions"><span>decisions</span><a href="#decisions" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">decisions</span><span class="tsd-signature-symbol">:</span> <a href="DucCharterDecision.html" class="tsd-signature-type tsd-kind-interface">DucCharterDecision</a><span class="tsd-signature-symbol">[]</span></div>
@@ -58,14 +58,14 @@ Only decisions significant enough to explain why the artifact is in its
 current state belong here. Everything else lives in issues.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L137">packages/ducjs/src/types/charter.types.ts:137</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L137">packages/ducjs/src/types/charter.types.ts:137</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="description"><code class="tsd-tag">Optional</code><span>description</span><a href="#description" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">description</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
 <div class="tsd-comment tsd-typography"><p>Orientation: what kind of project this is and the context needed to read the charter</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L110">packages/ducjs/src/types/charter.types.ts:110</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L110">packages/ducjs/src/types/charter.types.ts:110</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="objective"><span>objective</span><a href="#objective" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">objective</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
@@ -74,17 +74,17 @@ This is the single most important field in the Charter — every requirement,
 constraint, and decision should be traceable back to it.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L116">packages/ducjs/src/types/charter.types.ts:116</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L116">packages/ducjs/src/types/charter.types.ts:116</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="phase"><span>phase</span><a href="#phase" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">phase</span><span class="tsd-signature-symbol">:</span> <a href="../types/DucCharterPhase.html" class="tsd-signature-type tsd-kind-type-alias">DucCharterPhase</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L118">packages/ducjs/src/types/charter.types.ts:118</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L118">packages/ducjs/src/types/charter.types.ts:118</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="phasehistory"><code class="tsd-tag">Optional</code><span>phase<wbr/>History</span><a href="#phasehistory" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">phaseHistory</span><span class="tsd-signature-symbol">?:</span> <a href="DucCharterPhaseChange.html" class="tsd-signature-type tsd-kind-interface">DucCharterPhaseChange</a><span class="tsd-signature-symbol">[]</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L107">packages/ducjs/src/types/charter.types.ts:107</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L107">packages/ducjs/src/types/charter.types.ts:107</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="requirements"><span>requirements</span><a href="#requirements" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">requirements</span><span class="tsd-signature-symbol">:</span> <a href="DucCharterRequirement.html" class="tsd-signature-type tsd-kind-interface">DucCharterRequirement</a><span class="tsd-signature-symbol">[]</span></div>
@@ -92,26 +92,26 @@ constraint, and decision should be traceable back to it.</p>
 Scope exclusions and solution-space limits belong in constraints, not here.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L126">packages/ducjs/src/types/charter.types.ts:126</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L126">packages/ducjs/src/types/charter.types.ts:126</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="stakeholders"><code class="tsd-tag">Optional</code><span>stakeholders</span><a href="#stakeholders" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">stakeholders</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">actor</span><span class="tsd-signature-symbol">:</span> <a href="Actor.html" class="tsd-signature-type tsd-kind-interface">Actor</a><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">role</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">[]</span></div>
 <div class="tsd-comment tsd-typography"><p>Everyone with a stake in the project outcome — active contributors or not.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L139">packages/ducjs/src/types/charter.types.ts:139</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L139">packages/ducjs/src/types/charter.types.ts:139</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="title"><span>title</span><a href="#title" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">title</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L108">packages/ducjs/src/types/charter.types.ts:108</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L108">packages/ducjs/src/types/charter.types.ts:108</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="updatedat"><span>updated<wbr/>At</span><a href="#updatedat" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">updatedAt</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography"><p>Unix epoch milliseconds of the last Charter update.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/ducflair/duc/blob/de1ce8c15b9bf38ed0cc201e6e87ef0581a205aa/packages/ducjs/src/types/charter.types.ts#L145">packages/ducjs/src/types/charter.types.ts:145</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/ducflair/duc/blob/dd3b859091e80a3fa97ea6d10ffeabf00562ee7c/packages/ducjs/src/types/charter.types.ts#L145">packages/ducjs/src/types/charter.types.ts:145</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
