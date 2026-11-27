@@ -5,26 +5,26 @@ Each ELEMENT_CONTENT_PREFERENCE has its own dedicated method.
 
 ## Functions
 
-| [`_create_default_tiling_properties`](#ducpy.builders.style_builders._create_default_tiling_properties)(...)                      | Create default tiling settings used by content builders.             |
-|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`_create_default_hatch_style`](#ducpy.builders.style_builders._create_default_hatch_style)(...)                            | Create a neutral/default hatch style.                                |
-| [`_create_default_image_filter`](#ducpy.builders.style_builders._create_default_image_filter)(...)                           | Create a neutral image filter (no brightness/contrast changes).      |
-| [`create_solid_content`](#ducpy.builders.style_builders.create_solid_content)(...)                                   | Create solid color content.                                          |
-| [`create_fill_content`](#ducpy.builders.style_builders.create_fill_content)(...)                                    | Create generic fill content.                                         |
-| [`create_image_content`](#ducpy.builders.style_builders.create_image_content)(...)                                   | Create image content.                                                |
-| [`create_hatch_content`](#ducpy.builders.style_builders.create_hatch_content)(...)                                   | Create hatch pattern content.                                        |
-| [`create_background`](#ducpy.builders.style_builders.create_background)(...)                                      | Create a background wrapper from content.                            |
-| [`create_stroke`](#ducpy.builders.style_builders.create_stroke)(→ ducpy.classes.ElementsClass.ElementStroke)  | Create a stroke wrapper from content and stroke settings.            |
-| [`create_simple_styles`](#ducpy.builders.style_builders.create_simple_styles)(...)                                   | Create base element styles from backgrounds and strokes.             |
-| [`create_fill_style`](#ducpy.builders.style_builders.create_fill_style)(...)                                      | Create styles configured with fill only.                             |
-| [`create_stroke_style`](#ducpy.builders.style_builders.create_stroke_style)(...)                                    | Create styles configured with stroke only.                           |
-| [`create_fill_and_stroke_style`](#ducpy.builders.style_builders.create_fill_and_stroke_style)(...)                           | Create styles configured with both fill and stroke.                  |
-| [`create_solid_style`](#ducpy.builders.style_builders.create_solid_style)(color[, opacity])                        | Convenience helper that returns solid content for style composition. |
-| [`create_hatch_style`](#ducpy.builders.style_builders.create_hatch_style)(pattern[, opacity])                      | Convenience helper that returns hatch content for style composition. |
-| [`create_text_style`](#ducpy.builders.style_builders.create_text_style)(...)                                      | Create a text style instance.                                        |
-| [`create_doc_style`](#ducpy.builders.style_builders.create_doc_style)(→ ducpy.classes.ElementsClass.DucDocStyle) | DucDocStyle is empty in the current schema.                          |
-| [`create_table_style`](#ducpy.builders.style_builders.create_table_style)(...)                                     | DucTableStyle is empty in the current schema.                        |
-| [`create_margins`](#ducpy.builders.style_builders.create_margins)(→ ducpy.classes.ElementsClass.Margins)       | Create margin values in top/right/bottom/left order.                 |
+| [`_create_default_tiling_properties`](#ducpy.builders.style_builders._create_default_tiling_properties)() → ducpy.classes.ElementsClass.TilingProperties                            | Create default tiling settings used by content builders.             |
+|----------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| [`_create_default_hatch_style`](#ducpy.builders.style_builders._create_default_hatch_style)() → ducpy.classes.ElementsClass.DucHatchStyle                                     | Create a neutral/default hatch style.                                |
+| [`_create_default_image_filter`](#ducpy.builders.style_builders._create_default_image_filter)() → ducpy.classes.ElementsClass.DucImageFilter                                   | Create a neutral image filter (no brightness/contrast changes).      |
+| [`create_solid_content`](#ducpy.builders.style_builders.create_solid_content)(color[, opacity, visible]) → ducpy.classes.ElementsClass.ElementContentBase              | Create solid color content.                                          |
+| [`create_fill_content`](#ducpy.builders.style_builders.create_fill_content)(color[, opacity, visible]) → ducpy.classes.ElementsClass.ElementContentBase               | Create generic fill content.                                         |
+| [`create_image_content`](#ducpy.builders.style_builders.create_image_content)(image_src[, opacity, visible, ...]) → ducpy.classes.ElementsClass.ElementContentBase     | Create image content.                                                |
+| [`create_hatch_content`](#ducpy.builders.style_builders.create_hatch_content)(pattern[, opacity, visible]) → ducpy.classes.ElementsClass.ElementContentBase            | Create hatch pattern content.                                        |
+| [`create_background`](#ducpy.builders.style_builders.create_background)([content]) → ducpy.classes.ElementsClass.ElementBackground                                  | Create a background wrapper from content.                            |
+| [`create_stroke`](#ducpy.builders.style_builders.create_stroke)([content, width, placement, style, sides]) → ducpy.classes.ElementsClass.ElementStroke          | Create a stroke wrapper from content and stroke settings.            |
+| [`create_simple_styles`](#ducpy.builders.style_builders.create_simple_styles)([roundness, opacity, ...]) → ducpy.classes.ElementsClass.DucElementStylesBase            | Create base element styles from backgrounds and strokes.             |
+| [`create_fill_style`](#ducpy.builders.style_builders.create_fill_style)(content[, roundness, opacity]) → ducpy.classes.ElementsClass.DucElementStylesBase           | Create styles configured with fill only.                             |
+| [`create_stroke_style`](#ducpy.builders.style_builders.create_stroke_style)(content[, width, placement, opacity]) → ducpy.classes.ElementsClass.DucElementStylesBase  | Create styles configured with stroke only.                           |
+| [`create_fill_and_stroke_style`](#ducpy.builders.style_builders.create_fill_and_stroke_style)(fill_content, stroke_content) → ducpy.classes.ElementsClass.DucElementStylesBase | Create styles configured with both fill and stroke.                  |
+| [`create_solid_style`](#ducpy.builders.style_builders.create_solid_style)(color[, opacity])                                                                          | Convenience helper that returns solid content for style composition. |
+| [`create_hatch_style`](#ducpy.builders.style_builders.create_hatch_style)(pattern[, opacity])                                                                        | Convenience helper that returns hatch content for style composition. |
+| [`create_text_style`](#ducpy.builders.style_builders.create_text_style)([font_family, font_size, is_ltr, ...]) → ducpy.classes.ElementsClass.DucTextStyle           | Create a text style instance.                                        |
+| [`create_doc_style`](#ducpy.builders.style_builders.create_doc_style)() → ducpy.classes.ElementsClass.DucDocStyle                                                  | DucDocStyle is empty in the current schema.                          |
+| [`create_table_style`](#ducpy.builders.style_builders.create_table_style)() → ducpy.classes.ElementsClass.DucTableStyle                                              | DucTableStyle is empty in the current schema.                        |
+| [`create_margins`](#ducpy.builders.style_builders.create_margins)([top, right, bottom, left]) → ducpy.classes.ElementsClass.Margins                              | Create margin values in top/right/bottom/left order.                 |
 
 ## Module Contents
 

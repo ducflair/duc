@@ -16,10 +16,10 @@ Search user-authored project Charter and Issue content in DUC files.
 
 ## Functions
 
-| [`search_duc_charter`](#ducpy.search.search_charter_issues.search_duc_charter)(→ DucCharterIssueSearchResponse)   | Search user-authored fields in the project Charter.                   |
-|--------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| [`search_duc_issues`](#ducpy.search.search_charter_issues.search_duc_issues)(→ DucCharterIssueSearchResponse)    | Search issue titles, discussions, people, and exact reference fields. |
-| [`search_duc_charter_and_issues`](#ducpy.search.search_charter_issues.search_duc_charter_and_issues)(...)                    | Search the project Charter and Issues in one ranked response.         |
+| [`search_duc_charter`](#ducpy.search.search_charter_issues.search_duc_charter)(duc_path, query, \*[, output_path, ...]) → DucCharterIssueSearchResponse   | Search user-authored fields in the project Charter.                   |
+|------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| [`search_duc_issues`](#ducpy.search.search_charter_issues.search_duc_issues)(duc_path, query, \*[, output_path, ...]) → DucCharterIssueSearchResponse    | Search issue titles, discussions, people, and exact reference fields. |
+| [`search_duc_charter_and_issues`](#ducpy.search.search_charter_issues.search_duc_charter_and_issues)(duc_path, query, \*[, ...]) → DucCharterIssueSearchResponse     | Search the project Charter and Issues in one ranked response.         |
 
 ## Module Contents
 

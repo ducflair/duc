@@ -33,8 +33,8 @@ The JSON output is shaped for downstream consumers that need:
 
 ## Functions
 
-| [`search_duc_elements`](#ducpy.search.search_elements.search_duc_elements)(→ DucSearchResponse)   | Search DUC elements and export ordered results to JSON.   |
-|---------------------------------------------------------------------------------------------|-----------------------------------------------------------|
+| [`search_duc_elements`](#ducpy.search.search_elements.search_duc_elements)(duc_path, query, \*[, output_path, ...]) → DucSearchResponse   | Search DUC elements and export ordered results to JSON.   |
+|-------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|
 
 ## Module Contents
 

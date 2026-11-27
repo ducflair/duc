@@ -25,23 +25,23 @@ Only types from types.rs / duc.sql are supported.
 
 ## Functions
 
-| [`now_ms`](#ducpy.builders.state_builders.now_ms)(→ int)                                        | Current Unix timestamp in milliseconds.   |
-|-------------------------------------------------------------------------------------------------------|-------------------------------------------|
-| [`create_global_state_from_base`](#ducpy.builders.state_builders.create_global_state_from_base)(...)                   |                                           |
-| [`create_local_state_from_base`](#ducpy.builders.state_builders.create_local_state_from_base)(...)                    |                                           |
-| [`create_group_from_base`](#ducpy.builders.state_builders.create_group_from_base)(...)                          |                                           |
-| [`create_layer_from_base`](#ducpy.builders.state_builders.create_layer_from_base)(...)                          |                                           |
-| [`create_region_from_base`](#ducpy.builders.state_builders.create_region_from_base)(...)                         |                                           |
-| [`create_version_graph_from_base`](#ducpy.builders.state_builders.create_version_graph_from_base)(...)                  |                                           |
-| [`create_checkpoint_from_base`](#ducpy.builders.state_builders.create_checkpoint_from_base)(...)                     |                                           |
-| [`create_delta_from_base`](#ducpy.builders.state_builders.create_delta_from_base)(...)                          |                                           |
-| [`create_external_file_from_base`](#ducpy.builders.state_builders.create_external_file_from_base)(...)                  |                                           |
-| [`create_stack_base_from_base`](#ducpy.builders.state_builders.create_stack_base_from_base)(...)                     |                                           |
-| [`create_actor`](#ducpy.builders.state_builders.create_actor)(→ ducpy.classes.DataStateClass.Actor)   |                                           |
-| [`create_viewer3d_grid_uniform`](#ducpy.builders.state_builders.create_viewer3d_grid_uniform)(→ Dict[str, Any])       |                                           |
-| [`create_viewer3d_grid_per_plane`](#ducpy.builders.state_builders.create_viewer3d_grid_per_plane)(→ Dict[str, Any])     |                                           |
-| [`create_block`](#ducpy.builders.state_builders.create_block)(→ ducpy.classes.ElementsClass.DucBlock) |                                           |
-| [`create_string_value_entry`](#ducpy.builders.state_builders.create_string_value_entry)(...)                       |                                           |
+| [`now_ms`](#ducpy.builders.state_builders.now_ms)() → int                                                                                  | Current Unix timestamp in milliseconds.   |
+|--------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
+| [`create_global_state_from_base`](#ducpy.builders.state_builders.create_global_state_from_base)(base, \*\*kwargs) → ducpy.classes.DataStateClass.DucGlobalState   |                                           |
+| [`create_local_state_from_base`](#ducpy.builders.state_builders.create_local_state_from_base)(base, \*\*kwargs) → ducpy.classes.DataStateClass.DucLocalState     |                                           |
+| [`create_group_from_base`](#ducpy.builders.state_builders.create_group_from_base)(base, \*\*kwargs) → ducpy.classes.ElementsClass.DucGroup                 |                                           |
+| [`create_layer_from_base`](#ducpy.builders.state_builders.create_layer_from_base)(base, \*\*kwargs) → ducpy.classes.ElementsClass.DucLayer                 |                                           |
+| [`create_region_from_base`](#ducpy.builders.state_builders.create_region_from_base)(base, \*\*kwargs) → ducpy.classes.ElementsClass.DucRegion               |                                           |
+| [`create_version_graph_from_base`](#ducpy.builders.state_builders.create_version_graph_from_base)(base, \*\*kwargs) → ducpy.classes.DataStateClass.VersionGraph    |                                           |
+| [`create_checkpoint_from_base`](#ducpy.builders.state_builders.create_checkpoint_from_base)(base, \*\*kwargs) → ducpy.classes.DataStateClass.Checkpoint         |                                           |
+| [`create_delta_from_base`](#ducpy.builders.state_builders.create_delta_from_base)(base, \*\*kwargs) → ducpy.classes.DataStateClass.Delta                   |                                           |
+| [`create_external_file_from_base`](#ducpy.builders.state_builders.create_external_file_from_base)(base, \*\*kwargs) → ducpy.classes.DataStateClass.DucExternalFile |                                           |
+| [`create_stack_base_from_base`](#ducpy.builders.state_builders.create_stack_base_from_base)(base, \*\*kwargs) → ducpy.classes.ElementsClass.DucStackBase        |                                           |
+| [`create_actor`](#ducpy.builders.state_builders.create_actor)(identifier[, name]) → ducpy.classes.DataStateClass.Actor                           |                                           |
+| [`create_viewer3d_grid_uniform`](#ducpy.builders.state_builders.create_viewer3d_grid_uniform)([value]) → Dict[str, Any]                                          |                                           |
+| [`create_viewer3d_grid_per_plane`](#ducpy.builders.state_builders.create_viewer3d_grid_per_plane)([xy, xz, yz]) → Dict[str, Any]                                   |                                           |
+| [`create_block`](#ducpy.builders.state_builders.create_block)(id, label[, elements, description]) → ducpy.classes.ElementsClass.DucBlock         |                                           |
+| [`create_string_value_entry`](#ducpy.builders.state_builders.create_string_value_entry)(key, value) → ducpy.classes.ElementsClass.StringValueEntry            |                                           |
 
 ## Module Contents
 

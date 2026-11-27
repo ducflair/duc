@@ -363,22 +363,22 @@ DUC label and description.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_models.extract_python_imports" title="ducpy.search.search_models.extract_python_imports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_python_imports</span></code></a>(→ set[str])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_models.extract_python_imports" title="ducpy.search.search_models.extract_python_imports"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_python_imports</span></code></a>(code) → set[str]</p></td>
 <td><p>Return the top-level module names imported by <code class="docutils literal notranslate"><span class="pre">code</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_models.detect_model_engine" title="ducpy.search.search_models.detect_model_engine"><code class="xref py py-obj docutils literal notranslate"><span class="pre">detect_model_engine</span></code></a>(→ ModelEngine)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_models.detect_model_engine" title="ducpy.search.search_models.detect_model_engine"><code class="xref py py-obj docutils literal notranslate"><span class="pre">detect_model_engine</span></code></a>(element) → ModelEngine</p></td>
 <td><p>Classify a parsed model element into a <a class="reference internal" href="#ducpy.search.search_models.ModelEngine" title="ducpy.search.search_models.ModelEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelEngine</span></code></a>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_models.model_element_info" title="ducpy.search.search_models.model_element_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_element_info</span></code></a>(→ ModelElementInfo)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_models.model_element_info" title="ducpy.search.search_models.model_element_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_element_info</span></code></a>(element) → ModelElementInfo</p></td>
 <td><p>Build a <a class="reference internal" href="#ducpy.search.search_models.ModelElementInfo" title="ducpy.search.search_models.ModelElementInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModelElementInfo</span></code></a> from a parsed model element dict.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_models.iter_model_elements" title="ducpy.search.search_models.iter_model_elements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iter_model_elements</span></code></a>(→ Iterator[dict[str, Any]])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_models.iter_model_elements" title="ducpy.search.search_models.iter_model_elements"><code class="xref py py-obj docutils literal notranslate"><span class="pre">iter_model_elements</span></code></a>(duc_data) → Iterator[dict[str, Any]]</p></td>
 <td><p>Yield non-deleted model elements from parsed duc data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_models.resolve_model_search_targets" title="ducpy.search.search_models.resolve_model_search_targets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_model_search_targets</span></code></a>(→ list[ModelElementInfo])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_models.resolve_model_search_targets" title="ducpy.search.search_models.resolve_model_search_targets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_model_search_targets</span></code></a>(duc_data) → list[ModelElementInfo]</p></td>
 <td><p>Classify every live model element in parsed duc data.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_models.search_duc_models" title="ducpy.search.search_models.search_duc_models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">search_duc_models</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_models.search_duc_models" title="ducpy.search.search_models.search_duc_models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">search_duc_models</span></code></a>(duc_path, query, *[, output_path, ...]) → ducpy.search.search_elements.DucSearchResponse</p></td>
 <td><p>Search the user-authored text inside model elements and rank the results.</p></td>
 </tr>
 </tbody>

@@ -326,22 +326,22 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.locator.normalize_host_path" title="ducpy.classes.locator.normalize_host_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize_host_path</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.locator.normalize_host_path" title="ducpy.classes.locator.normalize_host_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize_host_path</span></code></a>(raw_path) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.locator.normalize_path_segments" title="ducpy.classes.locator.normalize_path_segments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize_path_segments</span></code></a>(→ str)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.locator.normalize_path_segments" title="ducpy.classes.locator.normalize_path_segments"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalize_path_segments</span></code></a>(path_str) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.locator.get_owning_duc_directory" title="ducpy.classes.locator.get_owning_duc_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_owning_duc_directory</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.locator.get_owning_duc_directory" title="ducpy.classes.locator.get_owning_duc_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_owning_duc_directory</span></code></a>(owning_duc_path) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.locator.create_external_file_locator" title="ducpy.classes.locator.create_external_file_locator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_external_file_locator</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.locator.create_external_file_locator" title="ducpy.classes.locator.create_external_file_locator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_external_file_locator</span></code></a>(kind, path[, original_path]) → ducpy.classes.DataStateClass.ExternalFileLocator</p></td>
 <td><p>Creates an ExternalFileLocator with explicit kind.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.locator.resolve_locator_path" title="ducpy.classes.locator.resolve_locator_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_locator_path</span></code></a>(→ Tuple[Optional[str], Optional[str]])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.classes.locator.resolve_locator_path" title="ducpy.classes.locator.resolve_locator_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_locator_path</span></code></a>(locator[, owning_duc_path]) → Tuple[Optional[str], Optional[str]]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.locator.resolve_locator" title="ducpy.classes.locator.resolve_locator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_locator</span></code></a>(→ ExternalFileResolutionResult)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.classes.locator.resolve_locator" title="ducpy.classes.locator.resolve_locator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_locator</span></code></a>(locator[, owning_duc_path, check_exists]) → ExternalFileResolutionResult</p></td>
 <td><p></p></td>
 </tr>
 </tbody>

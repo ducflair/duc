@@ -348,61 +348,61 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._compress_whitespace" title="ducpy.search.search_external_files._compress_whitespace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_compress_whitespace</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._compress_whitespace" title="ducpy.search.search_external_files._compress_whitespace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_compress_whitespace</span></code></a>(value) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.element_file_id" title="ducpy.search.search_external_files.element_file_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_file_id</span></code></a>(→ str | None)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.element_file_id" title="ducpy.search.search_external_files.element_file_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">element_file_id</span></code></a>(element) → str | None</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._normalize_target" title="ducpy.search.search_external_files._normalize_target"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_normalize_target</span></code></a>(→ ExternalFileSearchTarget)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._normalize_target" title="ducpy.search.search_external_files._normalize_target"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_normalize_target</span></code></a>(value) → ExternalFileSearchTarget</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._dedupe_targets" title="ducpy.search.search_external_files._dedupe_targets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_dedupe_targets</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._dedupe_targets" title="ducpy.search.search_external_files._dedupe_targets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_dedupe_targets</span></code></a>(targets) → tuple[ResolvedExternalFileSearchTarget, ...]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._has_table" title="ducpy.search.search_external_files._has_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_has_table</span></code></a>(→ bool)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._has_table" title="ducpy.search.search_external_files._has_table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_has_table</span></code></a>(conn, table_name) → bool</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._fetch_active_revision_ids" title="ducpy.search.search_external_files._fetch_active_revision_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_fetch_active_revision_ids</span></code></a>(→ dict[str, str])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._fetch_active_revision_ids" title="ducpy.search.search_external_files._fetch_active_revision_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_fetch_active_revision_ids</span></code></a>(conn, file_ids) → dict[str, str]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._fetch_live_external_file_ids" title="ducpy.search.search_external_files._fetch_live_external_file_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_fetch_live_external_file_ids</span></code></a>(→ set[str])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._fetch_live_external_file_ids" title="ducpy.search.search_external_files._fetch_live_external_file_ids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_fetch_live_external_file_ids</span></code></a>(conn) → set[str]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._fetch_element_external_refs" title="ducpy.search.search_external_files._fetch_element_external_refs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_fetch_element_external_refs</span></code></a>(→ list[tuple[str, str]])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._fetch_element_external_refs" title="ducpy.search.search_external_files._fetch_element_external_refs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_fetch_element_external_refs</span></code></a>(conn, element_ids) → list[tuple[str, str]]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.resolve_external_file_search_targets" title="ducpy.search.search_external_files.resolve_external_file_search_targets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_external_file_search_targets</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.resolve_external_file_search_targets" title="ducpy.search.search_external_files.resolve_external_file_search_targets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_external_file_search_targets</span></code></a>(conn, *[, ...]) → tuple[ResolvedExternalFileSearchTarget, ...]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._external_active_revision_id" title="ducpy.search.search_external_files._external_active_revision_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_external_active_revision_id</span></code></a>(→ str | None)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._external_active_revision_id" title="ducpy.search.search_external_files._external_active_revision_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_external_active_revision_id</span></code></a>(external) → str | None</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._external_revision_meta" title="ducpy.search.search_external_files._external_revision_meta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_external_revision_meta</span></code></a>(→ dict[str, Any] | None)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._external_revision_meta" title="ducpy.search.search_external_files._external_revision_meta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_external_revision_meta</span></code></a>(external, revision_id) → dict[str, Any] | None</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._external_revision_mime_type" title="ducpy.search.search_external_files._external_revision_mime_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_external_revision_mime_type</span></code></a>(→ str)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._external_revision_mime_type" title="ducpy.search.search_external_files._external_revision_mime_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_external_revision_mime_type</span></code></a>(external, revision_id, *, ...) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.extract_image_text_for_search" title="ducpy.search.search_external_files.extract_image_text_for_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_image_text_for_search</span></code></a>(→ ExtractedExternalText)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.extract_image_text_for_search" title="ducpy.search.search_external_files.extract_image_text_for_search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_image_text_for_search</span></code></a>(image_bytes, *, ocr_language) → ExtractedExternalText</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._stream_revision_bytes" title="ducpy.search.search_external_files._stream_revision_bytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_stream_revision_bytes</span></code></a>(→ bytes | None)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._stream_revision_bytes" title="ducpy.search.search_external_files._stream_revision_bytes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_stream_revision_bytes</span></code></a>(duc_source, revision_id) → bytes | None</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.load_external_file_text" title="ducpy.search.search_external_files.load_external_file_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_external_file_text</span></code></a>(→ ExtractedExternalText)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.load_external_file_text" title="ducpy.search.search_external_files.load_external_file_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_external_file_text</span></code></a>(duc_source, target, *, ...) → ExtractedExternalText</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc" title="ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_external_file_search_targets_from_parsed_duc</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc" title="ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_external_file_search_targets_from_parsed_duc</span></code></a>(...) → tuple[ResolvedExternalFileSearchTarget, ...]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._fetch_external_revision_row" title="ducpy.search.search_external_files._fetch_external_revision_row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_fetch_external_revision_row</span></code></a>(→ dict[str, Any] | None)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files._fetch_external_revision_row" title="ducpy.search.search_external_files._fetch_external_revision_row"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_fetch_external_revision_row</span></code></a>(conn, file_id, revision_id) → dict[str, Any] | None</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.ensure_external_file_search_index" title="ducpy.search.search_external_files.ensure_external_file_search_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_external_file_search_index</span></code></a>(→ dict[tuple[str, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.ensure_external_file_search_index" title="ducpy.search.search_external_files.ensure_external_file_search_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_external_file_search_index</span></code></a>(conn, *, targets[, ...]) → dict[tuple[str, str], ExtractedExternalText]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.query_external_file_search_rows" title="ducpy.search.search_external_files.query_external_file_search_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">query_external_file_search_rows</span></code></a>(→ list[sqlite3.Row])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_external_files.query_external_file_search_rows" title="ducpy.search.search_external_files.query_external_file_search_rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">query_external_file_search_rows</span></code></a>(conn, *, expression, ...) → list[sqlite3.Row]</p></td>
 <td><p></p></td>
 </tr>
 </tbody>

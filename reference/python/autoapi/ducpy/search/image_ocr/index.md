@@ -15,11 +15,11 @@ OCR is gracefully skipped.
 
 ## Functions
 
-| [`server_side_ocr_available`](#ducpy.search.image_ocr.server_side_ocr_available)(→ bool)               | Return whether the `ocr` extra (RapidOCR) is installed and usable.   |
-|--------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`_get_local_cache_dir`](#ducpy.search.image_ocr._get_local_cache_dir)(→ str | None)              |                                                                      |
-| [`_get_rapid_engine`](#ducpy.search.image_ocr._get_rapid_engine)(→ Any)                        |                                                                      |
-| [`extract_image_text_with_ocr`](#ducpy.search.image_ocr.extract_image_text_with_ocr)(→ tuple[str, bool]) | OCR an image using the `ocr` extra, or skip when unavailable.        |
+| [`server_side_ocr_available`](#ducpy.search.image_ocr.server_side_ocr_available)() → bool                                            | Return whether the `ocr` extra (RapidOCR) is installed and usable.   |
+|--------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| [`_get_local_cache_dir`](#ducpy.search.image_ocr._get_local_cache_dir)(repo_id) → str | None                                    |                                                                      |
+| [`_get_rapid_engine`](#ducpy.search.image_ocr._get_rapid_engine)() → Any                                                     |                                                                      |
+| [`extract_image_text_with_ocr`](#ducpy.search.image_ocr.extract_image_text_with_ocr)(image_bytes, \*, ocr_language) → tuple[str, bool] | OCR an image using the `ocr` extra, or skip when unavailable.        |
 
 ## Module Contents
 

@@ -371,19 +371,19 @@ from Python with <code class="docutils literal notranslate"><span class="pre">wa
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.ezdxf_available" title="ducpy.search.search_ezdxf.ezdxf_available"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ezdxf_available</span></code></a>(→ bool)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.ezdxf_available" title="ducpy.search.search_ezdxf.ezdxf_available"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ezdxf_available</span></code></a>() → bool</p></td>
 <td><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the optional <code class="docutils literal notranslate"><span class="pre">ezdxf</span></code> dependency can be imported.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.extract_drawing_text" title="ducpy.search.search_ezdxf.extract_drawing_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_drawing_text</span></code></a>(→ DxfText)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.extract_drawing_text" title="ducpy.search.search_ezdxf.extract_drawing_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_drawing_text</span></code></a>(doc) → DxfText</p></td>
 <td><p>Extract every piece of user text from an in-memory <code class="docutils literal notranslate"><span class="pre">ezdxf</span></code> drawing.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.extract_dxf_text" title="ducpy.search.search_ezdxf.extract_dxf_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_dxf_text</span></code></a>(→ DxfText)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.extract_dxf_text" title="ducpy.search.search_ezdxf.extract_dxf_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_dxf_text</span></code></a>(dxf_bytes) → DxfText</p></td>
 <td><p>Extract user text from raw DXF bytes. Returns empty on any failure.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.convert_dwg_to_dxf" title="ducpy.search.search_ezdxf.convert_dwg_to_dxf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_dwg_to_dxf</span></code></a>(→ bytes)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.convert_dwg_to_dxf" title="ducpy.search.search_ezdxf.convert_dwg_to_dxf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">convert_dwg_to_dxf</span></code></a>(dwg_bytes, *[, wasm_path, ...]) → bytes</p></td>
 <td><p>Convert DWG bytes to DXF bytes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.extract_model_dxf_text" title="ducpy.search.search_ezdxf.extract_model_dxf_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_model_dxf_text</span></code></a>(→ DxfText)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ezdxf.extract_model_dxf_text" title="ducpy.search.search_ezdxf.extract_model_dxf_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_model_dxf_text</span></code></a>(duc_source, element, *[, run_code]) → DxfText</p></td>
 <td><p>Hybrid extraction of user text from an <code class="docutils literal notranslate"><span class="pre">ezdxf</span></code> model element.</p></td>
 </tr>
 </tbody>

@@ -342,46 +342,46 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._element_to_camel" title="ducpy.serialize._element_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_to_camel</span></code></a>(→ dict)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._element_to_camel" title="ducpy.serialize._element_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_to_camel</span></code></a>(wrapper_or_element) → dict</p></td>
 <td><p>Convert an element (or ElementWrapper) to the camelCase dict Rust expects.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_external_files" title="ducpy.serialize._convert_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_external_files</span></code></a>(→ Tuple[Optional[Dict[str, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_external_files" title="ducpy.serialize._convert_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_external_files</span></code></a>(entries) → Tuple[Optional[Dict[str, Any]], Optional[Dict[str, bytes]]]</p></td>
 <td><p>Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._convert_dict_entries" title="ducpy.serialize._convert_dict_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_dict_entries</span></code></a>(→ Optional[Dict[str, str]])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._convert_dict_entries" title="ducpy.serialize._convert_dict_entries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_dict_entries</span></code></a>(entries) → Optional[Dict[str, str]]</p></td>
 <td><p>Convert a list of DictionaryEntry to a <code class="docutils literal notranslate"><span class="pre">{key:</span> <span class="pre">value}</span></code> dict.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_list" title="ducpy.serialize._convert_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_list</span></code></a>(→ Optional[list])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._convert_list" title="ducpy.serialize._convert_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_convert_list</span></code></a>(items) → Optional[list]</p></td>
 <td><p>Convert a list of dataclass instances to camelCase dicts.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._element_label" title="ducpy.serialize._element_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_label</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._element_label" title="ducpy.serialize._element_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_element_label</span></code></a>(element) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._find_revision" title="ducpy.serialize._find_revision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_find_revision</span></code></a>(→ Optional[Dict[str, Any]])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._find_revision" title="ducpy.serialize._find_revision"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_find_revision</span></code></a>(revisions, active_revision_id) → Optional[Dict[str, Any]]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._write_python_external_files" title="ducpy.serialize._write_python_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_write_python_external_files</span></code></a>(→ Dict[str, str])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._write_python_external_files" title="ducpy.serialize._write_python_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_write_python_external_files</span></code></a>(project_dir, files_meta, ...) → Dict[str, str]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._run_python_validation" title="ducpy.serialize._run_python_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_python_validation</span></code></a>(→ Optional[str])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._run_python_validation" title="ducpy.serialize._run_python_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_python_validation</span></code></a>(code, label, timeout_seconds[, ...]) → Optional[str]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._run_python_validation_in_process" title="ducpy.serialize._run_python_validation_in_process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_python_validation_in_process</span></code></a>(→ Optional[str])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._run_python_validation_in_process" title="ducpy.serialize._run_python_validation_in_process"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_python_validation_in_process</span></code></a>(code, label, ...) → Optional[str]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._write_typst_external_files" title="ducpy.serialize._write_typst_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_write_typst_external_files</span></code></a>(→ None)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._write_typst_external_files" title="ducpy.serialize._write_typst_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_write_typst_external_files</span></code></a>(project_dir, files_meta, ...) → None</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._format_typst_validation_error" title="ducpy.serialize._format_typst_validation_error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_format_typst_validation_error</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._format_typst_validation_error" title="ducpy.serialize._format_typst_validation_error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_format_typst_validation_error</span></code></a>(exc, main_path) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._run_typst_validation" title="ducpy.serialize._run_typst_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_typst_validation</span></code></a>(→ Optional[str])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize._run_typst_validation" title="ducpy.serialize._run_typst_validation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_run_typst_validation</span></code></a>(code, label, timeout_seconds, ...) → Optional[str]</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._validate_embedded_code" title="ducpy.serialize._validate_embedded_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_validate_embedded_code</span></code></a>(→ None)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.serialize._validate_embedded_code" title="ducpy.serialize._validate_embedded_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_validate_embedded_code</span></code></a>(elements, files_meta, ...) → None</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize.serialize_duc" title="ducpy.serialize.serialize_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">serialize_duc</span></code></a>(→ str)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.serialize.serialize_duc" title="ducpy.serialize.serialize_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">serialize_duc</span></code></a>(name[, output_path, thumbnail, ...]) → str</p></td>
 <td><p>Serialize elements and document state directly to a <code class="docutils literal notranslate"><span class="pre">.duc</span></code> file path.</p></td>
 </tr>
 </tbody>

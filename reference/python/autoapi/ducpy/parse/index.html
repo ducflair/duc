@@ -341,25 +341,25 @@ via DucData wrapper.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.parse._wrap" title="ducpy.parse._wrap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_wrap</span></code></a>(→ Any)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.parse._wrap" title="ducpy.parse._wrap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_wrap</span></code></a>(obj) → Any</p></td>
 <td><p>Recursively wrap dicts as DucData for attribute access.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.parse._path" title="ducpy.parse._path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_path</span></code></a>(→ str)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.parse._path" title="ducpy.parse._path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_path</span></code></a>(source) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.parse.parse_duc" title="ducpy.parse.parse_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_duc</span></code></a>(→ DucData)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.parse.parse_duc" title="ducpy.parse.parse_duc"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_duc</span></code></a>(source) → DucData</p></td>
 <td><p>Parse a <code class="docutils literal notranslate"><span class="pre">.duc</span></code> file into a <a class="reference internal" href="#ducpy.parse.DucData" title="ducpy.parse.DucData"><code class="xref py py-class docutils literal notranslate"><span class="pre">DucData</span></code></a> dict.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.parse.list_external_files" title="ducpy.parse.list_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_external_files</span></code></a>(→ List[DucData])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.parse.list_external_files" title="ducpy.parse.list_external_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_external_files</span></code></a>(source) → List[DucData]</p></td>
 <td><p>List metadata for all external files (without data blobs).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.parse.stream_external_file_revision_to_path" title="ducpy.parse.stream_external_file_revision_to_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stream_external_file_revision_to_path</span></code></a>(→ int)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.parse.stream_external_file_revision_to_path" title="ducpy.parse.stream_external_file_revision_to_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stream_external_file_revision_to_path</span></code></a>(source, ...) → int</p></td>
 <td><p>Stream an external file revision from a <code class="docutils literal notranslate"><span class="pre">.duc</span></code> file into <code class="docutils literal notranslate"><span class="pre">output_path</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.parse.stream_checkpoint_data_to_path" title="ducpy.parse.stream_checkpoint_data_to_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stream_checkpoint_data_to_path</span></code></a>(→ int)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.parse.stream_checkpoint_data_to_path" title="ducpy.parse.stream_checkpoint_data_to_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stream_checkpoint_data_to_path</span></code></a>(source, checkpoint_id, ...) → int</p></td>
 <td><p>Stream checkpoint data from a <code class="docutils literal notranslate"><span class="pre">.duc</span></code> file into <code class="docutils literal notranslate"><span class="pre">output_path</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.parse.stream_delta_changeset_to_path" title="ducpy.parse.stream_delta_changeset_to_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stream_delta_changeset_to_path</span></code></a>(→ int)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.parse.stream_delta_changeset_to_path" title="ducpy.parse.stream_delta_changeset_to_path"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stream_delta_changeset_to_path</span></code></a>(source, delta_id, ...) → int</p></td>
 <td><p>Stream delta changeset data from a <code class="docutils literal notranslate"><span class="pre">.duc</span></code> file into <code class="docutils literal notranslate"><span class="pre">output_path</span></code>.</p></td>
 </tr>
 </tbody>

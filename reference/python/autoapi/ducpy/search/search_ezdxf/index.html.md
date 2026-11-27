@@ -40,12 +40,12 @@ from Python with `wasmtime`.
 
 ## Functions
 
-| [`ezdxf_available`](#ducpy.search.search_ezdxf.ezdxf_available)(→ bool)           | Return `True` if the optional `ezdxf` dependency can be imported.   |
-|------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-| [`extract_drawing_text`](#ducpy.search.search_ezdxf.extract_drawing_text)(→ DxfText)   | Extract every piece of user text from an in-memory `ezdxf` drawing. |
-| [`extract_dxf_text`](#ducpy.search.search_ezdxf.extract_dxf_text)(→ DxfText)       | Extract user text from raw DXF bytes. Returns empty on any failure. |
-| [`convert_dwg_to_dxf`](#ducpy.search.search_ezdxf.convert_dwg_to_dxf)(→ bytes)       | Convert DWG bytes to DXF bytes.                                     |
-| [`extract_model_dxf_text`](#ducpy.search.search_ezdxf.extract_model_dxf_text)(→ DxfText) | Hybrid extraction of user text from an `ezdxf` model element.       |
+| [`ezdxf_available`](#ducpy.search.search_ezdxf.ezdxf_available)() → bool                                              | Return `True` if the optional `ezdxf` dependency can be imported.   |
+|------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| [`extract_drawing_text`](#ducpy.search.search_ezdxf.extract_drawing_text)(doc) → DxfText                                   | Extract every piece of user text from an in-memory `ezdxf` drawing. |
+| [`extract_dxf_text`](#ducpy.search.search_ezdxf.extract_dxf_text)(dxf_bytes) → DxfText                                 | Extract user text from raw DXF bytes. Returns empty on any failure. |
+| [`convert_dwg_to_dxf`](#ducpy.search.search_ezdxf.convert_dwg_to_dxf)(dwg_bytes, \*[, wasm_path, ...]) → bytes           | Convert DWG bytes to DXF bytes.                                     |
+| [`extract_model_dxf_text`](#ducpy.search.search_ezdxf.extract_model_dxf_text)(duc_source, element, \*[, run_code]) → DxfText | Hybrid extraction of user text from an `ezdxf` model element.       |
 
 ## Module Contents
 

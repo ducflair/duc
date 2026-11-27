@@ -97,7 +97,7 @@
 - [ducpy](ducpy/index.html.md): Python library for the .duc project-state format for physical-engineering work before execution.
 - [ducpy.builders](ducpy/builders/index.html.md): User-friendly helper functions for creating DUC elements without verbose dataclass construction.
 - [ducpy.builders.block_instance_builder](ducpy/builders/block_instance_builder/index.html.md): | &#96;BlockInstanceBuilder&#96;   |    |
-- [ducpy.builders.block_utils](ducpy/builders/block_utils/index.html.md): | &#96;&#95;get_base&#96;(element)     |                                                        |
+- [ducpy.builders.block_utils](ducpy/builders/block_utils/index.html.md): | &#96;&#95;get_base&#96;(element)                                                                              ...
 - [ducpy.builders.element_builders](ducpy/builders/element_builders/index.html.md): Helper functions for creating DUC elements with a user-friendly API.
 - [ducpy.builders.mutate_builder](ducpy/builders/mutate_builder/index.html.md): | &#96;mutate_element&#96;(el, &#92;&#42;&#92;&#42;kwargs)               | Mutate any property of an element (ElementWrapper...
 - [ducpy.builders.sql_builder](ducpy/builders/sql_builder/index.html.md): Thin wrapper to open .duc files as SQLite databases and run raw SQL.

@@ -316,22 +316,22 @@
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.runner._normalize_model_type" title="ducpy.tessellate.runner._normalize_model_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_normalize_model_type</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.runner._normalize_model_type" title="ducpy.tessellate.runner._normalize_model_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_normalize_model_type</span></code></a>(model_type) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.runner._deduce_model_output_kind" title="ducpy.tessellate.runner._deduce_model_output_kind"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_deduce_model_output_kind</span></code></a>(→ str)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.runner._deduce_model_output_kind" title="ducpy.tessellate.runner._deduce_model_output_kind"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_deduce_model_output_kind</span></code></a>(model_type) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.runner._build_external_file_code" title="ducpy.tessellate.runner._build_external_file_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_build_external_file_code</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.runner._build_external_file_code" title="ducpy.tessellate.runner._build_external_file_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_build_external_file_code</span></code></a>(model_type, file_id) → str</p></td>
 <td><p>Generate canonical model code loading an external file reference.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.runner.tessellate_external_file" title="ducpy.tessellate.runner.tessellate_external_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tessellate_external_file</span></code></a>(→ dict[str, Any])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.runner.tessellate_external_file" title="ducpy.tessellate.runner.tessellate_external_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tessellate_external_file</span></code></a>(file_path[, model_type]) → dict[str, Any]</p></td>
 <td><p>Directly tessellates a local CAD/BIM file (STEP, STL, IFC, DXF).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.runner.tessellate_model_code" title="ducpy.tessellate.runner.tessellate_model_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tessellate_model_code</span></code></a>(→ dict[str, Any])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.runner.tessellate_model_code" title="ducpy.tessellate.runner.tessellate_model_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tessellate_model_code</span></code></a>(code[, model_type, ...]) → dict[str, Any]</p></td>
 <td><p>Executes CAD Python code and captures the tessellated preview payload.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.runner.tessellate_duc_element" title="ducpy.tessellate.runner.tessellate_duc_element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tessellate_duc_element</span></code></a>(→ dict[str, Any])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.runner.tessellate_duc_element" title="ducpy.tessellate.runner.tessellate_duc_element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tessellate_duc_element</span></code></a>(duc_file_path, element_id[, ...]) → dict[str, Any]</p></td>
 <td><p>Extracts a model element and its external files from a .duc file and tessellates it.</p></td>
 </tr>
 </tbody>

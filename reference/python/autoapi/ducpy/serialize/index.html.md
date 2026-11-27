@@ -16,21 +16,21 @@ Serialize DUC data using the Rust native extension (ducpy_native).
 
 ## Functions
 
-| [`_element_to_camel`](#ducpy.serialize._element_to_camel)(→ dict)                               | Convert an element (or ElementWrapper) to the camelCase dict Rust expects.          |
-|----------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| [`_convert_external_files`](#ducpy.serialize._convert_external_files)(→ Tuple[Optional[Dict[str, ...) | Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization. |
-| [`_convert_dict_entries`](#ducpy.serialize._convert_dict_entries)(→ Optional[Dict[str, str]])       | Convert a list of DictionaryEntry to a `{key: value}` dict.                         |
-| [`_convert_list`](#ducpy.serialize._convert_list)(→ Optional[list])                         | Convert a list of dataclass instances to camelCase dicts.                           |
-| [`_element_label`](#ducpy.serialize._element_label)(→ str)                                   |                                                                                     |
-| [`_find_revision`](#ducpy.serialize._find_revision)(→ Optional[Dict[str, Any]])              |                                                                                     |
-| [`_write_python_external_files`](#ducpy.serialize._write_python_external_files)(→ Dict[str, str])          |                                                                                     |
-| [`_run_python_validation`](#ducpy.serialize._run_python_validation)(→ Optional[str])                 |                                                                                     |
-| [`_run_python_validation_in_process`](#ducpy.serialize._run_python_validation_in_process)(→ Optional[str])      |                                                                                     |
-| [`_write_typst_external_files`](#ducpy.serialize._write_typst_external_files)(→ None)                     |                                                                                     |
-| [`_format_typst_validation_error`](#ducpy.serialize._format_typst_validation_error)(→ str)                   |                                                                                     |
-| [`_run_typst_validation`](#ducpy.serialize._run_typst_validation)(→ Optional[str])                  |                                                                                     |
-| [`_validate_embedded_code`](#ducpy.serialize._validate_embedded_code)(→ None)                         |                                                                                     |
-| [`serialize_duc`](#ducpy.serialize.serialize_duc)(→ str)                                    | Serialize elements and document state directly to a `.duc` file path.               |
+| [`_element_to_camel`](#ducpy.serialize._element_to_camel)(wrapper_or_element) → dict                                                   | Convert an element (or ElementWrapper) to the camelCase dict Rust expects.          |
+|-------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| [`_convert_external_files`](#ducpy.serialize._convert_external_files)(entries) → Tuple[Optional[Dict[str, Any]], Optional[Dict[str, bytes]]] | Convert DucExternalFile dict (or legacy list) to camelCase dicts for serialization. |
+| [`_convert_dict_entries`](#ducpy.serialize._convert_dict_entries)(entries) → Optional[Dict[str, str]]                                      | Convert a list of DictionaryEntry to a `{key: value}` dict.                         |
+| [`_convert_list`](#ducpy.serialize._convert_list)(items) → Optional[list]                                                          | Convert a list of dataclass instances to camelCase dicts.                           |
+| [`_element_label`](#ducpy.serialize._element_label)(element) → str                                                                  |                                                                                     |
+| [`_find_revision`](#ducpy.serialize._find_revision)(revisions, active_revision_id) → Optional[Dict[str, Any]]                       |                                                                                     |
+| [`_write_python_external_files`](#ducpy.serialize._write_python_external_files)(project_dir, files_meta, ...) → Dict[str, str]                    |                                                                                     |
+| [`_run_python_validation`](#ducpy.serialize._run_python_validation)(code, label, timeout_seconds[, ...]) → Optional[str]                    |                                                                                     |
+| [`_run_python_validation_in_process`](#ducpy.serialize._run_python_validation_in_process)(code, label, ...) → Optional[str]                            |                                                                                     |
+| [`_write_typst_external_files`](#ducpy.serialize._write_typst_external_files)(project_dir, files_meta, ...) → None                               |                                                                                     |
+| [`_format_typst_validation_error`](#ducpy.serialize._format_typst_validation_error)(exc, main_path) → str                                           |                                                                                     |
+| [`_run_typst_validation`](#ducpy.serialize._run_typst_validation)(code, label, timeout_seconds, ...) → Optional[str]                       |                                                                                     |
+| [`_validate_embedded_code`](#ducpy.serialize._validate_embedded_code)(elements, files_meta, ...) → None                                      |                                                                                     |
+| [`serialize_duc`](#ducpy.serialize.serialize_duc)(name[, output_path, thumbnail, ...]) → str                                       | Serialize elements and document state directly to a `.duc` file path.               |
 
 ## Module Contents
 

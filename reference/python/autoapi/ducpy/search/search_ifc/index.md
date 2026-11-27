@@ -19,12 +19,12 @@ executed explicitly to capture IfcOpenShell files it opens or creates.
 
 ## Functions
 
-| [`ifcopenshell_available`](#ducpy.search.search_ifc.ifcopenshell_available)(→ bool)    | Return whether IfcOpenShell can be imported.                            |
-|------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| [`extract_ifc_file_text`](#ducpy.search.search_ifc.extract_ifc_file_text)(→ IfcText)  | Extract searchable values from a loaded IfcOpenShell file.              |
-| [`extract_ifc_text`](#ducpy.search.search_ifc.extract_ifc_text)(→ IfcText)       | Parse IFC STEP bytes and extract searchable values, or return empty.    |
-| [`extract_ifc_path_text`](#ducpy.search.search_ifc.extract_ifc_path_text)(→ IfcText)  | Open and extract an IFC file from disk without first reading its bytes. |
-| [`extract_model_ifc_text`](#ducpy.search.search_ifc.extract_model_ifc_text)(→ IfcText) | Extract searchable values from a DUC IFC model element.                 |
+| [`ifcopenshell_available`](#ducpy.search.search_ifc.ifcopenshell_available)() → bool                                       | Return whether IfcOpenShell can be imported.                            |
+|------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| [`extract_ifc_file_text`](#ducpy.search.search_ifc.extract_ifc_file_text)(model) → IfcText                                | Extract searchable values from a loaded IfcOpenShell file.              |
+| [`extract_ifc_text`](#ducpy.search.search_ifc.extract_ifc_text)(ifc_bytes) → IfcText                                 | Parse IFC STEP bytes and extract searchable values, or return empty.    |
+| [`extract_ifc_path_text`](#ducpy.search.search_ifc.extract_ifc_path_text)(path) → IfcText                                 | Open and extract an IFC file from disk without first reading its bytes. |
+| [`extract_model_ifc_text`](#ducpy.search.search_ifc.extract_model_ifc_text)(duc_source, element, \*[, run_code]) → IfcText | Extract searchable values from a DUC IFC model element.                 |
 
 ## Module Contents
 

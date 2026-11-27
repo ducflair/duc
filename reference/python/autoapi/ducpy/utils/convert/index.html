@@ -337,25 +337,25 @@ and for flattening/nesting element structures to match the Rust serde layout.</p
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.utils.convert.camel_to_snake" title="ducpy.utils.convert.camel_to_snake"><code class="xref py py-obj docutils literal notranslate"><span class="pre">camel_to_snake</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.utils.convert.camel_to_snake" title="ducpy.utils.convert.camel_to_snake"><code class="xref py py-obj docutils literal notranslate"><span class="pre">camel_to_snake</span></code></a>(name) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.utils.convert.snake_to_camel" title="ducpy.utils.convert.snake_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">snake_to_camel</span></code></a>(→ str)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.utils.convert.snake_to_camel" title="ducpy.utils.convert.snake_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">snake_to_camel</span></code></a>(name) → str</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.utils.convert.deep_camel_to_snake" title="ducpy.utils.convert.deep_camel_to_snake"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deep_camel_to_snake</span></code></a>(→ Any)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.utils.convert.deep_camel_to_snake" title="ducpy.utils.convert.deep_camel_to_snake"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deep_camel_to_snake</span></code></a>(obj) → Any</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.utils.convert.deep_snake_to_camel" title="ducpy.utils.convert.deep_snake_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deep_snake_to_camel</span></code></a>(→ Any)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.utils.convert.deep_snake_to_camel" title="ducpy.utils.convert.deep_snake_to_camel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deep_snake_to_camel</span></code></a>(obj) → Any</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.utils.convert._flatten_dict" title="ducpy.utils.convert._flatten_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_flatten_dict</span></code></a>(→ dict)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.utils.convert._flatten_dict" title="ducpy.utils.convert._flatten_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_flatten_dict</span></code></a>(d, *[, preserve_stack_base]) → dict</p></td>
 <td><p>Recursively flatten keys that Rust serde #[serde(flatten)] would flatten.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.utils.convert.to_serializable" title="ducpy.utils.convert.to_serializable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_serializable</span></code></a>(→ Any)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.utils.convert.to_serializable" title="ducpy.utils.convert.to_serializable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_serializable</span></code></a>(obj) → Any</p></td>
 <td><p>Convert a value to a JSON-serializable form suitable for the Rust native module.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.utils.convert.extract_embedded_code" title="ducpy.utils.convert.extract_embedded_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_embedded_code</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.utils.convert.extract_embedded_code" title="ducpy.utils.convert.extract_embedded_code"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_embedded_code</span></code></a>(func) → str</p></td>
 <td><p>Extracts the body of a Python function as a clean standalone script.</p></td>
 </tr>
 </tbody>

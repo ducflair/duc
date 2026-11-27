@@ -8,13 +8,13 @@
 
 ## Functions
 
-| [`normalize_host_path`](#ducpy.classes.locator.normalize_host_path)(→ str)                                  |                                                    |
-|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
-| [`normalize_path_segments`](#ducpy.classes.locator.normalize_path_segments)(→ str)                              |                                                    |
-| [`get_owning_duc_directory`](#ducpy.classes.locator.get_owning_duc_directory)(→ str)                             |                                                    |
-| [`create_external_file_locator`](#ducpy.classes.locator.create_external_file_locator)(...)                           | Creates an ExternalFileLocator with explicit kind. |
-| [`resolve_locator_path`](#ducpy.classes.locator.resolve_locator_path)(→ Tuple[Optional[str], Optional[str]]) |                                                    |
-| [`resolve_locator`](#ducpy.classes.locator.resolve_locator)(→ ExternalFileResolutionResult)             |                                                    |
+| [`normalize_host_path`](#ducpy.classes.locator.normalize_host_path)(raw_path) → str                                                                          |                                                    |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
+| [`normalize_path_segments`](#ducpy.classes.locator.normalize_path_segments)(path_str) → str                                                                      |                                                    |
+| [`get_owning_duc_directory`](#ducpy.classes.locator.get_owning_duc_directory)(owning_duc_path) → str                                                              |                                                    |
+| [`create_external_file_locator`](#ducpy.classes.locator.create_external_file_locator)(kind, path[, original_path]) → ducpy.classes.DataStateClass.ExternalFileLocator | Creates an ExternalFileLocator with explicit kind. |
+| [`resolve_locator_path`](#ducpy.classes.locator.resolve_locator_path)(locator[, owning_duc_path]) → Tuple[Optional[str], Optional[str]]                       |                                                    |
+| [`resolve_locator`](#ducpy.classes.locator.resolve_locator)(locator[, owning_duc_path, check_exists]) → ExternalFileResolutionResult                     |                                                    |
 
 ## Module Contents
 

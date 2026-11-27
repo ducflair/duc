@@ -4,8 +4,8 @@ CLI entry point for ducpy CAD and BIM tessellation sidecar.
 
 ## Functions
 
-| [`main`](#ducpy.tessellate.cli.main)(→ int)   |    |
-|----------------------------------------------------------------|----|
+| [`main`](#ducpy.tessellate.cli.main)() → int   |    |
+|-----------------------------------------------------------------|----|
 
 ## Module Contents
 

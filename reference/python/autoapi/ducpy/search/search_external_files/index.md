@@ -18,26 +18,26 @@ Scoped external-file search helpers.
 
 ## Functions
 
-| [`_compress_whitespace`](#ducpy.search.search_external_files._compress_whitespace)(→ str)                               |    |
-|------------------------------------------------------------------------------------------------------------|----|
-| [`element_file_id`](#ducpy.search.search_external_files.element_file_id)(→ str | None)                             |    |
-| [`_normalize_target`](#ducpy.search.search_external_files._normalize_target)(→ ExternalFileSearchTarget)             |    |
-| [`_dedupe_targets`](#ducpy.search.search_external_files._dedupe_targets)(...)                                      |    |
-| [`_has_table`](#ducpy.search.search_external_files._has_table)(→ bool)                                        |    |
-| [`_fetch_active_revision_ids`](#ducpy.search.search_external_files._fetch_active_revision_ids)(→ dict[str, str])              |    |
-| [`_fetch_live_external_file_ids`](#ducpy.search.search_external_files._fetch_live_external_file_ids)(→ set[str])                 |    |
-| [`_fetch_element_external_refs`](#ducpy.search.search_external_files._fetch_element_external_refs)(→ list[tuple[str, str]])     |    |
-| [`resolve_external_file_search_targets`](#ducpy.search.search_external_files.resolve_external_file_search_targets)(...)                 |    |
-| [`_external_active_revision_id`](#ducpy.search.search_external_files._external_active_revision_id)(→ str | None)                |    |
-| [`_external_revision_meta`](#ducpy.search.search_external_files._external_revision_meta)(→ dict[str, Any] | None)          |    |
-| [`_external_revision_mime_type`](#ducpy.search.search_external_files._external_revision_mime_type)(→ str)                       |    |
-| [`extract_image_text_for_search`](#ducpy.search.search_external_files.extract_image_text_for_search)(→ ExtractedExternalText)    |    |
-| [`_stream_revision_bytes`](#ducpy.search.search_external_files._stream_revision_bytes)(→ bytes | None)                    |    |
-| [`load_external_file_text`](#ducpy.search.search_external_files.load_external_file_text)(→ ExtractedExternalText)          |    |
-| [`resolve_external_file_search_targets_from_parsed_duc`](#ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc)(...) |    |
-| [`_fetch_external_revision_row`](#ducpy.search.search_external_files._fetch_external_revision_row)(→ dict[str, Any] | None)     |    |
-| [`ensure_external_file_search_index`](#ducpy.search.search_external_files.ensure_external_file_search_index)(→ dict[tuple[str, ...)  |    |
-| [`query_external_file_search_rows`](#ducpy.search.search_external_files.query_external_file_search_rows)(→ list[sqlite3.Row])      |    |
+| [`_compress_whitespace`](#ducpy.search.search_external_files._compress_whitespace)(value) → str                                                                          |    |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------|----|
+| [`element_file_id`](#ducpy.search.search_external_files.element_file_id)(element) → str | None                                                                      |    |
+| [`_normalize_target`](#ducpy.search.search_external_files._normalize_target)(value) → ExternalFileSearchTarget                                                        |    |
+| [`_dedupe_targets`](#ducpy.search.search_external_files._dedupe_targets)(targets) → tuple[ResolvedExternalFileSearchTarget, ...]                                    |    |
+| [`_has_table`](#ducpy.search.search_external_files._has_table)(conn, table_name) → bool                                                                        |    |
+| [`_fetch_active_revision_ids`](#ducpy.search.search_external_files._fetch_active_revision_ids)(conn, file_ids) → dict[str, str]                                                |    |
+| [`_fetch_live_external_file_ids`](#ducpy.search.search_external_files._fetch_live_external_file_ids)(conn) → set[str]                                                             |    |
+| [`_fetch_element_external_refs`](#ducpy.search.search_external_files._fetch_element_external_refs)(conn, element_ids) → list[tuple[str, str]]                                    |    |
+| [`resolve_external_file_search_targets`](#ducpy.search.search_external_files.resolve_external_file_search_targets)(conn, \*[, ...]) → tuple[ResolvedExternalFileSearchTarget, ...]       |    |
+| [`_external_active_revision_id`](#ducpy.search.search_external_files._external_active_revision_id)(external) → str | None                                                        |    |
+| [`_external_revision_meta`](#ducpy.search.search_external_files._external_revision_meta)(external, revision_id) → dict[str, Any] | None                                     |    |
+| [`_external_revision_mime_type`](#ducpy.search.search_external_files._external_revision_mime_type)(external, revision_id, \*, ...) → str                                         |    |
+| [`extract_image_text_for_search`](#ducpy.search.search_external_files.extract_image_text_for_search)(image_bytes, \*, ocr_language) → ExtractedExternalText                       |    |
+| [`_stream_revision_bytes`](#ducpy.search.search_external_files._stream_revision_bytes)(duc_source, revision_id) → bytes | None                                             |    |
+| [`load_external_file_text`](#ducpy.search.search_external_files.load_external_file_text)(duc_source, target, \*, ...) → ExtractedExternalText                               |    |
+| [`resolve_external_file_search_targets_from_parsed_duc`](#ducpy.search.search_external_files.resolve_external_file_search_targets_from_parsed_duc)(...) → tuple[ResolvedExternalFileSearchTarget, ...]   |    |
+| [`_fetch_external_revision_row`](#ducpy.search.search_external_files._fetch_external_revision_row)(conn, file_id, revision_id) → dict[str, Any] | None                           |    |
+| [`ensure_external_file_search_index`](#ducpy.search.search_external_files.ensure_external_file_search_index)(conn, \*, targets[, ...]) → dict[tuple[str, str], ExtractedExternalText] |    |
+| [`query_external_file_search_rows`](#ducpy.search.search_external_files.query_external_file_search_rows)(conn, \*, expression, ...) → list[sqlite3.Row]                             |    |
 
 ## Module Contents
 

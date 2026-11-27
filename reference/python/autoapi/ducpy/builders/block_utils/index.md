@@ -2,9 +2,9 @@
 
 ## Functions
 
-| [`_get_base`](#ducpy.builders.block_utils._get_base)(element)     |                                                        |
-|-------------------------------------------------------------------------|--------------------------------------------------------|
-| [`instantiate_block`](#ducpy.builders.block_utils.instantiate_block)(...) | Creates an instance of a block at a specific position. |
+| [`_get_base`](#ducpy.builders.block_utils._get_base)(element)                                                                                         |                                                        |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
+| [`instantiate_block`](#ducpy.builders.block_utils.instantiate_block)(state, block_id, position_x, position_y) → ducpy.classes.DataStateClass.DucBlockInstance | Creates an instance of a block at a specific position. |
 
 ## Module Contents
 

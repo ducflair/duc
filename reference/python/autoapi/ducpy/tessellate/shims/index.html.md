@@ -12,18 +12,18 @@ Scopture and Ducflair runtimes (three-cad-viewer buffer JSON, ifcopenshell trian
 
 ## Functions
 
-| [`scopture_is_model_dependency_call`](#ducpy.tessellate.shims.scopture_is_model_dependency_call)(→ bool)        | Return whether the current call stack is executing a duc_model module.         |
-|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| [`scopture_install_model_modules`](#ducpy.tessellate.shims.scopture_install_model_modules)(→ None)           | Install one execution's model-element sources as a lazy Python package.        |
-| [`scopture_install_fonts`](#ducpy.tessellate.shims.scopture_install_fonts)(→ None)                   | Register mounted TTF files with OCCT and expose name-based resolution.         |
-| [`scopture_flatten_candidates`](#ducpy.tessellate.shims.scopture_flatten_candidates)(→ list[Any])         | Recursively flatten nested lists/tuples/sets of objects into a flat list.      |
-| [`scopture_install_animation`](#ducpy.tessellate.shims.scopture_install_animation)(module, globals_dict) | Collect ocp_vscode animation tracks for the most recently shown assembly.      |
-| [`scopture_tessellate_to_buffer_json`](#ducpy.tessellate.shims.scopture_tessellate_to_buffer_json)(→ str)        | Tessellate CAD objects and return a compact JSON payload using base64 buffers. |
-| [`scopture_install_ipython_stub`](#ducpy.tessellate.shims.scopture_install_ipython_stub)(→ None)            | Install a stub for IPython.lib.pretty so build123d can import it.              |
-| [`scopture_install_ifc_output_capture`](#ducpy.tessellate.shims.scopture_install_ifc_output_capture)(→ None)      | Patch ifcopenshell.file.write to also write to output_path.                    |
-| [`scopture_install_dxf_output_capture`](#ducpy.tessellate.shims.scopture_install_dxf_output_capture)(→ None)      | Patch ezdxf.document.Drawing.saveas to also write to output_path.              |
-| [`scopture_collect_model_file`](#ducpy.tessellate.shims.scopture_collect_model_file)(→ dict[str, Any])    | Find an ifcopenshell or ezdxf object in globals and write it to output_path.   |
-| [`scopture_collect_ifc_preview`](#ducpy.tessellate.shims.scopture_collect_ifc_preview)(→ str | None)       | Tessellate an IFC model and return a compact JSON preview payload.             |
+| [`scopture_is_model_dependency_call`](#ducpy.tessellate.shims.scopture_is_model_dependency_call)() → bool                                   | Return whether the current call stack is executing a duc_model module.         |
+|-------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
+| [`scopture_install_model_modules`](#ducpy.tessellate.shims.scopture_install_model_modules)(model_modules, ...) → None                    | Install one execution's model-element sources as a lazy Python package.        |
+| [`scopture_install_fonts`](#ducpy.tessellate.shims.scopture_install_fonts)(mounted_external_files) → None                        | Register mounted TTF files with OCCT and expose name-based resolution.         |
+| [`scopture_flatten_candidates`](#ducpy.tessellate.shims.scopture_flatten_candidates)(\*objs) → list[Any]                              | Recursively flatten nested lists/tuples/sets of objects into a flat list.      |
+| [`scopture_install_animation`](#ducpy.tessellate.shims.scopture_install_animation)(module, globals_dict)                             | Collect ocp_vscode animation tracks for the most recently shown assembly.      |
+| [`scopture_tessellate_to_buffer_json`](#ducpy.tessellate.shims.scopture_tessellate_to_buffer_json)(\*objs, \*\*kwargs) → str                 | Tessellate CAD objects and return a compact JSON payload using base64 buffers. |
+| [`scopture_install_ipython_stub`](#ducpy.tessellate.shims.scopture_install_ipython_stub)() → None                                       | Install a stub for IPython.lib.pretty so build123d can import it.              |
+| [`scopture_install_ifc_output_capture`](#ducpy.tessellate.shims.scopture_install_ifc_output_capture)(output_path[, ...]) → None               | Patch ifcopenshell.file.write to also write to output_path.                    |
+| [`scopture_install_dxf_output_capture`](#ducpy.tessellate.shims.scopture_install_dxf_output_capture)(output_path[, ...]) → None               | Patch ezdxf.document.Drawing.saveas to also write to output_path.              |
+| [`scopture_collect_model_file`](#ducpy.tessellate.shims.scopture_collect_model_file)(globals_dict, fmt, output_path) → dict[str, Any] | Find an ifcopenshell or ezdxf object in globals and write it to output_path.   |
+| [`scopture_collect_ifc_preview`](#ducpy.tessellate.shims.scopture_collect_ifc_preview)(globals_dict[, ...]) → str | None               | Tessellate an IFC model and return a compact JSON preview payload.             |
 
 ## Module Contents
 

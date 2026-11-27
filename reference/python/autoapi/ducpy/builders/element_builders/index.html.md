@@ -27,10 +27,10 @@ Only the 15 element types from duc.sql / types.rs are supported.
 
 ## Functions
 
-| [`_create_element_wrapper`](#ducpy.builders.element_builders._create_element_wrapper)(element_class, base_params, ...)   | Helper function to create an ElementWrapper with the given parameters.   |
-|-------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
-| [`create_duc_path`](#ducpy.builders.element_builders.create_duc_path)(→ ducpy.classes.ElementsClass.DucPath)     |                                                                          |
-| [`create_bound_element`](#ducpy.builders.element_builders.create_bound_element)(...)                                  |                                                                          |
+| [`_create_element_wrapper`](#ducpy.builders.element_builders._create_element_wrapper)(element_class, base_params, ...)                                  | Helper function to create an ElementWrapper with the given parameters.   |
+|--------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| [`create_duc_path`](#ducpy.builders.element_builders.create_duc_path)(line_indices[, background, stroke]) → ducpy.classes.ElementsClass.DucPath |                                                                          |
+| [`create_bound_element`](#ducpy.builders.element_builders.create_bound_element)(element_id, element_type) → ducpy.classes.ElementsClass.BoundElement |                                                                          |
 
 ## Module Contents
 

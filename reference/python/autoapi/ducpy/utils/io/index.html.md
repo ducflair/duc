@@ -6,7 +6,7 @@ This module provides high-level functions for reading and writing DUC files.
 
 | [`write_duc_file`](#ducpy.utils.io.write_duc_file)(file_path, name[, thumbnail, ...])   | Serializes an ExportedDataState object to a .duc file.        |
 |------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
-| [`read_duc_file`](#ducpy.utils.io.read_duc_file)(→ ducpy.parse.DucData)                | Parses a .duc file into a DucData dict with attribute access. |
+| [`read_duc_file`](#ducpy.utils.io.read_duc_file)(file_path) → ducpy.parse.DucData      | Parses a .duc file into a DucData dict with attribute access. |
 
 ## Module Contents
 

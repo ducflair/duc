@@ -9,13 +9,13 @@ Compiles and tessellates model elements into canonical model cache payloads:
 
 ## Functions
 
-| [`_normalize_model_type`](#ducpy.tessellate.runner._normalize_model_type)(→ str)               |                                                                                      |
-|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| [`_deduce_model_output_kind`](#ducpy.tessellate.runner._deduce_model_output_kind)(→ str)           |                                                                                      |
-| [`_build_external_file_code`](#ducpy.tessellate.runner._build_external_file_code)(→ str)           | Generate canonical model code loading an external file reference.                    |
-| [`tessellate_external_file`](#ducpy.tessellate.runner.tessellate_external_file)(→ dict[str, Any]) | Directly tessellates a local CAD/BIM file (STEP, STL, IFC, DXF).                     |
-| [`tessellate_model_code`](#ducpy.tessellate.runner.tessellate_model_code)(→ dict[str, Any])    | Executes CAD Python code and captures the tessellated preview payload.               |
-| [`tessellate_duc_element`](#ducpy.tessellate.runner.tessellate_duc_element)(→ dict[str, Any])   | Extracts a model element and its external files from a .duc file and tessellates it. |
+| [`_normalize_model_type`](#ducpy.tessellate.runner._normalize_model_type)(model_type) → str                                   |                                                                                      |
+|----------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| [`_deduce_model_output_kind`](#ducpy.tessellate.runner._deduce_model_output_kind)(model_type) → str                               |                                                                                      |
+| [`_build_external_file_code`](#ducpy.tessellate.runner._build_external_file_code)(model_type, file_id) → str                      | Generate canonical model code loading an external file reference.                    |
+| [`tessellate_external_file`](#ducpy.tessellate.runner.tessellate_external_file)(file_path[, model_type]) → dict[str, Any]        | Directly tessellates a local CAD/BIM file (STEP, STL, IFC, DXF).                     |
+| [`tessellate_model_code`](#ducpy.tessellate.runner.tessellate_model_code)(code[, model_type, ...]) → dict[str, Any]           | Executes CAD Python code and captures the tessellated preview payload.               |
+| [`tessellate_duc_element`](#ducpy.tessellate.runner.tessellate_duc_element)(duc_file_path, element_id[, ...]) → dict[str, Any] | Extracts a model element and its external files from a .duc file and tessellates it. |
 
 ## Module Contents
 

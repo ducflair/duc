@@ -15,12 +15,12 @@ headers are deliberately excluded.
 
 ## Functions
 
-| [`build123d_available`](#ducpy.search.search_build123d.build123d_available)(→ bool)                     | Return whether build123d can be imported.                            |
-|--------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`extract_build123d_shape_text`](#ducpy.search.search_build123d.extract_build123d_shape_text)() → Build123dText) | Extract labels/materials/joints from loaded shapes and viewer names. |
-| [`extract_build123d_path_text`](#ducpy.search.search_build123d.extract_build123d_path_text)(→ Build123dText)    | Extract semantic text from a STEP/STP or STL path.                   |
-| [`extract_build123d_text`](#ducpy.search.search_build123d.extract_build123d_text)(→ Build123dText)         | Extract semantic build123d-backed text from in-memory file data.     |
-| [`extract_model_build123d_text`](#ducpy.search.search_build123d.extract_model_build123d_text)(→ Build123dText)   | Extract semantic text from a DUC build123d model element.            |
+| [`build123d_available`](#ducpy.search.search_build123d.build123d_available)() → bool                                                 | Return whether build123d can be imported.                            |
+|-------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| [`extract_build123d_shape_text`](#ducpy.search.search_build123d.extract_build123d_shape_text)(shape, \*[, viewer_names]) → Build123dText      | Extract labels/materials/joints from loaded shapes and viewer names. |
+| [`extract_build123d_path_text`](#ducpy.search.search_build123d.extract_build123d_path_text)(path[, model_type]) → Build123dText              | Extract semantic text from a STEP/STP or STL path.                   |
+| [`extract_build123d_text`](#ducpy.search.search_build123d.extract_build123d_text)(data, model_type) → Build123dText                     | Extract semantic build123d-backed text from in-memory file data.     |
+| [`extract_model_build123d_text`](#ducpy.search.search_build123d.extract_model_build123d_text)(duc_source, element, \*[, ...]) → Build123dText | Extract semantic text from a DUC build123d model element.            |
 
 ## Module Contents
 

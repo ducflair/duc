@@ -313,43 +313,43 @@ Each ELEMENT_CONTENT_PREFERENCE has its own dedicated method.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders._create_default_tiling_properties" title="ducpy.builders.style_builders._create_default_tiling_properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_create_default_tiling_properties</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders._create_default_tiling_properties" title="ducpy.builders.style_builders._create_default_tiling_properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_create_default_tiling_properties</span></code></a>() → ducpy.classes.ElementsClass.TilingProperties</p></td>
 <td><p>Create default tiling settings used by content builders.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders._create_default_hatch_style" title="ducpy.builders.style_builders._create_default_hatch_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_create_default_hatch_style</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders._create_default_hatch_style" title="ducpy.builders.style_builders._create_default_hatch_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_create_default_hatch_style</span></code></a>() → ducpy.classes.ElementsClass.DucHatchStyle</p></td>
 <td><p>Create a neutral/default hatch style.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders._create_default_image_filter" title="ducpy.builders.style_builders._create_default_image_filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_create_default_image_filter</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders._create_default_image_filter" title="ducpy.builders.style_builders._create_default_image_filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_create_default_image_filter</span></code></a>() → ducpy.classes.ElementsClass.DucImageFilter</p></td>
 <td><p>Create a neutral image filter (no brightness/contrast changes).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_solid_content" title="ducpy.builders.style_builders.create_solid_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_solid_content</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_solid_content" title="ducpy.builders.style_builders.create_solid_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_solid_content</span></code></a>(color[, opacity, visible]) → ducpy.classes.ElementsClass.ElementContentBase</p></td>
 <td><p>Create solid color content.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_fill_content" title="ducpy.builders.style_builders.create_fill_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_fill_content</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_fill_content" title="ducpy.builders.style_builders.create_fill_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_fill_content</span></code></a>(color[, opacity, visible]) → ducpy.classes.ElementsClass.ElementContentBase</p></td>
 <td><p>Create generic fill content.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_image_content" title="ducpy.builders.style_builders.create_image_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_image_content</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_image_content" title="ducpy.builders.style_builders.create_image_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_image_content</span></code></a>(image_src[, opacity, visible, ...]) → ducpy.classes.ElementsClass.ElementContentBase</p></td>
 <td><p>Create image content.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_hatch_content" title="ducpy.builders.style_builders.create_hatch_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_hatch_content</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_hatch_content" title="ducpy.builders.style_builders.create_hatch_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_hatch_content</span></code></a>(pattern[, opacity, visible]) → ducpy.classes.ElementsClass.ElementContentBase</p></td>
 <td><p>Create hatch pattern content.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_background" title="ducpy.builders.style_builders.create_background"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_background</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_background" title="ducpy.builders.style_builders.create_background"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_background</span></code></a>([content]) → ducpy.classes.ElementsClass.ElementBackground</p></td>
 <td><p>Create a background wrapper from content.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_stroke" title="ducpy.builders.style_builders.create_stroke"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_stroke</span></code></a>(→ ducpy.classes.ElementsClass.ElementStroke)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_stroke" title="ducpy.builders.style_builders.create_stroke"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_stroke</span></code></a>([content, width, placement, style, sides]) → ducpy.classes.ElementsClass.ElementStroke</p></td>
 <td><p>Create a stroke wrapper from content and stroke settings.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_simple_styles" title="ducpy.builders.style_builders.create_simple_styles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_simple_styles</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_simple_styles" title="ducpy.builders.style_builders.create_simple_styles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_simple_styles</span></code></a>([roundness, opacity, ...]) → ducpy.classes.ElementsClass.DucElementStylesBase</p></td>
 <td><p>Create base element styles from backgrounds and strokes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_fill_style" title="ducpy.builders.style_builders.create_fill_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_fill_style</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_fill_style" title="ducpy.builders.style_builders.create_fill_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_fill_style</span></code></a>(content[, roundness, opacity]) → ducpy.classes.ElementsClass.DucElementStylesBase</p></td>
 <td><p>Create styles configured with fill only.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_stroke_style" title="ducpy.builders.style_builders.create_stroke_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_stroke_style</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_stroke_style" title="ducpy.builders.style_builders.create_stroke_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_stroke_style</span></code></a>(content[, width, placement, opacity]) → ducpy.classes.ElementsClass.DucElementStylesBase</p></td>
 <td><p>Create styles configured with stroke only.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_fill_and_stroke_style" title="ducpy.builders.style_builders.create_fill_and_stroke_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_fill_and_stroke_style</span></code></a>(...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_fill_and_stroke_style" title="ducpy.builders.style_builders.create_fill_and_stroke_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_fill_and_stroke_style</span></code></a>(fill_content, stroke_content) → ducpy.classes.ElementsClass.DucElementStylesBase</p></td>
 <td><p>Create styles configured with both fill and stroke.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_solid_style" title="ducpy.builders.style_builders.create_solid_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_solid_style</span></code></a>(color[, opacity])</p></td>
@@ -358,16 +358,16 @@ Each ELEMENT_CONTENT_PREFERENCE has its own dedicated method.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_hatch_style" title="ducpy.builders.style_builders.create_hatch_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_hatch_style</span></code></a>(pattern[, opacity])</p></td>
 <td><p>Convenience helper that returns hatch content for style composition.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_text_style" title="ducpy.builders.style_builders.create_text_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_text_style</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_text_style" title="ducpy.builders.style_builders.create_text_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_text_style</span></code></a>([font_family, font_size, is_ltr, ...]) → ducpy.classes.ElementsClass.DucTextStyle</p></td>
 <td><p>Create a text style instance.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_doc_style" title="ducpy.builders.style_builders.create_doc_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_doc_style</span></code></a>(→ ducpy.classes.ElementsClass.DucDocStyle)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_doc_style" title="ducpy.builders.style_builders.create_doc_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_doc_style</span></code></a>() → ducpy.classes.ElementsClass.DucDocStyle</p></td>
 <td><p>DucDocStyle is empty in the current schema.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_table_style" title="ducpy.builders.style_builders.create_table_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_table_style</span></code></a>(...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_table_style" title="ducpy.builders.style_builders.create_table_style"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_table_style</span></code></a>() → ducpy.classes.ElementsClass.DucTableStyle</p></td>
 <td><p>DucTableStyle is empty in the current schema.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_margins" title="ducpy.builders.style_builders.create_margins"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_margins</span></code></a>(→ ducpy.classes.ElementsClass.Margins)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.builders.style_builders.create_margins" title="ducpy.builders.style_builders.create_margins"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_margins</span></code></a>([top, right, bottom, left]) → ducpy.classes.ElementsClass.Margins</p></td>
 <td><p>Create margin values in top/right/bottom/left order.</p></td>
 </tr>
 </tbody>

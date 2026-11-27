@@ -9,9 +9,9 @@ PDF text extraction for search.
 
 ## Functions
 
-| [`_compress_whitespace`](#ducpy.search.search_pdf._compress_whitespace)(→ str)                   |    |
-|------------------------------------------------------------------------------------------------|----|
-| [`extract_pdf_text_for_search`](#ducpy.search.search_pdf.extract_pdf_text_for_search)(→ tuple[str, ...) |    |
+| [`_compress_whitespace`](#ducpy.search.search_pdf._compress_whitespace)(value) → str                                                                             |    |
+|----------------------------------------------------------------------------------------------------------------------------------------------------------------|----|
+| [`extract_pdf_text_for_search`](#ducpy.search.search_pdf.extract_pdf_text_for_search)(pdf_bytes, \*, ocr_language) → tuple[str, tuple[tuple[int, int, int], ...], bool] |    |
 
 ## Module Contents
 

@@ -32,13 +32,13 @@ DUC label and description.
 
 ## Functions
 
-| [`extract_python_imports`](#ducpy.search.search_models.extract_python_imports)(→ set[str])                     | Return the top-level module names imported by `code`.                                                       |
-|---------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| [`detect_model_engine`](#ducpy.search.search_models.detect_model_engine)(→ ModelEngine)                     | Classify a parsed model element into a [`ModelEngine`](#ducpy.search.search_models.ModelEngine).        |
-| [`model_element_info`](#ducpy.search.search_models.model_element_info)(→ ModelElementInfo)                 | Build a [`ModelElementInfo`](#ducpy.search.search_models.ModelElementInfo) from a parsed model element dict. |
-| [`iter_model_elements`](#ducpy.search.search_models.iter_model_elements)(→ Iterator[dict[str, Any]])        | Yield non-deleted model elements from parsed duc data.                                                      |
-| [`resolve_model_search_targets`](#ducpy.search.search_models.resolve_model_search_targets)(→ list[ModelElementInfo]) | Classify every live model element in parsed duc data.                                                       |
-| [`search_duc_models`](#ducpy.search.search_models.search_duc_models)(...)                                 | Search the user-authored text inside model elements and rank the results.                                   |
+| [`extract_python_imports`](#ducpy.search.search_models.extract_python_imports)(code) → set[str]                                                                     | Return the top-level module names imported by `code`.                                                       |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| [`detect_model_engine`](#ducpy.search.search_models.detect_model_engine)(element) → ModelEngine                                                                  | Classify a parsed model element into a [`ModelEngine`](#ducpy.search.search_models.ModelEngine).        |
+| [`model_element_info`](#ducpy.search.search_models.model_element_info)(element) → ModelElementInfo                                                              | Build a [`ModelElementInfo`](#ducpy.search.search_models.ModelElementInfo) from a parsed model element dict. |
+| [`iter_model_elements`](#ducpy.search.search_models.iter_model_elements)(duc_data) → Iterator[dict[str, Any]]                                                    | Yield non-deleted model elements from parsed duc data.                                                      |
+| [`resolve_model_search_targets`](#ducpy.search.search_models.resolve_model_search_targets)(duc_data) → list[ModelElementInfo]                                             | Classify every live model element in parsed duc data.                                                       |
+| [`search_duc_models`](#ducpy.search.search_models.search_duc_models)(duc_path, query, \*[, output_path, ...]) → ducpy.search.search_elements.DucSearchResponse | Search the user-authored text inside model elements and rank the results.                                   |
 
 ## Module Contents
 

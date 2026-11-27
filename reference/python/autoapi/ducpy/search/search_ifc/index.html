@@ -334,19 +334,19 @@ executed explicitly to capture IfcOpenShell files it opens or creates.</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.ifcopenshell_available" title="ducpy.search.search_ifc.ifcopenshell_available"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ifcopenshell_available</span></code></a>(→ bool)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.ifcopenshell_available" title="ducpy.search.search_ifc.ifcopenshell_available"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ifcopenshell_available</span></code></a>() → bool</p></td>
 <td><p>Return whether IfcOpenShell can be imported.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.extract_ifc_file_text" title="ducpy.search.search_ifc.extract_ifc_file_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ifc_file_text</span></code></a>(→ IfcText)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.extract_ifc_file_text" title="ducpy.search.search_ifc.extract_ifc_file_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ifc_file_text</span></code></a>(model) → IfcText</p></td>
 <td><p>Extract searchable values from a loaded IfcOpenShell file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.extract_ifc_text" title="ducpy.search.search_ifc.extract_ifc_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ifc_text</span></code></a>(→ IfcText)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.extract_ifc_text" title="ducpy.search.search_ifc.extract_ifc_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ifc_text</span></code></a>(ifc_bytes) → IfcText</p></td>
 <td><p>Parse IFC STEP bytes and extract searchable values, or return empty.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.extract_ifc_path_text" title="ducpy.search.search_ifc.extract_ifc_path_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ifc_path_text</span></code></a>(→ IfcText)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.extract_ifc_path_text" title="ducpy.search.search_ifc.extract_ifc_path_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_ifc_path_text</span></code></a>(path) → IfcText</p></td>
 <td><p>Open and extract an IFC file from disk without first reading its bytes.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.extract_model_ifc_text" title="ducpy.search.search_ifc.extract_model_ifc_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_model_ifc_text</span></code></a>(→ IfcText)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.search.search_ifc.extract_model_ifc_text" title="ducpy.search.search_ifc.extract_model_ifc_text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">extract_model_ifc_text</span></code></a>(duc_source, element, *[, run_code]) → IfcText</p></td>
 <td><p>Extract searchable values from a DUC IFC model element.</p></td>
 </tr>
 </tbody>

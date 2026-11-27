@@ -35,8 +35,8 @@ with duc.DucSQL.from_bytes(raw) as db:
 
 ## Functions
 
-| [`quote_sql_identifier`](#ducpy.builders.sql_builder.quote_sql_identifier)(→ str)   | Quote a SQLite identifier such as an attached database alias.   |
-|--------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| [`quote_sql_identifier`](#ducpy.builders.sql_builder.quote_sql_identifier)(value) → str   | Quote a SQLite identifier such as an attached database alias.   |
+|--------------------------------------------------------------------------------------|-----------------------------------------------------------------|
 
 ## Module Contents
 

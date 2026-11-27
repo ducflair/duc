@@ -326,37 +326,37 @@ Scopture and Ducflair runtimes (three-cad-viewer buffer JSON, ifcopenshell trian
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_is_model_dependency_call" title="ducpy.tessellate.shims.scopture_is_model_dependency_call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_is_model_dependency_call</span></code></a>(→ bool)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_is_model_dependency_call" title="ducpy.tessellate.shims.scopture_is_model_dependency_call"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_is_model_dependency_call</span></code></a>() → bool</p></td>
 <td><p>Return whether the current call stack is executing a duc_model module.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_model_modules" title="ducpy.tessellate.shims.scopture_install_model_modules"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_model_modules</span></code></a>(→ None)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_model_modules" title="ducpy.tessellate.shims.scopture_install_model_modules"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_model_modules</span></code></a>(model_modules, ...) → None</p></td>
 <td><p>Install one execution's model-element sources as a lazy Python package.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_fonts" title="ducpy.tessellate.shims.scopture_install_fonts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_fonts</span></code></a>(→ None)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_fonts" title="ducpy.tessellate.shims.scopture_install_fonts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_fonts</span></code></a>(mounted_external_files) → None</p></td>
 <td><p>Register mounted TTF files with OCCT and expose name-based resolution.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_flatten_candidates" title="ducpy.tessellate.shims.scopture_flatten_candidates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_flatten_candidates</span></code></a>(→ list[Any])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_flatten_candidates" title="ducpy.tessellate.shims.scopture_flatten_candidates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_flatten_candidates</span></code></a>(*objs) → list[Any]</p></td>
 <td><p>Recursively flatten nested lists/tuples/sets of objects into a flat list.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_animation" title="ducpy.tessellate.shims.scopture_install_animation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_animation</span></code></a>(module, globals_dict)</p></td>
 <td><p>Collect ocp_vscode animation tracks for the most recently shown assembly.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_tessellate_to_buffer_json" title="ducpy.tessellate.shims.scopture_tessellate_to_buffer_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_tessellate_to_buffer_json</span></code></a>(→ str)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_tessellate_to_buffer_json" title="ducpy.tessellate.shims.scopture_tessellate_to_buffer_json"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_tessellate_to_buffer_json</span></code></a>(*objs, **kwargs) → str</p></td>
 <td><p>Tessellate CAD objects and return a compact JSON payload using base64 buffers.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_ipython_stub" title="ducpy.tessellate.shims.scopture_install_ipython_stub"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_ipython_stub</span></code></a>(→ None)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_ipython_stub" title="ducpy.tessellate.shims.scopture_install_ipython_stub"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_ipython_stub</span></code></a>() → None</p></td>
 <td><p>Install a stub for IPython.lib.pretty so build123d can import it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_ifc_output_capture" title="ducpy.tessellate.shims.scopture_install_ifc_output_capture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_ifc_output_capture</span></code></a>(→ None)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_ifc_output_capture" title="ducpy.tessellate.shims.scopture_install_ifc_output_capture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_ifc_output_capture</span></code></a>(output_path[, ...]) → None</p></td>
 <td><p>Patch ifcopenshell.file.write to also write to output_path.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_dxf_output_capture" title="ducpy.tessellate.shims.scopture_install_dxf_output_capture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_dxf_output_capture</span></code></a>(→ None)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_install_dxf_output_capture" title="ducpy.tessellate.shims.scopture_install_dxf_output_capture"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_install_dxf_output_capture</span></code></a>(output_path[, ...]) → None</p></td>
 <td><p>Patch ezdxf.document.Drawing.saveas to also write to output_path.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_collect_model_file" title="ducpy.tessellate.shims.scopture_collect_model_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_collect_model_file</span></code></a>(→ dict[str, Any])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_collect_model_file" title="ducpy.tessellate.shims.scopture_collect_model_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_collect_model_file</span></code></a>(globals_dict, fmt, output_path) → dict[str, Any]</p></td>
 <td><p>Find an ifcopenshell or ezdxf object in globals and write it to output_path.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_collect_ifc_preview" title="ducpy.tessellate.shims.scopture_collect_ifc_preview"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_collect_ifc_preview</span></code></a>(→ str | None)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ducpy.tessellate.shims.scopture_collect_ifc_preview" title="ducpy.tessellate.shims.scopture_collect_ifc_preview"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scopture_collect_ifc_preview</span></code></a>(globals_dict[, ...]) → str | None</p></td>
 <td><p>Tessellate an IFC model and return a compact JSON preview payload.</p></td>
 </tr>
 </tbody>
