@@ -38,8 +38,8 @@ serde-wasm-bindgen = "0.6"
 log = "0.4.22"
 console_log = "1.0"
 acadrust = "0.5.5"
-dwgpdf = { version = "1.0.1", default-features = false }
-zip = { version = "2.2", default-features = false, features = ["deflate"] }
+dwgpdf = { version = "1.0.4", default-features = false }
+zip = { version = "9.0.5", default-features = false, features = ["deflate"] }
 roxmltree = "0.20"
 ironcalc = { version = "0.9", default-features = false }
 xlsx-to-pdf = "0.1.0"
