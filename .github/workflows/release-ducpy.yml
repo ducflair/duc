@@ -14,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       UV_PYTHON: "3.12"
-      PYODIDE_VERSION: "0.28.0"
-      PYODIDE_BUILD_VERSION: "0.35.0"
     concurrency:
       group: release-ducpy
       cancel-in-progress: false
@@ -75,10 +73,6 @@ jobs:
         id: pyodide_tooling
         if: steps.release.outputs.status == 'success'
         uses: ./.github/actions/setup-pyodide-build
-        with:
-          pyodide-version: ${{ env.PYODIDE_VERSION }}
-          pyodide-build-version: ${{ env.PYODIDE_BUILD_VERSION }}
-          python-version: '3.13'
 
       - name: Build Pyodide wheel
         if: steps.release.outputs.status == 'success'
@@ -106,7 +100,7 @@ jobs:
             echo "Wheel filename contains expected tag '$EXPECTED_TAG' — OK"
           else
             echo "ERROR: Wheel filename does not contain expected tag '$EXPECTED_TAG'"
-            echo "This means the built wheel is incompatible with the Pyodide ${{ env.PYODIDE_VERSION }} runtime."
+            echo "This means the built wheel is incompatible with the configured Pyodide runtime."
             exit 1
           fi
 

@@ -50,6 +50,9 @@ jobs:
       test_filters: ${{ steps.check.outputs.test_filters }}
       needs_wasm: ${{ steps.check.outputs.needs_wasm }}
       needs_python: ${{ steps.check.outputs.needs_python }}
+      validate_release_workflows: ${{ steps.check.outputs.validate_release_workflows }}
+      validate_ducpy_release: ${{ steps.check.outputs.validate_ducpy_release }}
+      validate_npm_signatures: ${{ steps.check.outputs.validate_npm_signatures }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -169,6 +172,29 @@ jobs:
           echo "needs_wasm=${NEEDS_WASM}" >> "$GITHUB_OUTPUT"
           echo "needs_python=${NEEDS_PYTHON}" >> "$GITHUB_OUTPUT"
 
+          if git diff --quiet origin/main...HEAD -- .github/workflows .github/actions; then
+            echo "validate_release_workflows=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "validate_release_workflows=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          if git diff --quiet origin/main...HEAD -- \
+            .github/workflows/pr-checks.yml \
+            .github/workflows/release-ducpy.yml \
+            .github/actions/setup-pyodide-build/action.yml; then
+            echo "validate_ducpy_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "validate_ducpy_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ "$ANY" = "true" ] || ! git diff --quiet origin/main...HEAD -- \
+            package.json bun.lock apps/web 'apps/**/package.json' 'packages/**/package.json' \
+            .github/workflows .github/actions; then
+            echo "validate_npm_signatures=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "validate_npm_signatures=false" >> "$GITHUB_OUTPUT"
+          fi
+
           echo ""
           echo "═══════════════════════════════"
           if [ "$ANY" = "true" ]; then
@@ -193,7 +219,7 @@ jobs:
   test:
     name: Test Affected Packages
     needs: release-check
-    if: needs.release-check.outputs.any_release == 'true'
+    if: needs.release-check.outputs.any_release == 'true' || needs.release-check.outputs.validate_release_workflows == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -249,6 +275,7 @@ jobs:
         run: bun install
 
       - name: Run package tests
+        if: needs.release-check.outputs.any_release == 'true'
         run: bun turbo test ${{ needs.release-check.outputs.test_filters }}
 
       - name: Build and verify ducjs WASI package artifact
@@ -265,25 +292,25 @@ jobs:
 
       - name: Validate Pyodide build tooling
         id: pyodide-tooling
-        if: needs.release-check.outputs.ducpy == 'true'
+        if: needs.release-check.outputs.ducpy == 'true' || needs.release-check.outputs.validate_ducpy_release == 'true'
         uses: ./.github/actions/setup-pyodide-build
-        with:
-          pyodide-version: '314.0.8'
-          pyodide-build-version: '0.39.4'
-          python-version: '3.14'
 
       - name: Test Pyodide wheel build
-        if: needs.release-check.outputs.ducpy == 'true'
+        if: needs.release-check.outputs.ducpy == 'true' || needs.release-check.outputs.validate_ducpy_release == 'true'
         working-directory: ./packages/ducpy
         env:
           PYODIDE_ROOT: ${{ steps.pyodide-tooling.outputs.pyodide-root }}
+          RELEASE_VERSION: ${{ needs.release-check.outputs.ducpy_version }}
         run: |
           echo "Testing Pyodide wheel build..."
+          if [ -n "$RELEASE_VERSION" ]; then
+            export SETUPTOOLS_SCM_PRETEND_VERSION="$RELEASE_VERSION"
+          fi
           pyodide build --outdir /tmp/pyodide-wheel-test
           echo "Pyodide wheel build succeeded"
 
       - name: Verify wheel platform tag
-        if: needs.release-check.outputs.ducpy == 'true'
+        if: needs.release-check.outputs.ducpy == 'true' || needs.release-check.outputs.validate_ducpy_release == 'true'
         working-directory: /tmp/pyodide-wheel-test
         run: |
           WHEEL=$(find . -name '*.whl' | head -1)
@@ -323,6 +350,7 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────
   test-web:
     name: Next.js Docs Site Build Check
+    needs: release-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -332,7 +360,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: lts/*
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -341,6 +369,10 @@ jobs:
 
       - name: Install dependencies
         run: bun install
+
+      - name: Verify npm registry signatures
+        if: needs.release-check.outputs.validate_npm_signatures == 'true'
+        uses: ./.github/actions/audit-npm-signatures
 
       - name: Build Next.js docs website
         env:
@@ -401,6 +433,8 @@ jobs:
           DOCS_RESULT="${{ needs.test-docs.result }}"
           WEB_RESULT="${{ needs.test-web.result }}"
           ANY_RELEASE="${{ needs.release-check.outputs.any_release }}"
+          VALIDATE_RELEASE_WORKFLOWS="${{ needs.release-check.outputs.validate_release_workflows }}"
+          VALIDATE_DUCPY_RELEASE="${{ needs.release-check.outputs.validate_ducpy_release }}"
 
           if [ "$RELEASE_CHECK" != "success" ]; then
             echo "### ❌ Release detection failed" >> "$GITHUB_STEP_SUMMARY"
@@ -429,6 +463,20 @@ jobs:
               FAILED="true"
             else
               echo "### ❌ Package tests failed" >> "$GITHUB_STEP_SUMMARY"
+              FAILED="true"
+            fi
+          elif [ "$VALIDATE_RELEASE_WORKFLOWS" = "true" ]; then
+            if [ "$TEST_RESULT" = "success" ]; then
+              if [ "$VALIDATE_DUCPY_RELEASE" = "true" ]; then
+                echo "### ✅ Release workflow changes and Pyodide wheel build passed" >> "$GITHUB_STEP_SUMMARY"
+              else
+                echo "### ✅ CI workflow changes passed validation" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            elif [ "$TEST_RESULT" = "cancelled" ]; then
+              echo "### 🛑 CI workflow validation cancelled" >> "$GITHUB_STEP_SUMMARY"
+              FAILED="true"
+            else
+              echo "### ❌ CI workflow validation failed" >> "$GITHUB_STEP_SUMMARY"
               FAILED="true"
             fi
           else
