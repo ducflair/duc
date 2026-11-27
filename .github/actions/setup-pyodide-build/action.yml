@@ -3,15 +3,17 @@ description: 'Install pyodide-build tooling, cross-build environment, and valida
 
 inputs:
   pyodide-version:
-    description: 'Pyodide runtime version for the xbuildenv (e.g. 0.28.0).'
-    required: true
-  pyodide-build-version:
-    description: 'pyodide-build package version (e.g. 0.35.0). Separate from the runtime version.'
-    required: true
-  python-version:
-    description: 'Python version for setup-python step. Should match the xbuildenv target Python version (e.g. 3.13 for Pyodide 0.28.0) to avoid sysconfigdata path issues. Defaults to 3.12 for backward compatibility with workflows that need it for dev deps.'
+    description: 'Pyodide runtime version for the xbuildenv.'
     required: false
-    default: '3.12'
+    default: '314.0.8'
+  pyodide-build-version:
+    description: 'pyodide-build package version, separate from the runtime version.'
+    required: false
+    default: '0.39.4'
+  python-version:
+    description: 'Python version for setup-python; match it to the xbuildenv target to avoid sysconfigdata path issues.'
+    required: false
+    default: '3.14'
 
 outputs:
   pyodide-root:
