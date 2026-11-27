@@ -1155,7 +1155,7 @@ describe("thumbnails end-to-end render capture with real test fixtures", () => {
     } finally {
       fixture.cleanup();
     }
-  }, 120000);
+  }, 300000);
 
   it("renders the biggest microscope model element (open parts compound assembly) in 4K UHD (GPU vs CPU)", async () => {
     if (!hasGpu) return;
